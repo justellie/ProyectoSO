@@ -20,7 +20,31 @@ typedef struct _argsPacientes  {
     int reposo_en_casa;
 } argsPaciente;
 
-enum cama {ninguno,en_casa,basica,intesiva}; 
+//aqui se manejaran los recursos de cada hospital
+typedef struct _hospital
+{
+    // [T] Zona de Triaje -----------------------
+    // Es un número fijo para cada hospital:
+    sem_t salaMuestra; // -med. tomando pruebas(5)
+    sem_t salaEspera;  // +sillas de espera(20)
+
+    // [H] Hospital --------------------------------
+    // El número de camas puede
+    // variar con el tiempo.
+    sem_t camasHospital;
+    // Siempre se piden estos recursos:
+    sem_t oxigeno;
+    sem_t respirador;
+    // El número de medicos y pacientes
+    // varía entre hospitales:
+    sem_t enfermeras[6];
+    sem_t medicos[6];
+
+} hospital;
+
+hospital hospitalH[3];
+
+enum cama {ninguno,en_casa,basica,intensiva,muerto}; 
 
 
 void *thread_function(void *arg)
@@ -48,12 +72,12 @@ void *irHospital(void *input)
     enum cama tipo_cama_actual;
     es_intensivo=0;
     // Entra a la sala de espera
-    sem_wait( &salaEspera[((argsPaciente *)input)->idHospital] );
+    sem_wait( &hospitalH[((argsPaciente *)input)->idHospital].salaEspera );
         // Entra en alguna de las 5 salas de muestra
-        sem_wait(&salaMuestra[((argsPaciente*)input)->idHospital]);
+        sem_wait(&hospitalH[((argsPaciente *)input)->idHospital].salaMuestra);
                 diagnostico = obtener_diagnostico();
-        sem_post(&salaMuestra[((argsPaciente*)input)->idHospital]);
-    sem_post( &salaEspera[((argsPaciente*)input)->idHospital]);
+        sem_post(&hospitalH[((argsPaciente *)input)->idHospital].salaMuestra);
+    sem_post( &hospitalH[((argsPaciente *)input)->idHospital].salaEspera);
 
     tipo_cama_actual=ninguno;
     tiene_cama=0;
@@ -62,7 +86,7 @@ void *irHospital(void *input)
     {
         switch (diagnostico)
         {
-        case ninguno://muerto
+        case muerto://muerto
             if (tiene_cama)
             {
                 liberarRecursosDelHospital(((argsPaciente*)input)->idHospital,es_intensivo);
@@ -78,6 +102,7 @@ void *irHospital(void *input)
             // Puede ser con un signal.
             ((argsPaciente*)input)->reposo_en_casa=1;
             ((argsPaciente*)input)->vivo=1;
+            diagnostico = obtener_diagnostico();
             return;
             break;
 
@@ -86,7 +111,7 @@ void *irHospital(void *input)
         if (tiene_cama==0)
         {
             //asignamos recursos 
-            sem_wait(&camasHospital[((argsPaciente*)input)->idHospital]);
+            sem_wait(&hospitalH[((argsPaciente *)input)->idHospital].camasHospital);
             tiene_cama=1;
             es_intensivo=0;
             tipo_cama_actual=basica;
@@ -97,7 +122,7 @@ void *irHospital(void *input)
             // También son un recurso crítico de cada hospital.
 
             // Le da oxigeno
-            sem_wait(&oxigeno[((argsPaciente*)input)->idHospital]);
+            sem_wait(&hospitalH[((argsPaciente *)input)->idHospital].oxigeno);
         }
         else
         {
@@ -110,14 +135,41 @@ void *irHospital(void *input)
             //diagnostico <- obtenerDiagnostico()
         //semSignal(medico[idHospital] )
 
-        //esperarEfectosDelTratamiento()    
+        //esperarEfectosDelTratamiento() 
+        diagnostico = obtener_diagnostico();   
         break;    
 
-        case intesiva:
+        case intensiva:
+            if (tiene_cama==0)
+            {
+                // [...] Intentar reservar Camas de Tratados Intensivos
+                // [...] Si falla, reservar Camas Normales
+                sem_wait(&hospitalH[((argsPaciente *)input)->idHospital].camasHospital);
+                tiene_cama=1;
+                es_intensivo=1;
+                tipo_cama_actual=intensiva;
+                sem_wait(&hospitalH[((argsPaciente *)input)->idHospital].respirador);
+                //hago la busqueda de enfermeras 
+            }
+            else
+            {
+                //transferir cama en caso de que venga de basico a intesivo 
+                //transferirDeCama( idHospital , tipo_cama_actual , Intensivo )
+                tipo_cama_actual = intensiva;
 
-            
+            }
+            // pido al medico 
+            diagnostico = obtener_diagnostico();
+            break;
 
-        default:
+        case ninguno:
+            if (tiene_cama)
+            {
+                liberarRecursosDelHospital(((argsPaciente *)input)->idHospital,es_intensivo);
+            }
+            ((argsPaciente *)input)->reposo_en_casa=0;
+            ((argsPaciente *)input)->vivo=1;
+            return;
             break;
         }
     }
