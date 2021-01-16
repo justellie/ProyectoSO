@@ -39,6 +39,7 @@ typedef struct _hospital
     // varía entre hospitales:
     sem_t enfermeras[6];
     sem_t medicos[6];
+    sem_t voluntarios[6];
 
 } hospital;
 
@@ -89,7 +90,7 @@ void *irHospital(void *input)
         case muerto://muerto
             if (tiene_cama)
             {
-                liberarRecursosDelHospital(((argsPaciente*)input)->idHospital,es_intensivo);
+                liberarRecursosDelHospital(((argsPaciente*)input)->idHospital,es_intensivo,tiene_cama);
 
             }
             ((argsPaciente*)input)->vivo=0;
@@ -97,7 +98,7 @@ void *irHospital(void *input)
             return;
             break;
         case en_casa://reposo en casa
-            liberarRecursosDelHospital(((argsPaciente*)input)->idHospital,es_intensivo);
+            liberarRecursosDelHospital(((argsPaciente*)input)->idHospital,es_intensivo,tiene_cama);
             // Se tiene que avisar de alguna manera que ya está listo para continuar.
             // Puede ser con un signal.
             ((argsPaciente*)input)->reposo_en_casa=1;
@@ -165,7 +166,7 @@ void *irHospital(void *input)
         case ninguno:
             if (tiene_cama)
             {
-                liberarRecursosDelHospital(((argsPaciente *)input)->idHospital,es_intensivo);
+                liberarRecursosDelHospital(((argsPaciente *)input)->idHospital,es_intensivo,tiene_cama);
             }
             ((argsPaciente *)input)->reposo_en_casa=0;
             ((argsPaciente *)input)->vivo=1;
@@ -173,18 +174,26 @@ void *irHospital(void *input)
             break;
         }
     }
-    
-    
-
-
-
-
-    sem_wait(&binary_sem);
-        shared--;// uso el recurso
-        printf("valor de dato compartido en hilo: %d \n", shared);
-    sem_post(&binary_sem);
-
     return NULL;
+}
+
+void liberarRecursosDelHospital(int idHospital,int es_intensivo,int tiene_cama)
+{
+    if (tiene_cama)  
+    {
+        sem_post( &hospitalH[idHospital].camasHospital );
+        if (es_intensivo)
+        {
+            sem_post( &hospitalH[idHospital].respirador );
+            
+        }
+        else
+        {
+            sem_post( &hospitalH[idHospital].oxigeno );
+        }
+        //se libera de enfermeras 
+    }
+    
 }
 
 void *paciente()
@@ -202,7 +211,6 @@ void *paciente()
             break;
         }
         fue_atendido=0;
-
         for ( int i = 0; i < HOSPITLES; i++)
         {
             semWait( &consultarNCamasDelHospital[i] );
@@ -215,7 +223,7 @@ void *paciente()
                 }
             semPost( &consultarNCamasDelHospital[i] );
         }
-        
+
         if (args->vivo!=1)//por si muere
         {
             break;
@@ -224,7 +232,7 @@ void *paciente()
         {
             if (args->reposo_en_casa)
             {
-                //recibirAtencionVoluntaria( &vivo )
+                recibirAtencionVoluntaria( args );
             }
             else
             {
@@ -240,10 +248,40 @@ void *paciente()
 
 }
 
+void recibirAtencionVoluntaria (argsPaciente* args ) 
+{
+    enum cama diagnostico; 
+    sem_wait(&hospitalH[args->idHospital].voluntarios);
+        while (1)
+        {
+            diagnostico = obtener_diagnostico();
+            switch (diagnostico)
+            {
+            case muerto:
+
+                //reportar fallecido
+                break;
+            case en_casa:
+                continue;
+            case ninguno:
+                break;
+               
+            default:
+                //debe ir al hospital de nuevo a tratarse
+                break;
+            }
+        }
+        
+}
+
+
+
+
+
 int main(int argc, char const *argv[])
 {
 
-    
+        
 
     return 0;
 }
