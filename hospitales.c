@@ -6,11 +6,8 @@
 
 int shared=20;
 int camas[3]={20,55,10};//esto tiene que ser un semaforo, se lo dejo al elio del futuro o a quien sea que vaya a tocar este codigo 
-int enfermerasActivas[3]={3,4,5};   
 int HOSPITLES=3;
 sem_t consultarNCamasDelHospital[3];
-sem_t salaMuestra[3],salaEspera[3],camasHospital[3],oxigeno[3];
-sem_t enfermeras[3][5];//3 hospitales, 5 enfemeras 
 
 sem_t binary_sem;//use like a mutex
 
@@ -40,6 +37,10 @@ typedef struct _hospital
     sem_t enfermeras[6];
     sem_t medicos[6];
     sem_t voluntarios[6];
+
+    //contador de disponibilidad de las enfemeras y medicos 
+    int contadorEnfermeras[6];
+    int contadorMedicos[6];
 
 } hospital;
 
@@ -273,9 +274,6 @@ void recibirAtencionVoluntaria (argsPaciente* args )
         }
         
 }
-
-
-
 
 
 int main(int argc, char const *argv[])
