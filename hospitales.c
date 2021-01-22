@@ -2,15 +2,15 @@
 #include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 
-int shared=20;
-int camas[3]={20,55,10};//esto tiene que ser un semaforo, se lo dejo al elio del futuro o a quien sea que vaya a tocar este codigo 
-int HOSPITLES=3;
-sem_t consultarNCamasDelHospital[3];
+// IDEA(sGaps): Creo que hay que usar UpperCamelCase para los nuevos tipos de datos.
+//              En este caso sería: ArgsPaciente, Hospital, etc...
 
-sem_t binary_sem;//use like a mutex
 
+// Declaración de tipos de datos:
+// ------------------------------
 typedef struct _argsPacientes  {
     int vivo;
     int idHospital;
@@ -34,9 +34,10 @@ typedef struct _hospital
     sem_t respirador;
     // El número de medicos y pacientes
     // varía entre hospitales:
-    sem_t enfermeras[6];
-    sem_t medicos[6];
-    sem_t voluntarios[6];
+    // Creo que no deben ser arreglos:
+    sem_t enfermeras;   
+    sem_t medicos;
+    sem_t voluntarios;
 
     //contador de disponibilidad de las enfemeras y medicos 
     int contadorEnfermeras[6];
@@ -44,10 +45,37 @@ typedef struct _hospital
 
 } hospital;
 
-hospital hospitalH[3];
-
 enum cama {ninguno,en_casa,basica,intensiva,muerto}; 
 
+// Definición de variables globales: (process scope)
+// ---------------------------------
+int shared=20;
+int camas[3]={20,55,10};//esto tiene que ser un semaforo, se lo dejo al elio del futuro o a quien sea que vaya a tocar este codigo 
+int HOSPITLES=3;
+sem_t consultarNCamasDelHospital[3];
+
+sem_t binary_sem;//use like a mutex
+
+
+// Declaración de funciones:
+// -------------------------
+void liberarRecursosDelHospital( int id_hospital , int tipo_atencion , int tiene_cama );
+void transferirDeCama( int id_hospital , int tipo_de_cama , int tipo_atencion );
+void recibirAtencionVoluntaria( argsPaciente* datos_paciente );
+void tiempoSano();
+
+
+// TODO(sGaps): Definir luego
+void transferirDeCama( int id_hospital , int tipo_de_cama , int tipo_atencion ) {}
+
+
+hospital hospitalH[3];
+
+
+void tiempoSano(){
+    // TODO(sGaps): Agregar un límite de tiempo razonable
+    sleep( rand() );
+}
 
 void *thread_function(void *arg)
 {
@@ -62,8 +90,9 @@ void *thread_function(void *arg)
 }
 int obtener_diagnostico()
 {
-    time_t t;
-    srand((unsigned) time(&t));
+    // NOTE(sGaps): srand() deber ir en la inicialización. Se encarga de inicializar la semilla de números aleatorios.
+    // time_t t;
+    // srand((unsigned) time(&t));
     return rand()% 4;
 }
 
@@ -72,14 +101,16 @@ void *irHospital(void *input)
 {
     int tiene_cama, es_intensivo, diagnostico;
     enum cama tipo_cama_actual;
+    argsPaciente* usr = (argsPaciente*) input;
+
     es_intensivo=0;
     // Entra a la sala de espera
-    sem_wait( &hospitalH[((argsPaciente *)input)->idHospital].salaEspera );
+    sem_wait( &hospitalH[usr->idHospital].salaEspera );
         // Entra en alguna de las 5 salas de muestra
-        sem_wait(&hospitalH[((argsPaciente *)input)->idHospital].salaMuestra);
+        sem_wait(&hospitalH[usr->idHospital].salaMuestra);
                 diagnostico = obtener_diagnostico();
-        sem_post(&hospitalH[((argsPaciente *)input)->idHospital].salaMuestra);
-    sem_post( &hospitalH[((argsPaciente *)input)->idHospital].salaEspera);
+        sem_post(&hospitalH[usr->idHospital].salaMuestra);
+    sem_post( &hospitalH[usr->idHospital].salaEspera);
 
     tipo_cama_actual=ninguno;
     tiene_cama=0;
@@ -91,21 +122,21 @@ void *irHospital(void *input)
         case muerto://muerto
             if (tiene_cama)
             {
-                liberarRecursosDelHospital(((argsPaciente*)input)->idHospital,es_intensivo,tiene_cama);
+                liberarRecursosDelHospital(usr->idHospital,es_intensivo,tiene_cama);
 
             }
-            ((argsPaciente*)input)->vivo=0;
+            usr->vivo=0;
             //reporta gestion central
-            return;
+            return NULL;
             break;
         case en_casa://reposo en casa
-            liberarRecursosDelHospital(((argsPaciente*)input)->idHospital,es_intensivo,tiene_cama);
+            liberarRecursosDelHospital(usr->idHospital,es_intensivo,tiene_cama);
             // Se tiene que avisar de alguna manera que ya está listo para continuar.
             // Puede ser con un signal.
-            ((argsPaciente*)input)->reposo_en_casa=1;
-            ((argsPaciente*)input)->vivo=1;
+            usr->reposo_en_casa=1;
+            usr->vivo=1;
             diagnostico = obtener_diagnostico();
-            return;
+            return NULL;
             break;
 
         case basica: //basico 
@@ -113,7 +144,7 @@ void *irHospital(void *input)
         if (tiene_cama==0)
         {
             //asignamos recursos 
-            sem_wait(&hospitalH[((argsPaciente *)input)->idHospital].camasHospital);
+            sem_wait(&hospitalH[usr->idHospital].camasHospital);
             tiene_cama=1;
             es_intensivo=0;
             tipo_cama_actual=basica;
@@ -124,12 +155,12 @@ void *irHospital(void *input)
             // También son un recurso crítico de cada hospital.
 
             // Le da oxigeno
-            sem_wait(&hospitalH[((argsPaciente *)input)->idHospital].oxigeno);
+            sem_wait(&hospitalH[usr->idHospital].oxigeno);
         }
         else
         {
                 // Tenía una cama asignada, por lo tanto debemos transferirlo a las camas básicas:
-                transferirDeCama( ((argsPaciente*)input)->idHospital , tipo_cama_actual , basica );
+                transferirDeCama( usr->idHospital , tipo_cama_actual , basica );
                 tipo_cama_actual = basica;
         }    
         // Durante un periodo, hay medicos para el paciente.
@@ -146,11 +177,11 @@ void *irHospital(void *input)
             {
                 // [...] Intentar reservar Camas de Tratados Intensivos
                 // [...] Si falla, reservar Camas Normales
-                sem_wait(&hospitalH[((argsPaciente *)input)->idHospital].camasHospital);
+                sem_wait(&hospitalH[usr->idHospital].camasHospital);
                 tiene_cama=1;
                 es_intensivo=1;
                 tipo_cama_actual=intensiva;
-                sem_wait(&hospitalH[((argsPaciente *)input)->idHospital].respirador);
+                sem_wait(&hospitalH[usr->idHospital].respirador);
                 //hago la busqueda de enfermeras 
             }
             else
@@ -167,11 +198,11 @@ void *irHospital(void *input)
         case ninguno:
             if (tiene_cama)
             {
-                liberarRecursosDelHospital(((argsPaciente *)input)->idHospital,es_intensivo,tiene_cama);
+                liberarRecursosDelHospital(usr->idHospital,es_intensivo,tiene_cama);
             }
-            ((argsPaciente *)input)->reposo_en_casa=0;
-            ((argsPaciente *)input)->vivo=1;
-            return;
+            usr->reposo_en_casa=0;
+            usr->vivo=1;
+            return NULL;
             break;
         }
     }
@@ -202,48 +233,53 @@ void *paciente()
     //declaracion de variables
     int fue_atendido;
     pthread_t thread_ID;
-    argsPaciente *args = (argsPaciente *)malloc(sizeof(argsPaciente));
+
+    // NOTE(sGaps): No es necesario reservar memoria dinámica. usar un inicializador estático en su lugar.
+    //            > Cada paciente es un hilo, por lo que los valores creados aquí son locales. Los demás
+    //              no podrán acceder a éstos mientras no se publiquen en un ámbito global
+    //              (mediante estructuras globales)
+
+    // argsPaciente *args = (argsPaciente *)malloc(sizeof(argsPaciente));
+    argsPaciente args = { 0 }; // TODO(sGaps): Inicializar luego con valores aleatorios.
     //inicializacion 
-    args->vivo=1;
+    args.vivo = 1;
     while (1)
     {   
-        if (args->vivo!=1)
+        if (args.vivo != 1)
         {
             break;
         }
         fue_atendido=0;
         for ( int i = 0; i < HOSPITLES; i++)
         {
-            semWait( &consultarNCamasDelHospital[i] );
+            sem_wait( &consultarNCamasDelHospital[i] );
                 if (camas[i] > 0)
                 {
-                    args->idHospital=i;
-                    pthread_create(&thread_ID,NULL,irHospital,(void *)args);
+                    args.idHospital=i;
+                    //pthread_create(&thread_ID,NULL,irHospital,(void *)args);
+                    // NOTE(sGaps): creo que los hilos del hospital deben ser creados por el hilo del Director general.
+                    pthread_create(&thread_ID,NULL,irHospital, &args); // (cast implícito a *void)
                     fue_atendido <- 1;
                     break;
                 }
-            semPost( &consultarNCamasDelHospital[i] );
+            sem_post( &consultarNCamasDelHospital[i] );
         }
 
-        if (args->vivo!=1)//por si muere
+        if (args.vivo != 1)//por si muere
         {
             break;
         }
         if (fue_atendido)
         {
-            if (args->reposo_en_casa)
+            if (args.reposo_en_casa)
             {
-                recibirAtencionVoluntaria( args );
+                recibirAtencionVoluntaria( &args );
             }
             else
             {
-                //tiempoSano( random() )
+                tiempoSano();
             }
-            
-            
         }
-        
-
     }
     
 
@@ -278,8 +314,5 @@ void recibirAtencionVoluntaria (argsPaciente* args )
 
 int main(int argc, char const *argv[])
 {
-
-        
-
     return 0;
 }
