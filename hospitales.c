@@ -228,6 +228,7 @@ void liberarRecursosDelHospital(int idHospital,int es_intensivo,int tiene_cama)
     
 }
 
+
 int buscarHospitalLibre(argsPaciente* args, int fue_atendido, pthread_t * thread_ID)
 {
 
