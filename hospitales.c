@@ -228,6 +228,25 @@ void liberarRecursosDelHospital(int idHospital,int es_intensivo,int tiene_cama)
     
 }
 
+int buscarHospitalLibre(argsPaciente* args, int fue_atendido, pthread_t * thread_ID)
+{
+
+    for ( int i = 0; i < HOSPITLES; i++)
+    {
+        semWait( &consultarNCamasDelHospital[i] );
+            if (camas[i] > 0)
+            {
+                args->idHospital=i;
+                pthread_create(thread_ID,NULL,irHospital,(void *)args);
+                fue_atendido = 1;
+                break;
+            }
+        semPost( &consultarNCamasDelHospital[i] );
+    }
+    
+    return fue_atendido;
+}
+
 void *paciente()
 {
     //declaracion de variables
@@ -249,21 +268,10 @@ void *paciente()
         {
             break;
         }
+
         fue_atendido=0;
-        for ( int i = 0; i < HOSPITLES; i++)
-        {
-            sem_wait( &consultarNCamasDelHospital[i] );
-                if (camas[i] > 0)
-                {
-                    args.idHospital=i;
-                    //pthread_create(&thread_ID,NULL,irHospital,(void *)args);
-                    // NOTE(sGaps): creo que los hilos del hospital deben ser creados por el hilo del Director general.
-                    pthread_create(&thread_ID,NULL,irHospital, &args); // (cast implícito a *void)
-                    fue_atendido <- 1;
-                    break;
-                }
-            sem_post( &consultarNCamasDelHospital[i] );
-        }
+
+        fue_atendido=buscarHospitalLibre(&args, fue_atendido, &thread_ID);
 
         if (args.vivo != 1)//por si muere
         {
@@ -310,7 +318,6 @@ void recibirAtencionVoluntaria (argsPaciente* args )
         }
         
 }
-
 
 int main(int argc, char const *argv[])
 {
