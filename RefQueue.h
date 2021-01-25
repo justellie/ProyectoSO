@@ -6,6 +6,7 @@
 #include <string.h> // Cadenas
 #include <stddef.h> // tipos size_t y ssize_t
 #include <stdio.h>  // fprintf
+#include <errno.h>  // errno y perror()
 
 // DEPENDIENTE DE UNIX:
 #include <pthread.h>
@@ -34,8 +35,8 @@ void   refqueue_init   ( RefQueue* qs , void  (*free)(void*) ,
                                         char* (*str) (void*) );
 // Operaciones Atómicas:
 void   refqueue_put    ( RefQueue* qs , void* item );
-// TODO(sGaps): Añadir la función refqueue_try_get
 void*  refqueue_get    ( RefQueue* qs );
+void*  refqueue_tryget ( RefQueue* qs );    // retorna NULL y errno = EBUSY si qs está vacío.
 void   refqueue_clean  ( RefQueue* qs );    // Just uses pop.
 void   refqueue_destroy( RefQueue* qs );    // Uses free.
 char*  refqueue_str    ( RefQueue* qs );      // New string must be freed.

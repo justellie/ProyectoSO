@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <errno.h>
 
 // DEPENDIENTE DE UNIX:
 #include <pthread.h>
@@ -85,6 +86,28 @@ void* refqueue_get( RefQueue* qs ){
     // |> End Critical Region:
     pthread_mutex_unlock( &self->lock );
     return item;
+}
+
+// Si qs está vacío, retorna NULL y establece a errno = EBUSY.
+void* refqueue_tryget( RefQueue* qs ){
+    RefQueue* self = qs;
+    void*     item;
+    // |> Begin Critical Region:
+    pthread_mutex_lock( &self->lock );
+
+    // Unsafe operations:
+    if( refqueue_unsafe_empty(self) ){
+        // |> End Critical Region:
+        pthread_mutex_unlock( &self->lock );
+        errno = EBUSY;
+        return NULL;
+    } else {
+        item = refqueue_unsafe_get( self );
+
+        // |> End Critical Region:
+        pthread_mutex_unlock( &self->lock );
+        return item;
+    }
 }
 
 static void refqueue_unsafe_put( RefQueue* qs , void* item ){

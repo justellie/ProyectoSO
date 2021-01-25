@@ -18,6 +18,7 @@ queue-tests: generic-queue
 	$(CC) $(COMMON) ejemplos/simple_queue.c RefQueue.o -o ejemplos/simple_queue.out
 	$(CC) $(COMMON) ejemplos/shared_queue.c RefQueue.o -o ejemplos/shared_queue.out
 	$(CC) $(COMMON) ejemplos/quick_shared_queue.c RefQueue.o -o ejemplos/quick_shared_queue.out
+	$(CC) $(COMMON) ejemplos/tryget_queue.c RefQueue.o -o ejemplos/tryget_queue.out
 
 generic-queue:
 	$(CC) $(COMMON) $(LIBFLG) RefQueue.c RefQueue.h
