@@ -15,7 +15,7 @@ int main(){
         var  = (int*) malloc( sizeof(int) );
         *var = i;
         refqueue_put( &cola , var );
-        }
+    }
 
     printf( "[*1] Prueba con memoria Dinámica:\n"
             "     Cola de Referencias Opaca (long %d): " , MAX );
@@ -25,6 +25,8 @@ int main(){
     // Imprime y libera la variable:
     var = refqueue_get( &cola );
     printf( "     Frente [debe ser 0]: %d\n" , *var );
+    free( var );
+
     var = refqueue_get( &cola );
     printf( "     Frente [debe ser 1]: %d\n" , *var );
     free( var );

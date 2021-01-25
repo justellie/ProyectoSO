@@ -39,7 +39,8 @@ static void free_node( _LNode* node ,
     free(node);
 }
 
-// NOTE: xs->str() must be a function that allocates a string which must be freed outside (in this function)
+// NOTE: xs->str() debe ser una función que tome un objeto de la cola
+//       y devuelva una cadena que deba ser liberada más adelante.
 void refqueue_init( RefQueue* qs         ,
                     void  (*free)(void*) ,  // can be NULL -> doesn't free
                     char* (*str) (void*) ){ // can be NULL -> doesn't contents 
@@ -47,7 +48,6 @@ void refqueue_init( RefQueue* qs         ,
     qs->last = NULL;
     qs->n    = 0;
 
-    // TODO: Finish
     // Atomicity:
     pthread_mutex_init( &(qs->lock)     , NULL );
     pthread_cond_init ( &(qs->has_item) , NULL );
@@ -65,8 +65,6 @@ void refqueue_put( RefQueue* qs , void* elem ){
     // Unsafe operations:
     refqueue_unsafe_put( self , elem );
     pthread_cond_signal( &self->has_item );  // Wake up only a thread
-    // TODO: Delete this
-    //pthread_cond_broadcast( self->has_item ); // Wake up all threads
 
     // |> End Critical Region:
     pthread_mutex_unlock( &self->lock );
@@ -197,7 +195,8 @@ void refqueue_show_in( RefQueue* qs , FILE* stream ){
     free( strQueue );
 }
 
-// NOTE: Ser cuidadoso con esto... Sólo usar si no importa perder las referencias de los objetos
+// NOTE: Ser cuidadoso con esto... Sólo usar si no importa perder
+//       las referencias de los objetos
 void refqueue_clean( RefQueue* qs ){
     RefQueue* self    = qs;
     void (*freeObj)() = self->free? self->free : free;

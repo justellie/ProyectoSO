@@ -15,6 +15,7 @@ run:
 
 queue-tests: generic-queue
 	$(CC) $(COMMON) ejemplos/simple_queue.c Queue.o -o ejemplos/simple_queue.out
+	$(CC) $(COMMON) ejemplos/shared_queue.c Queue.o -o ejemplos/shared_queue.out
 
 generic-queue:
 	$(CC) $(COMMON) $(LIBFLG) Queue.c Queue.h
