@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../Queue.h"
+#include "../RefQueue.h"
 #define MAX 10
 
 static char* show_int( void* int_value );
