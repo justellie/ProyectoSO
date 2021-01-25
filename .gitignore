@@ -2,3 +2,8 @@
 *.docx
 *.pdf
 *.txt
+
+# Archivos Objetos y misceláneos del compilador
+*.out
+*.o
+*.h.gch
