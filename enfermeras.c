@@ -53,21 +53,19 @@ hospital H[3];
 para asignarle enfermeras a un paciente se debe saber:
 -el tipo de antencion que esta recibiendo (basica, intensiva)
 -en caso de que la atencion sea intensiva se debe saber el tipo de hospital en el que se encuentra (centinela, intermedio, general)
-
 candidad de enfermeras por paciente segun sus necesidades
-
 +++++++++++++++++++++++++++++++++++++++++++++++
 |   cama    | centinela | intermedio | general|
 |---------------------------------------------|
 |basica     | 0.25      | 0.25       | 0.25   |
 |intensiva  | 3         | 2          | 1      |
 +++++++++++++++++++++++++++++++++++++++++++++++
-
 */
 
 void * ir(void *);
 void paciente();
-int reservarEnfermera();
+int reservarEnfermera(int , enum cama , int []);
+int liberarEnfermera(int , enum cama , int []);
 
 int main(int argc, char const *argv[]) //se inicializan los valores necesarios para el hospital en especifico
 {
@@ -76,7 +74,7 @@ int main(int argc, char const *argv[]) //se inicializan los valores necesarios p
     H[0].num_enfermeras = 6;
     sem_init(&H[0].enfermeras, 0, 1);
     paciente();
-    
+
     return 0;
 }
 
@@ -91,9 +89,9 @@ void paciente() //esto solo es necesario ya que se esta haciendo a parte del cod
     args.idHospital = 0;
     for(int i = 0; i < 3; i++) args.enfermera[i] = -1;
     pthread_create(&hilo, NULL, ir, &args);
-    /*pthread_join(hilo, &exit_status); usado para comprobar el funcionamineto
+    pthread_join(hilo, &exit_status); //usado para comprobar el funcionamineto
     j= (int)exit_status;
-    printf("%d", j);*/
+    printf("%d", j);
 
 }
 
@@ -101,11 +99,13 @@ void *ir(void *input) //esto solo es necesario ya que se esta haciendo a parte d
 {
     argsPaciente* usr = (argsPaciente*) input;
     int funciono = reservarEnfermera(0,intensiva,usr->enfermera);
-    /*if (funciono == 1) usado para comprobar el funcionamineto
+    sleep(10);
+    int funciono2 = liberarEnfermera(0, intensiva, usr->enfermera);
+    if (funciono2 == 1) //usado para comprobar el funcionamineto
     {
         return (void *)1;
     }
-    return (void *)0;]*/
+    return (void *)0;
 }
 
 /*
@@ -113,19 +113,16 @@ la funcion retorna un entero como indicativo de exito o fallo
 si el valor de retorno es 1 el paciente reservo con exito las enfermeras que ameritaba
 si el valor de retorno es -1 el paciente no encontro enfermeras suficientes para su atencion
 (se debe decidir que hacer con los pacientes cuando no hay enfermeras suficientes)
-
 la funcion bloquea el acceso al array general de enfermeras del hospital con un semaforo binario,
 busca en el array respecto a lo que requiera el paciente, si hay disponibles, se le asignan al paciente.
-
 para la funcion se necesita como parametro el id del hospital en el que se encuentra el paciente,
 el tipo de cama en la que se encuentra el paciente y un array de 3, en el cual se guardaran los id de las
 enfermeras asignadas a cada paciente
-
 int reservarEnfermera(int , enum cama, int [])
 */
 
 int reservarEnfermera(int hospital, enum cama tipo_cama, int enfermera[]){
-    
+
     switch (H[hospital].tipoH)
     {
     case 1://general
@@ -140,7 +137,7 @@ int reservarEnfermera(int hospital, enum cama tipo_cama, int enfermera[]){
                         enfermera[0]= i;
                         break;
                     }
-                    
+
                 }
             sem_post(&H[hospital].enfermeras);
             if (enfermera[0]==-1)
@@ -148,7 +145,7 @@ int reservarEnfermera(int hospital, enum cama tipo_cama, int enfermera[]){
                     return -1;
                 }
             return 1;
-                
+
         }
         else//intesivo
         {//paciente que se encuentra en un hospital general y en una cama intensiva, se le asignara una enfermera
@@ -161,7 +158,7 @@ int reservarEnfermera(int hospital, enum cama tipo_cama, int enfermera[]){
                         enfermera[0]= i;
                         break;
                     }
-                    
+
                 }
             sem_post(&H[hospital].enfermeras);
             if (enfermera[0]==-1)
@@ -170,7 +167,7 @@ int reservarEnfermera(int hospital, enum cama tipo_cama, int enfermera[]){
             }
             return 1;
         }
-        
+
         break;
     case 2://intermedio
         if (tipo_cama == basica)
@@ -184,7 +181,7 @@ int reservarEnfermera(int hospital, enum cama tipo_cama, int enfermera[]){
                         enfermera[0]= i;
                         break;
                     }
-                    
+
                 }
             sem_post(&H[hospital].enfermeras);
             if (enfermera[0]==-1)
@@ -192,7 +189,7 @@ int reservarEnfermera(int hospital, enum cama tipo_cama, int enfermera[]){
                     return -1;
                 }
             return 1;
-                
+
         }
         else//intensivo
         {//paciente que se encuentra en un hospital intermedio y en una cama intensiva, se le asignaran 2 enfermeras
@@ -237,7 +234,7 @@ int reservarEnfermera(int hospital, enum cama tipo_cama, int enfermera[]){
                         enfermera[0]= i;
                         break;
                     }
-                    
+
                 }
             sem_post(&H[hospital].enfermeras);
             if (enfermera[0]==-1)
@@ -245,7 +242,7 @@ int reservarEnfermera(int hospital, enum cama tipo_cama, int enfermera[]){
                     return -1;
                 }
             return 1;
-                
+
         }
         else//intesivo
         {//paciente que se encuentra en un hospital centinela y en una cama intensiva, se le asignaran 3 enfermeras
@@ -280,7 +277,123 @@ int reservarEnfermera(int hospital, enum cama tipo_cama, int enfermera[]){
         }
         break;
     default:
+        return -1;
         break;
     }
 
+}
+
+int liberarEnfermera(int hospital, enum cama tipo_cama, int enfermera[])
+{
+    switch (H[hospital].tipoH)
+    {
+    case 1://general
+        if (tipo_cama == basica)
+        {
+            if (enfermera[0] == -1)
+            {
+                return -1;
+            }
+            else
+            {
+                sem_wait(&H[hospital].enfermeras);
+                    H[hospital].contadorEnfermeras[enfermera[0]] += 1;
+                sem_post(&H[hospital].enfermeras);
+                enfermera[0] = -1;
+                return 1;
+            }
+            
+        }
+        else//intesivo
+        {
+            if (enfermera[0] == -1)
+            {
+                return -1;
+            }
+            else
+            {
+                sem_wait(&H[hospital].enfermeras);
+                    H[hospital].contadorEnfermeras[enfermera[0]] = 4;
+                sem_post(&H[hospital].enfermeras);
+                enfermera[0] = -1;
+                return 1;
+            }
+        }
+        break;
+
+    case 2://intermedio
+        if (tipo_cama == basica)
+        {
+            if (enfermera[0] == -1)
+            {
+                return -1;
+            }
+            else
+            {
+                sem_wait(&H[hospital].enfermeras);
+                    H[hospital].contadorEnfermeras[enfermera[0]] += 1;
+                sem_post(&H[hospital].enfermeras);
+                enfermera[0] = -1;
+                return 1;
+            }
+        }
+        else//intensivo
+        {
+            if (enfermera[0] == -1)
+            {
+                return -1;
+            }
+            else
+            {
+                sem_wait(&H[hospital].enfermeras);
+                    H[hospital].contadorEnfermeras[enfermera[0]] = 4;
+                    H[hospital].contadorEnfermeras[enfermera[1]] = 4;
+                sem_post(&H[hospital].enfermeras);
+                enfermera[0] = -1;
+                enfermera[1] = -1;
+                return 1;
+            }
+        }
+        break;
+
+    case 3://centinela 
+        if (tipo_cama == basica)
+        {
+            if (enfermera[0] == -1)
+            {
+                return -1;
+            }
+            else
+            {
+                sem_wait(&H[hospital].enfermeras);
+                    H[hospital].contadorEnfermeras[enfermera[0]] += 1;
+                sem_post(&H[hospital].enfermeras);
+                enfermera[0] = -1;
+                return 1;
+            }
+        }
+        else//intesivo
+        {
+            if (enfermera[0] == -1)
+            {
+                return -1;
+            }
+            else
+            {
+                sem_wait(&H[hospital].enfermeras);
+                    H[hospital].contadorEnfermeras[enfermera[0]] = 4;
+                    H[hospital].contadorEnfermeras[enfermera[1]] = 4;
+                    H[hospital].contadorEnfermeras[enfermera[2]] = 4;
+                sem_post(&H[hospital].enfermeras);
+                enfermera[0] = -1;
+                enfermera[1] = -1;
+                enfermera[2] = -1;
+                return 1;
+            }
+        }
+        break;
+    default:
+        return -1;
+        break;
+    }
 }
