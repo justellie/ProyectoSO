@@ -31,6 +31,7 @@ typedef struct RefQueue {
     char* (*str)( void* e );
 } RefQueue;
 
+void   refqueue_singleton( RefQueue* qs );
 void   refqueue_init   ( RefQueue* qs , void  (*free)(void*) ,
                                         char* (*str) (void*) );
 // Operaciones Atómicas:
@@ -39,12 +40,11 @@ void*  refqueue_get    ( RefQueue* qs );
 void*  refqueue_tryget ( RefQueue* qs );    // retorna NULL y errno = EBUSY si qs está vacío.
 void   refqueue_clean  ( RefQueue* qs );    // Just uses pop.
 void   refqueue_destroy( RefQueue* qs );    // Uses free.
-char*  refqueue_str    ( RefQueue* qs );      // New string must be freed.
+char*  refqueue_str    ( RefQueue* qs );    // New string must be freed.
 void   refqueue_show_in( RefQueue* qs , FILE* stream );
 
 // Operaciones No-Atómicas:
 size_t refqueue_unsafe_len  ( RefQueue* qs );
 int    refqueue_unsafe_empty( RefQueue* qs );
-void*  refqueue_unsafe_last ( RefQueue* xs , void* item );
 
 #endif
