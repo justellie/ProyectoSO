@@ -64,9 +64,9 @@ int    refqueue_unsafe_empty( RefQueue* qs );
 /// @fn void refqueue_singleton( RefQueue* qs )
 /// @brief Crea una cola de referencias trivial.
 /// @param qs Cola a inicializar.
-/// @see refqueue_init.
 /// @details Inicializa una cola de referencias sin protocolos de liberación de memoria dinámica ni
 //           protocolos para mostrar los elementos de la misma.
+/// @see refqueue_init.
 
 /// @fn void refqueue_init( RefQueue* qs , void (*free)(void*) , char* (*str) (void*) )
 /// @brief Inicializa una cola de referencias.
@@ -91,10 +91,10 @@ int    refqueue_unsafe_empty( RefQueue* qs );
 /// @brief Intenta extraer un elemento de la cola.
 /// @param qs Cola objetivo.
 /// @return la referencia del objeto en caso de exito. NULL en caso contrario.
-/// @see refqueue_get.
 /// @details Similar a refqueue_get. retorna NULL y se establece a errno = EBUSY cuando la cola está
 //           vacía. Se puede utilizar para extraer elementos de manera segura y manejar los errores
 //           cuando sea necesario.
+/// @see refqueue_get.
 
 /// @fn void refqueue_clean( RefQueue* qs )
 /// @brief Elimina todas las referencias de la cola.
@@ -106,8 +106,8 @@ int    refqueue_unsafe_empty( RefQueue* qs );
 /// @fn void refqueue_destroy( RefQueue* qs )
 /// @brief Libera todas las referencias de la cola.
 /// @param qs Cola objetivo.
-/// @see refqueue_clean
 /// @details Aplica el protocolo de liberación en todos los elementos de la cola y la deja vacía.
+/// @see refqueue_clean
 
 /// @fn char* refqueue_str( RefQueue* qs )
 /// @brief Obtiene la representación de la cola como cadena.
@@ -119,8 +119,8 @@ int    refqueue_unsafe_empty( RefQueue* qs );
 /// @brief Imprime la cola en un archivo.
 /// @param qs Cola objetivo.
 /// @param stream flujo de caracteres objetivo.
-/// @see refqueue_str.
 /// @details Muestra la cola en un archivo. Útil durante las tareas de depuración.
+/// @see refqueue_str.
 
 /// @fn size_t refqueue_unsafe_len( RefQueue* qs )
 /// @brief Obtiene la longitud de la cola.
