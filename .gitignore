@@ -7,3 +7,7 @@
 *.out
 *.o
 *.h.gch
+
+# Archivos generados por Doxygen
+/html
+/latex

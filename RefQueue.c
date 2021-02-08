@@ -68,13 +68,13 @@ void refqueue_init( RefQueue* qs         ,
 }
 
 // Modelo: Productor-Consumidor:
-void refqueue_put( RefQueue* qs , void* elem ){
+void refqueue_put( RefQueue* qs , void* item ){
     RefQueue* self = qs;
     // |> Begin Critical Region:
     pthread_mutex_lock( &self->lock );
 
     // Unsafe operations:
-    refqueue_unsafe_put( self , elem );
+    refqueue_unsafe_put( self , item );
     pthread_cond_signal( &self->has_item );  // Wake up only a thread
 
     // |> End Critical Region:
