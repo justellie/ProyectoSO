@@ -585,7 +585,7 @@ void refmap_debug( RefMap* t , int use_ascii_color , void (*print_key)(void*) , 
         ured    = red;
         unormal = normal;
     } else
-        ublack = ured = unormal;
+        ublack = ured = unormal = "";
     fprintf( stderr , "%s" , unormal );
     debug( t->root , 4 , 4 ,
            ublack , ured , unormal ,
@@ -598,10 +598,8 @@ void refmap_clear( RefMap* t ){
     // <| BEGIN CRITICAL REGION
     pthread_mutex_lock( &self->lock );
 
-    void* k , *outk;
     while( !refmap_unsafe_empty(t) ){
-        k    = t->root->key;
-        refmap_unsafe_delete( t , k );
+        refmap_unsafe_deleteMin( t );
     }
 
     // <| END CRITICAL REGION
@@ -613,12 +611,8 @@ void refmap_destroy( RefMap* t ){
     // <| BEGIN CRITICAL REGION
     pthread_mutex_lock( &self->lock );
 
-    void* k , *outk;
-    // BUG: when deletes the 6th elements, it delete twice, idk why, I must see what happens!
     while( !refmap_unsafe_empty(t) ){
-        //refmap_debug(t);
-        k    = t->root->key;
-        refmap_unsafe_delete( t , k );
+        refmap_unsafe_deleteMin( t );
     }
     // <| END CRITICAL REGION
     pthread_mutex_unlock( &self->lock );

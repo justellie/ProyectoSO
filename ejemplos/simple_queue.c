@@ -32,7 +32,7 @@ int main(){
     free( var );
 
     // Totalmente requerido en este caso!
-    refqueue_destroy( &cola );  // Elimina los objetos de la cola.
+    refqueue_deallocateAll( &cola );  // Elimina los objetos de la cola.
 
 
     // Prueba Con una constante (2)

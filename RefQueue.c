@@ -245,15 +245,28 @@ void refqueue_clean( RefQueue* qs ){
     pthread_mutex_unlock( &self->lock );
 }
 
-// NOTE: Elimina los nodos y libera las referencias de los objetos
 void refqueue_destroy( RefQueue* qs ){
     RefQueue* self    = qs;
+    pthread_mutex_lock( &self->lock );
+    while( !refqueue_unsafe_empty(self) ){
+        refqueue_unsafe_get(self); // result ignored. reference thrown
+    }
+    pthread_mutex_unlock ( &self->lock );
+    pthread_mutex_destroy( &self->lock );
+    pthread_cond_destroy( &self->has_item );
+}
+void refqueue_deallocateAll( RefQueue* qs ){
+    RefQueue* self    = qs;
     void (*freeObj)() = self->free? self->free : free;
+
     pthread_mutex_lock( &self->lock );
     while( !refqueue_unsafe_empty(self) ){
         (*freeObj)( refqueue_unsafe_get(self) );
     }
-    pthread_mutex_unlock( &self->lock );
+
+    pthread_mutex_unlock ( &self->lock );
+    pthread_mutex_destroy( &self->lock );
+    pthread_cond_destroy( &self->has_item );
 }
 
 #undef IS_SAFE_PTR

@@ -52,8 +52,8 @@ void   refqueue_put    ( RefQueue* qs , void* item );
 void*  refqueue_get    ( RefQueue* qs );
 void*  refqueue_tryget ( RefQueue* qs );    // retorna NULL y errno = EBUSY si qs está vacío.
 void   refqueue_clean  ( RefQueue* qs );    // Just uses pop.
-void   refqueue_destroy( RefQueue* qs );    // Uses free. TODO: Renombrar a refqueue_freeobjs()
-                                            // TODO: Agregar refqueue_destroy() para liberar todo.
+void   refqueue_destroy( RefQueue* qs );
+void   refqueue_deallocateAll( RefQueue* qs );   // Applies free() to each object and q gets empty.
 char*  refqueue_str    ( RefQueue* qs );    // New string must be freed.
 void   refqueue_show_in( RefQueue* qs , FILE* stream );
 
@@ -102,12 +102,21 @@ int    refqueue_unsafe_empty( RefQueue* qs );
 //  @details Las referencias de la cola son descartadas. Es particularmente útil cuando los elementos de
 //           qs fueron reservados de forma estática.
 
-// TODO: Modificar para simplemente destruir el semáforo interno y la variable de condición.
 /// @fn void refqueue_destroy( RefQueue* qs )
+/// @brief Elimina todas las referencias de la cola.
+/// @param qs Cola objetivo.
+/// @details Descarta todas las referencias de la cola y destruye los elementos usados
+//           para asegurar la exclusión mututa. *La cola debe inicializarse otra vez para
+//           utilizarla.*
+/// @see refqueue_clean
+
+/// @fn void refqueue_deallocateAll( RefQueue* qs )
 /// @brief Libera todas las referencias de la cola.
 /// @param qs Cola objetivo.
 /// @details Aplica el protocolo de liberación en todos los elementos de la cola y la deja vacía.
-/// @see refqueue_clean
+/// @warning Sólo aplicar cuando se está seguro de que los elementos de la cola han
+//           sido reservados con memoria dinámica.
+/// @see refqueue_destroy
 
 /// @fn char* refqueue_str( RefQueue* qs )
 /// @brief Obtiene la representación de la cola como cadena.
