@@ -9,10 +9,15 @@
 // DEPENDIENTE DE UNIX:
 #include <pthread.h>
 
+#define STOP_IF_UNSAFE( ptr , err_msg ) \
+    do { if( ptr == NULL ){             \
+            perror( err_msg );          \
+            exit( 1 ); }                \
+    } while(0);
+
 // Declaracion de funciones estáticas (visibles sólo para el archivo actual)
 static void  refqueue_unsafe_put  ( RefQueue* qs , void* elem );
 static void* refqueue_unsafe_get  ( RefQueue* qs );
-static void* refqueue_unsafe_clean( RefQueue* qs );
 static char* refqueue_unsafe_str  ( RefQueue* xs );
 static char* opaque_object_str    ( void* ignored );
 
@@ -23,6 +28,7 @@ static void free_node( _LNode* node , void (*free_obj)(void*) );
 
 static _LNode* new_node( void* e ){
     _LNode* node = (_LNode*) malloc(sizeof(_LNode));
+    STOP_IF_UNSAFE( node , "[new_node] allocation_error" );
     node->item = e;
     node->next = NULL;
     return node;
@@ -38,6 +44,10 @@ static void free_node( _LNode* node ,
                        void (*free_obj)(void*) ){
     (*free_obj)(node->item);
     free(node);
+}
+
+void refqueue_singleton( RefQueue* qs ){
+    refqueue_init( qs , NULL , NULL );
 }
 
 // NOTE: xs->str() debe ser una función que tome un objeto de la cola
@@ -58,13 +68,13 @@ void refqueue_init( RefQueue* qs         ,
 }
 
 // Modelo: Productor-Consumidor:
-void refqueue_put( RefQueue* qs , void* elem ){
+void refqueue_put( RefQueue* qs , void* item ){
     RefQueue* self = qs;
     // |> Begin Critical Region:
     pthread_mutex_lock( &self->lock );
 
     // Unsafe operations:
-    refqueue_unsafe_put( self , elem );
+    refqueue_unsafe_put( self , item );
     pthread_cond_signal( &self->has_item );  // Wake up only a thread
 
     // |> End Critical Region:
@@ -144,6 +154,7 @@ static char* opaque_object_str( void* ignored ){
     const char dummyObj[] = "(*)";
     const int  size       = sizeof(dummyObj);
     char* str = malloc( size * sizeof(char) + 1 );
+    STOP_IF_UNSAFE( str , "[opaque_object_str] allocation error" );
     strcpy( str , dummyObj );
     return str;
 }
@@ -157,8 +168,11 @@ static char* refqueue_unsafe_str( RefQueue* xs ){
     _LNode* node   = xs->head;
     char** elems   = malloc(xs->n * sizeof(char*));
     int*   lengths = malloc(xs->n * sizeof(int)  );
-    int    size    = 0; // Using size
-    char* (*toStr)(void*) = xs->str? xs->str : opaque_object_str;
+    int    size    = 0;
+    char* (*toStr)(void*) = xs->str? xs->str : opaque_object_str; // Which will be used to print?
+
+    STOP_IF_UNSAFE( elems   , "[refqueue_unsafe_str] allocation error (str set)" );
+    STOP_IF_UNSAFE( lengths , "[refqueue_unsafe_str] allocation error (lengths set)" );
 
     // Prints something cool:
     for( int i = 0 ; i < xs->n ; i += 1 ){
@@ -174,6 +188,8 @@ static char* refqueue_unsafe_str( RefQueue* xs ){
         size   += slen + ((xs->n - 1) * clen) + elen;
     char* str  = malloc( size + 1 );
     char* curr = str;
+
+    STOP_IF_UNSAFE( elems , "[refqueue_unsafe_str] allocation error (render str)" );
 
     strncpy( curr , start , slen );
     curr += slen;
@@ -222,7 +238,6 @@ void refqueue_show_in( RefQueue* qs , FILE* stream ){
 //       las referencias de los objetos
 void refqueue_clean( RefQueue* qs ){
     RefQueue* self    = qs;
-    void (*freeObj)() = self->free? self->free : free;
     pthread_mutex_lock( &self->lock );
     while( !refqueue_unsafe_empty(self) ){
         refqueue_unsafe_get(self); // result ignored. reference thrown
@@ -230,10 +245,10 @@ void refqueue_clean( RefQueue* qs ){
     pthread_mutex_unlock( &self->lock );
 }
 
+// NOTE: Elimina los nodos y libera las referencias de los objetos
 void refqueue_destroy( RefQueue* qs ){
     RefQueue* self    = qs;
     void (*freeObj)() = self->free? self->free : free;
-    void*     item;
     pthread_mutex_lock( &self->lock );
     while( !refqueue_unsafe_empty(self) ){
         (*freeObj)( refqueue_unsafe_get(self) );
@@ -241,3 +256,4 @@ void refqueue_destroy( RefQueue* qs ){
     pthread_mutex_unlock( &self->lock );
 }
 
+#undef IS_SAFE_PTR

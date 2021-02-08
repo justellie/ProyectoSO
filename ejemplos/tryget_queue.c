@@ -14,8 +14,9 @@ RefQueue cola;
 typedef struct pair { char* name; unsigned sleep_time; } pair;
 
 static char* show_dynamic_int( void* int_ptr );
-void* productor ( void* thread_name );
-void* consumidor( void* thread_name );
+void* productor ( void* pair_info );
+void* consumidor( void* pair_info );
+void* konsumidor( void* pair_info );
 
 void* productor( void* pair_info ){
     pair*    p    = (pair*) pair_info;
