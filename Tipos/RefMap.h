@@ -78,9 +78,9 @@ void   refmap_init       ( RefMap* t,
                            void* (*copyProtocol)(void*),
                            void  (*deallocationProtocol)(void*) );  // ()
 void   refmap_put        ( RefMap* t , void* key , void* value );   // ()
-void*  refmap_extract    ( RefMap* t , void* key );         // ()
-void*  refmap_extract_min( RefMap* t );                     // ()
-void   refmap_delete     ( RefMap* t , void* key );         // ()
+void*  refmap_extract    ( RefMap* t , void* key );         // TODO: cambiar todos los métodos de extracción por:
+void*  refmap_extract_min( RefMap* t );                     //      int refmap_extract( RefMap* t , void* key , void* value )
+void   refmap_delete     ( RefMap* t , void* key );         //      para devolver el estado de error en lugar de usar al errno.
 void   refmap_deleteMin  ( RefMap* t );                     // ()
 void   refmap_clear      ( RefMap* t );                     // ()
 void   refmap_destroy    ( RefMap* t );                     // ()
