@@ -6,19 +6,19 @@
 #define MAX 15
 #define forever for (;;)
 #define TO_MILISEC 1000
-// shared_queue.c sin ningún usleep
 
 RefQueue cola;
 
 typedef struct pair { char* name; unsigned sleep_time; } pair;
 
 static char* show_dynamic_int( void* int_ptr );
-void* productor ( void* thread_name );
-void* consumidor( void* thread_name );
+void* productor ( void* pair_info );
+void* consumidor( void* pair_info );
 
 void* productor( void* pair_info ){
     pair*    p    = (pair*) pair_info;
     char*    name = p->name;
+    unsigned t    = p->sleep_time;
 
     int* var;
     int remaining;
@@ -28,6 +28,7 @@ void* productor( void* pair_info ){
         printf( "|> %s: Produciendo ( %d ) a la cola.\n" , name , *var );
         refqueue_put( &cola , var );
         printf( "|| %s: Añadido ( %d ) a la cola.\n" , name , i );
+        usleep( t );
     }
 
     return NULL;
@@ -36,12 +37,15 @@ void* productor( void* pair_info ){
 void* consumidor( void* pair_info ){
     pair*    p    = (pair*) pair_info;
     char*    name = p->name;
+    unsigned t    = p->sleep_time;
 
     int* ext;
     forever {
         ext = refqueue_get( &cola );
         printf( "<| %s: Se ha extraido (%d) de la cola\n" , name , *ext );
+
         free( ext );
+        usleep( t );
     }
 
     return NULL;

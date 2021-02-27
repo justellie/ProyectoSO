@@ -18,7 +18,7 @@ int main(){
     }
 
     printf( "[*1] Prueba con memoria Dinámica:\n"
-            "     Cola de Referencias Opaca (long %d): " , MAX );
+            "     Cola de Referencias Opaca (longitud %d): " , MAX );
     refqueue_show_in( &cola , stdout );
     printf( "\n" );
 
@@ -32,14 +32,14 @@ int main(){
     free( var );
 
     // Totalmente requerido en este caso!
-    refqueue_destroy( &cola );  // Elimina los objetos de la cola.
+    refqueue_deallocateAll( &cola );  // Elimina los objetos de la cola.
 
 
     // Prueba Con una constante (2)
     refqueue_init( &cola , NULL , NULL );
     refqueue_put( &cola , (void*) 99 ); // Cast explícito de una constante a un apuntador void
     printf( "[*2] Prueba mediante el uso de una constante:\n"
-            "     Cola de Referencias Opaca con una constante (long %d): " , 1 );
+            "     Cola de Referencias Opaca con una constante (longitud %d): " , 1 );
     refqueue_show_in( &cola , stdout );
     printf( "\n" );
     refqueue_clean( &cola );    // Sólo descarta las referencias que estaban en la cola.
@@ -51,7 +51,7 @@ int main(){
     refqueue_put( &cola , (void*) 49 ); // Cast explícito de una constante a un apuntador void
     refqueue_put( &cola , (void*) 35 ); // Cast explícito de una constante a un apuntador void
     printf( "[*3] Prueba con varias constantes:\n"
-            "     Cola de Referencias Opaca con varias constantes (long %d): " , 3 );
+            "     Cola de Referencias Opaca con varias constantes (longitud %d): " , 3 );
     refqueue_show_in( &cola , stdout );
     printf( "\n" );
     refqueue_clean( &cola );    // Sólo descarta las referencias que estaban en la cola.

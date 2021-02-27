@@ -1,0 +1,67 @@
+Ok, luego de revisar lo anterior, creo que debemos crear
+estructuras de datos para mantener todo organizado.
+
+Si seguimos con el enfoque clásico de C (globales y nombres dispersos)
+será más complicado dividir los módulos del proyecto.
+
+El archivo consta únicamente de definiciones con algunas observaciones
+en las últimas líneas.
+
+Una persona puede encargarse de la vida del paciente, que constaría en
+buscar algún hospital con alguna zona de triaje no-colapsada (del array
+de hospitales), esperar hasta que alguna sala de muestra esté disponible,
+avisar cuándo esté sentado, esperar a que tomen su muestra, avisar que
+desocupó la silla, esperar a ser atendido, ... bailar champ3ta hasta
+enfermarse otra vez.
+
+Se puede
+hacer mediante una revisión aleatoria de la siguiente manera:
+if( sem_trywait( hospital.salaEspera ) == -1 )
+    local_errno = errno;
+    if( local_errno == EAGAIN ){
+        // Manejar el caso donde no se pudo reservar nada en ese hospital
+    }
+
+Actores en el archivo propuesta.c:
+    Paciente
+    Hospital
+    Gestor de Cama
+    Medico      (Como Personal)
+    Enfermera   (Como Personal)
+
+
+Actores que faltan en el archivo propuesta.c:
+    Jefe Administrativo
+    Analista de Muestras
+    Jefe de Epidemiologia
+    Gestor de Inventario UGC
+    Gestor de Personal   UGC
+    daemon UGC
+    Voluntario*
+    Director de Hospital*
+    
+-----
+NUEVO
+-----
+< Se han añadido entradas en el archivo propuesta.c >
+
+Cada hilo ahora se considera como actor, ya que ejecuta acciones (verbos) dentro
+del programa. En el archivo propuesta.c hay descripciones sobre las responsabilidades
+de cada actor.
+
+Los hilos del programa creo que deben tener algo que los identifiquen fácilmente
+de los demás componentes. Para este caso, se utiliría identificadores de la forma
+'actor_'.
+    por ejemplo:
+        void actor_paciente( void* datos );
+    corresponde a un hilo de algún paciente.
+
+    P: ¿Por qué se hace esto?
+    R: el lenguaje C no tiene espacios de nombres (todo global), y hay muchos nombres parecidos.
+       Si se distinguen de una vez, será menor el número de confusiones entre el uso de recursos
+       y los hilos.
+
+Además, dichos hilos se definirán en un archivo llamado 'actores.c' y las definiciones de los
+mismos estarán en archivos separados, de la forma 'actor_@.c', donde @ es el nombre del hilo.
+
+
