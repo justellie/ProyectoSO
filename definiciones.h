@@ -23,8 +23,8 @@ typedef pthread_cond_t   Condicion;
 // --------------------------------
 
 // [T] Tipos de datos -------------
-#include "Refmap.h"
-#include "RefQueue.h"
+#include "Tipos/Refmap.h"
+#include "Tipos/RefQueue.h"
 // --------------------------------
 
 

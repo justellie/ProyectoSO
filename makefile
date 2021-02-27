@@ -14,7 +14,7 @@ CC	   := gcc
 DEBUG  := -g -O0
 COMMON := -pthread $(DEBUG) -lm
 LIBFLG := -c
-TARGET := a.$(EXT)
+TARGET := proyecto.$(EXT)
 MFILES := hospitales.c
 TYPES  := Tipos
 EXAMPL := ejemplos
@@ -28,6 +28,10 @@ run:
 	@echo "Ejecutando Programa..."
 	@command ./$(TARGET)
 
+
+
+
+# ------------------------------------------------------
 # Genera casos de pruebas para los tipos de datos:
 tests: queue-tests refmap-tests
 
@@ -46,7 +50,12 @@ refmap-tests: refmap
 	$(CC) $(COMMON) $(TXAMPL)/refmap-allocate.c RefMap.o -o $(TXAMPL)/refmap-allocate.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/refmap-debug.c    RefMap.o -o $(TXAMPL)/refmap-debug.$(EXT)
 	@echo
+# ------------------------------------------------------
 
+
+
+
+# ------------------------------------------------------
 # Genera los Archivos Objetos de los Tipos de datos:
 # 	>>> Los .o se generan en el archivo raíz.
 # 		Ejemplo: compilar ./$(TYPES)/RefQueue.c --> genera --> ./RefQueue.o
@@ -54,3 +63,28 @@ generic-queue:
 	$(CC) $(COMMON) $(LIBFLG) $(TYPES)/RefQueue.c $(TYPES)/RefQueue.h
 refmap:
 	$(CC) $(COMMON) $(LIBFLG) $(TYPES)/RefMap.c $(TYPES)/RefMap.h
+# ------------------------------------------------------
+
+
+
+
+# ------------------------------------------------------
+# Métodos para limpiar los rastros de las compilaciones:
+clean-all: clean-types clean-root
+	@echo Listo
+	@echo
+
+# Limpieza:
+clean-types:
+	@echo Eliminando archivos ejecutables de $(TXAMPL)
+	rm -f $(TXAMPL)/*.$(EXT)
+	@echo Eliminando archivos objetos de $(TYPES)
+	rm -f $(TYPES)/*.h.gch
+	@echo
+
+clean-root:
+	@echo Eliminando archivos objetos de ./
+	rm -f *.o *.h.gch
+	@echo
+# --------------------------------------------------------------------
+
