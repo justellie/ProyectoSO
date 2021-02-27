@@ -15,11 +15,18 @@ typedef struct _argsPacientes  {
     int vivo;
     int idHospital;
     int reposo_en_casa;
+    //personal hospital
+    sem_t sEnfermera;
+    int enfermera[3]; // Inicializar en -1 en otra parte
+    sem_t sMedico;
+    int medico[3]; // Inicializar en -1 en otra parte
 } argsPaciente;
 
 //aqui se manejaran los recursos de cada hospital
 typedef struct _hospital
 {
+    //Identificacion del hospital (1-general, 2-intermedio, 3-centinela)
+    int tipoH;
     // [T] Zona de Triaje -----------------------
     // Es un número fijo para cada hospital:
     sem_t salaMuestra; // -med. tomando pruebas(5)
@@ -40,6 +47,8 @@ typedef struct _hospital
     sem_t voluntarios;
 
     //contador de disponibilidad de las enfemeras y medicos 
+    int num_enfermeras;//es necesario saber el numero de aPersonals
+    int num_medicos;
     int contadorEnfermeras[6];
     int contadorMedicos[6];
 
