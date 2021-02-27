@@ -1,10 +1,13 @@
-# Extensión según el sistema operativo:
+# ------------------------------------------------------------------
+# Elige la extensión del ejecutable según el Sistema Operativo:
+# (para el caso en el que se utilice la librería pthread en windows)
 EXT	   :=
 ifeq ($(OS),Windows_NT)
 	EXT +=exe
 else
 	EXT +=out
 endif
+# ------------------------------------------------------------------
 
 # Variables de compilación
 CC	   := gcc
