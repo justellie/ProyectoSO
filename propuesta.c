@@ -12,6 +12,7 @@
 #include "RefQueue.h"
 // [>] POSIX
 #include <pthread.h>
+#include <semaphore.h>
 
 // [>] PRIMITIVOS
 typedef pthread_mutex_t  Mutex;
@@ -37,7 +38,7 @@ void destruirPersonal ( Personal* p );
 
 
 typedef enum { EnHospital , EnCasa } Lugar;
-typedef {
+typedef struct{
     int   id_lugar; // Tiene sentido cuando es un hospital.
     Lugar lugar;    // En casa o en Hospital
 } Ubicacion;
@@ -51,9 +52,9 @@ typedef struct {
     // Uno de cada uno a la vez. ni más, ni menos.
     int       medID;
     int       enfID;
-    rwlock    medLock;
-    rwlock    enfLock;
-    rwlock    dondeLock;
+    RWLock    medLock;
+    RWLock    enfLock;
+    RWLock    dondeLock;
 
     Mutex     atendidoLock;     // Permita pausar el hilo actor_paciente
     Condicion atendido;         // mientras espera por ser atendido por algún
@@ -84,7 +85,7 @@ typedef struct {
     //       Se realizará esto hasta llegar al último nivel (0) del cual, no será
     //       posible extraer a nadie. En tal caso, debe reportarse que ha ocurrido un
     //       error. y manejarlo según corresponda.
-    Refmap       medicos   [MAX_ATENCION];
+    RefMap       medicos   [MAX_ATENCION];
     RefMap       enfermeras[MAX_ATENCION];
     // TODO:    ^^^ Inicializar ambos grupos de diccionarios.
     //       >>>    Se indexarán por su id.     <<<
@@ -141,7 +142,7 @@ typedef struct {
     RefQueue pacientes;
 } GestorCama;
 // Verifica el estado del paciente.
-void construirGestorCama( GestorCama* g , idHospital ); 
+void construirGestorCama( GestorCama* g , int idHospital ); 
 void destruirGestorCama ( GestorCama* g );
 
 // Similar al gestor de cama, pero fuera del hospital.
