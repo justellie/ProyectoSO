@@ -56,14 +56,15 @@ typedef struct{
 
 // [*] PACIENTE:
 typedef struct {
-    int       id;
-    int       vivo;
-    Ubicacion donde;
-    char*     sintomas;
+    int          id;
+    int          vivo;
+    Ubicacion    donde;
+    char*        sintomas;
+    TipoAtencion servicio;
 
     // Uno de cada uno a la vez. ni más, ni menos.
-    int       medID;
-    int       enfID;
+    int       medID[MAX_ATENCION];  // TODO: Verificar el número de médicos.
+    int       enfID[MAX_ATENCION];  // 
     RWLock    medLock;
     RWLock    enfLock;
     RWLock    dondeLock;
@@ -77,6 +78,8 @@ void destruirPaciente ( Paciente* p );
 
 
 // [*] HOSPITAL:
+//      medicos y pacientes deben ser diccionarios de la forma:
+//      { (TipoPersonal,id) : Personal }
 typedef enum { TIPO_A , TIPO_B , TIPO_C } TipoHospital;
 // Agrupa ciertos campos de una vez.
 typedef struct {
@@ -163,8 +166,6 @@ void construirGestorCama( GestorCama* g , int id );
 void destruirGestorCama ( GestorCama* g );
 
 
-
-
 // [*] VOLUNTARIO:
 //      Similar al gestor de cama, pero fuera del hospital.
 typedef struct {
@@ -173,6 +174,10 @@ typedef struct {
 } Voluntario;
 void construirVoluntario( Voluntario* g , int id );
 void destruirVoluntario ( Voluntario* g );
+
+// Se podría utilizar si se decide emplear tuplas como llaves dentro de los diccionarios.
+void EXTRAER_SI_BASICO   ( void* personal );
+void EXTRAER_SI_INTENSIVO( void* personal );
 
 
 
