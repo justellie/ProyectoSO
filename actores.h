@@ -11,18 +11,18 @@
 
 void actor_paciente( void* datos_iniciales );
 
-void actor_inventario_ugc( void* datos );
-void actor_personal_ugc  ( void* datos );
+void actor_inventario_ugc( void* inv_ugc );
+void actor_personal_ugc  ( void* inv_ugc );
 // daemon. Estadísticas, inventario, uso, resumen de todo, etc.
-void actor_status_ugc    ( void* datos );
+void actor_status_ugc    ( void* inv_ugc );
 
 void actor_jefe_admin   ( void* hospital );
 void actor_jefe_epidemia( void* hospital );
 void actor_director     ( void* hospital );
-void actor_analista  ( void* hospital );
+void actor_analista     ( void* hospital );
 
 // Revisan la cola de pacientes interna, 
-void actor_voluntario( void* hospital_paciente );
+void actor_voluntario( void* datos_voluntario );
 void actor_gestor    ( void* hospital );
 
 // ---------------------------- RELACIONES ENTRE ACTORES -----------------------------------------

@@ -105,9 +105,9 @@ int    refqueue_unsafe_empty( RefQueue* qs );
 /// @fn void refqueue_destroy( RefQueue* qs )
 /// @brief Elimina todas las referencias de la cola.
 /// @param qs Cola objetivo.
-/// @details Descarta todas las referencias de la cola y destruye los elementos usados
-//           para asegurar la exclusión mututa. *La cola debe inicializarse otra vez para
-//           utilizarla.*
+/// @details Descarta todas las referencias de la cola y destruye los elementos internos,
+///          que son empleados para asegurar la exclusión mututa. *La cola debe inicializarse
+///          otra vez para utilizarla.*
 /// @see refqueue_clean
 
 /// @fn void refqueue_deallocateAll( RefQueue* qs )
@@ -115,7 +115,7 @@ int    refqueue_unsafe_empty( RefQueue* qs );
 /// @param qs Cola objetivo.
 /// @details Aplica el protocolo de liberación en todos los elementos de la cola y la deja vacía.
 /// @warning Sólo aplicar cuando se está seguro de que los elementos de la cola han
-//           sido reservados con memoria dinámica.
+///          sido reservados con memoria dinámica.
 /// @see refqueue_destroy
 
 /// @fn char* refqueue_str( RefQueue* qs )

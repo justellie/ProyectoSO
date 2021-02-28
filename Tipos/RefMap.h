@@ -5,8 +5,7 @@
  *        de búsqueda.
  * @author Gabriel Peraza
  * @version 1.0.0.0
- * @date 2021-02-08
- */
+ * @date 2021-02-08 */
 
 // Estándar usado: __PAQUETE__SUBPAQUETE__ ... __NOMBRE_MODULO_
 #ifndef __REFMAP_H__
@@ -80,16 +79,33 @@ void   refmap_init       ( RefMap* t,
 void   refmap_put        ( RefMap* t , void* key , void* value );   // ()
 void*  refmap_extract    ( RefMap* t , void* key );         // TODO: cambiar todos los métodos de extracción por:
 void*  refmap_extract_min( RefMap* t );                     //      int refmap_extract( RefMap* t , void* key , void* value )
-void   refmap_delete     ( RefMap* t , void* key );         //      para devolver el estado de error en lugar de usar al errno.
+void*  refmap_extract_max( RefMap* t );                     //      para devolver el estado de error en lugar de usar al errno.
+void   refmap_delete     ( RefMap* t , void* key );         // ()
 void   refmap_deleteMin  ( RefMap* t );                     // ()
+void   refmap_deleteMax  ( RefMap* t );                     // ()
 void   refmap_clear      ( RefMap* t );                     // ()
 void   refmap_destroy    ( RefMap* t );                     // ()
+
+// Miscelaneous:
+/// @brief Extrae la clave más pequeña del mapa si cumple con la condición.
+/// @param t Mapa objetivo.
+/// @param predicate Predicado que se aplica sobre la clave mas pequeña de t.
+/// @return El valor asociado a la clave más pequeña de t, siempre que t no esté vacío
+//          y dicha clave cumpla con el predicado.
+void*  refmap_extract_min_if_key( RefMap* t , int (*predicate)(void*) );
+/// @brief Extrae la clave más grande del mapa si cumple con la condición.
+/// @param t Mapa objetivo.
+/// @param predicate Predicado que se aplica sobre la clave mas pequeña de t.
+/// @return El valor asociado a la clave más grande de t, siempre que t no esté vacío
+//          y dicha clave cumpla con el predicado.
+void*  refmap_extract_max_if_key( RefMap* t , int (*predicate)(void*) );
 
 void*  refmap_unsafe_get   ( RefMap* t , void* key );       // ()
 int    refmap_unsafe_empty ( RefMap* t );                   // ()
 int    refmap_unsafe_size  ( RefMap* t );                   // ()
 int    refmap_unsafe_contains ( RefMap* t , void* key );    // ()
-void*  refmap_unsafe_min( RefMap* t );                      // ()
+void*  refmap_unsafe_minkey( RefMap* t );                      // ()
+void*  refmap_unsafe_maxkey( RefMap* t );                      // ()
 /// @brief Muestra el mapa en stderr.
 /// @param t Mapa objetivo.
 /// @param use_ascii_color Lógico. si es 0, no muestra colores. si es 1 muestra colores. (Formato Unix)
@@ -177,12 +193,17 @@ void   refmap_debug( RefMap* t , int use_ascii_color , void (*print_key)(void*) 
 /// @warning No es Thread-safe.
 /// @return Lógico. Verdad si key está dentro de t.
 
-/// @fn void* refmap_unsafe_min( RefMap* t )
-/// @brief Consulta el valor asociado con la clave más pequeña del mapa.
+/// @fn void* refmap_unsafe_minkey( RefMap* t )
+/// @brief Función que consulta la clave más pequeña del mapa.
 /// @param t Mapa objetivo.
 /// @warning No es Thread-safe.
-/// @return Referencia del valor asociado con la clave más pequeña. NULL si está vacío.
+/// @return Referencia a la clave de búsqueda más pequeña. NULL si está vacío.
 
+/// @fn void* refmap_unsafe_maxkey( RefMap* t )
+/// @brief Función que consulta la clave más grande del mapa.
+/// @param t Mapa objetivo.
+/// @warning No es Thread-safe.
+/// @return Referencia a la clave de búsqueda más grande. NULL si está vacío.
 
 /// @fn void refmap_debug( RefMap* t , int use_ascii_color , void (*print_key)(void*) , void (*print_value)(void*) );
 /// @brief Muestra el mapa en stderr.

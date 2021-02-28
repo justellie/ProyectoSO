@@ -48,8 +48,10 @@ static NodeRB* balance      ( NodeRB* h );
 static NodeRB* moveRedRight ( NodeRB* h );
 static NodeRB* moveRedLeft  ( NodeRB* h );
 static void*   deleteMin    ( NodeRB** h ); // [$] Mutable traversal. Returns the retrieved key.
+static void*   deleteMax    ( NodeRB** h ); // [$] Mutable traversal. Returns the retrieved key.
 static void*   delete       ( NodeRB** root , void* key , int (*compare)(void*,void*) );    // [$] Mutable traversal. Returns the extracted key.
 static NodeRB* minimum      ( NodeRB* h );
+static NodeRB* maximum      ( NodeRB* h );
 static int     contains     ( NodeRB* node , void* key , int (*cmp)(void*,void*) );
 static NodeRB* get          ( NodeRB* node , void* key , int (*cmp)(void*,void*) );
 static int     isRed        ( NodeRB* node );
@@ -58,6 +60,7 @@ static COLOR _flipcolor ( COLOR c );
 // Refmap private functions:
 static void refmap_unsafe_delete   ( RefMap* t , void* key );
 static void refmap_unsafe_deleteMin( RefMap* t );
+static void refmap_unsafe_deleteMax( RefMap* t );
 
 static void print_opaque( void *unknow );
 static void debug( NodeRB* x , int indent , int incr ,
@@ -191,6 +194,13 @@ static NodeRB* minimum( NodeRB* h ){
     while( min->left != NULL )
         min = min->left;
     return min;
+}
+
+static NodeRB* maximum( NodeRB* h ){
+    NodeRB* max = h;
+    while( max->right != NULL )
+        max = max->right;
+    return max;
 }
 
 // Balancea la carga del subárbol:
@@ -489,7 +499,7 @@ static void* deleteMin( NodeRB** root ){
     NodeRB** head;
     NodeRB*  node;
     int      DONE = 0;
-    void*   extracted_key = NULL;
+    void*    extracted_key = NULL;
 
     PUSH( stack , used , root );
     while( !DONE ){
@@ -539,6 +549,95 @@ void refmap_deleteMin( RefMap* t ){
     // <| END CRITICAL REGION
     pthread_mutex_unlock( &t->lock );
 }
+
+
+static void refmap_unsafe_deleteMax( RefMap* t ){
+    // Initial Interface:
+    if( refmap_unsafe_empty(t) ) return;
+
+    NodeRB* root = t->root;
+    if( !isRed(root->left) && !isRed(root->right) )
+        t->root->color = RED;
+
+    void* old_key = deleteMax(&t->root);
+    (*t->freekey)( old_key );
+
+    if( !refmap_unsafe_empty(t) )
+        t->root->color = BLACK;
+}
+
+static void* deleteMax( NodeRB** root ){
+    static int extra = 1;   // counts the head and the new node.
+
+    // [^] Build Stack:
+    NodeRB*** stack;
+    int used = 0;
+    int size = maxDepth( *root ) + extra;
+
+    stack = malloc( size * sizeof(NodeRB**) );
+    STOP_IF_UNSAFE( stack , "deleteMax (NodeRB): Unable to build stack" );
+
+    // [S] Search:
+    NodeRB** head;
+    NodeRB*  node;
+    int      DONE = 0;
+    void*    extracted_key = NULL;
+
+    PUSH( stack , used , root );
+    while( !DONE ){
+        if( EMPTY ){ perror("deleteMax (NodeRB): Stack smashed in bottom."); exit(1); }
+        POP( stack , used , head );
+        node = *head;
+
+        // Adjust while passing over here:
+        if( isRed(node->left) ) {
+            node  = rotateRight(node);
+            *head = node;
+        }
+
+        if( node->right == NULL ){
+            // DEALLOCATE:
+            extracted_key = node->key;
+            node->key   = NULL;
+            node->left  = NULL;
+            node->right = NULL;
+            node->value = NULL;
+
+            free( *head );
+            *head = NULL;
+
+            DONE = 1;
+            continue;   // EXIT Recursive case.
+        }
+        
+        if( !isRed(node->right) && !isRed(node->right->left) ){
+            node  = moveRedRight(node);
+            *head = node;
+        }
+
+        PUSH( stack , used , head );
+        PUSH( stack , used , &node->right );
+    }
+
+    while( !EMPTY ){
+        POP( stack , used , head );
+        *head = balance(*head);
+    }
+
+    // [$!] TOTALLY REQUIRED:
+    free( stack );
+
+    return extracted_key;
+}
+
+void refmap_deleteMax( RefMap* t ){
+    // |> BEGIN CRITICAL REGION
+    pthread_mutex_lock( &t->lock );
+    refmap_unsafe_deleteMax( t );
+    // <| END CRITICAL REGION
+    pthread_mutex_unlock( &t->lock );
+}
+
 
 int refmap_unsafe_contains( RefMap* t , void* key ){
     return contains(t->root, key ,t->cmp);
@@ -620,16 +719,75 @@ void refmap_destroy( RefMap* t ){
     pthread_mutex_destroy( &self->lock );
 }
 
-void* refmap_unsafe_min( RefMap* t ){
+// TODO: Revisar si debe devolver la clave o el valor.
+void* refmap_unsafe_minkey( RefMap* t ){
     if( t->root == NULL ) return NULL;
     else                  return minimum(t->root)->key;
 }
 
+void*  refmap_unsafe_maxkey( RefMap* t ){
+    if( t->root == NULL ) return NULL;
+    else                  return maximum(t->root)->key;
+}
+
+// TODO: Arreglar, devuelven la clave en lugar del valor.
 void* refmap_extract_min( RefMap* t ){
     // |> BEGIN CRITICAL REGION
     pthread_mutex_lock( &t->lock );
-    void* value = refmap_unsafe_min(t);
-    refmap_unsafe_deleteMin( t );
+    void* value = NULL;
+    if( !refmap_unsafe_empty(t) ){
+        value = minimum( t->root )->value;
+        refmap_unsafe_deleteMin( t );
+        //void* value = refmap_unsafe_minkey(t);
+        //refmap_unsafe_deleteMin( t );
+    }
+    // <| END CRITICAL REGION
+    pthread_mutex_unlock( &t->lock );
+    return value;
+}
+
+void* refmap_extract_max( RefMap* t ){
+    // |> BEGIN CRITICAL REGION
+    pthread_mutex_lock( &t->lock );
+    void* value = NULL;
+    if( !refmap_unsafe_empty(t) ){
+        value = maximum( t->root )->value;
+        refmap_unsafe_deleteMax( t );
+    }
+    //void* value = refmap_unsafe_maxkey(t);
+    //refmap_unsafe_deleteMax( t );
+    // <| END CRITICAL REGION
+    pthread_mutex_unlock( &t->lock );
+    return value;
+}
+
+void* refmap_extract_min_if_key( RefMap* t , int (*predicate)(void*) ){
+    // |> BEGIN CRITICAL REGION
+    pthread_mutex_lock( &t->lock );
+    void* value = NULL;
+    if( !refmap_unsafe_empty(t) ){
+        NodeRB* node = minimum( t->root );
+        if( (*predicate)(node->key) )
+            refmap_unsafe_deleteMin( t );
+    }
+    //void* value = refmap_unsafe_minkey(t);
+    //refmap_unsafe_deleteMin( t );
+    // <| END CRITICAL REGION
+    pthread_mutex_unlock( &t->lock );
+    return value;
+}
+
+void* refmap_extract_max_if_key( RefMap* t , int (*predicate)(void*) ){
+    // |> BEGIN CRITICAL REGION
+    pthread_mutex_lock( &t->lock );
+    void* value = NULL;
+    if( !refmap_unsafe_empty(t) ){
+        NodeRB* node = maximum( t->root );
+        if( (*predicate)(node->key) )
+            refmap_unsafe_deleteMax( t );
+    }
+    //void* value = refmap_unsafe_maxkey(t);
+    //refmap_unsafe_deleteMax( t );
     // <| END CRITICAL REGION
     pthread_mutex_unlock( &t->lock );
     return value;

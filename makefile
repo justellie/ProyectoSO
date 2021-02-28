@@ -47,8 +47,9 @@ queue-tests: generic-queue
 # Genera los casos de prueba para el tipo "Mapa de Referencias":
 refmap-tests: refmap
 	@echo [M] Generando ejemplos de uso para el Mapa de Referencias...
-	$(CC) $(COMMON) $(TXAMPL)/refmap-allocate.c RefMap.o -o $(TXAMPL)/refmap-allocate.$(EXT)
-	$(CC) $(COMMON) $(TXAMPL)/refmap-debug.c    RefMap.o -o $(TXAMPL)/refmap-debug.$(EXT)
+	$(CC) $(COMMON) $(TXAMPL)/refmap-allocate.c  RefMap.o -o $(TXAMPL)/refmap-allocate.$(EXT)
+	$(CC) $(COMMON) $(TXAMPL)/refmap-debug.c     RefMap.o -o $(TXAMPL)/refmap-debug.$(EXT)
+	$(CC) $(COMMON) $(TXAMPL)/refmap-debug-max.c RefMap.o -o $(TXAMPL)/refmap-debug-max.$(EXT)
 	@echo
 # ------------------------------------------------------
 
