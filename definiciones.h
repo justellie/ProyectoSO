@@ -14,6 +14,9 @@
 #define NVOLUNTARIOS        5   // Cuántos voluntarios hay en el país
 #define NACTUALIZACIONES    2   // Cuántas veces se actualizan las estadísticas de la UGC.
 
+#define NSALA_ESPERA        20  // # de puestos en la sala de espera.
+#define NSALA_MUESTRA       5   // # de habitaciones de toma de muestras.
+
 
 // [>] POSIX ----------------------
 #include <pthread.h>
@@ -105,8 +108,36 @@ typedef struct {
     RefMap       enfermeras[MAX_ATENCION];
     // TODO:    ^^^ Inicializar ambos grupos de diccionarios.
     //       >>>    Se indexarán por su id.     <<<
-
     // NOTE: No se necesita saber cuántos hay
+    // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    //      IDEA(sGaps): Se puede usar la tupla (servicio,id) para organizar al personal.
+    //                      Suponiendo que:
+    //                      ```
+    //                      MEDICOS = medicos[disponibilidad_actual]
+    //                      ```
+    //
+    //                   Se podría insertar un elemento con `refmap_put( MEDICOS , &un_medico , &un_medico );`
+    //                      + Al crear al RefMap, se pasa una función de comparación que aplique un cast desde `void*` a `Personal*`
+    //                      ```
+    //                          void cmp_por_servicio_id( void* p1 , void* p2 ){ 
+    //                              Personal *x = p1 , *y= p2;
+    //                              int result = cmp(x->servicio,y->servicio);
+    //                              return (result == IGUALES)? cmp(x->id,y->id) : result; }
+    //                      ```
+    //                      + Se pasa también una función de copia que devuelva la función identidad.
+    //                          `void sin_copiar( void* key ){ return key; }`
+    //                      + Se pasa una función de liberación que no haga nada:
+    //                          `void no_borrar( void* key ){ return NULL; }`
+    //
+    //                      ¿Por qué usar sin_copiar/borrar? El RefMap copiará la clave, pero esta existe dentro de cada
+    //                      personal. Como cada miembro es inicializado en el programa principal, no se puede borrar ningún
+    //                      dato del mismo desde aquí (no es la responsabilidad del hospital ni de los gestores).
+    //
+    //                   Para remover un elemento (AKA: reservar), se podría usar:
+    //                      `un_medico = refmap_extract_min_if_key( MEDICOS , EXTRAER_SI_BASICO );`
+    //                   para pedir algún médico del servicio básico y
+    //                      `un_medico = refmap_extract_min_if_key( MEDICOS , EXTRAER_SI_INTENSIVO );`
+    //
 
     sem_t        salaEspera;
     sem_t        salaMuestra;
@@ -149,7 +180,7 @@ typedef struct {
                                 // turno = (turno+1) % NACTUALIZACIONES;
 } UGC;
 void construirUGC( UGC* ugc , int id , TuplaRecursos* descripcion );
-void destruirUGC( UGC* ugc );
+void destruirUGC ( UGC* ugc );
 
 
 
@@ -158,11 +189,11 @@ void destruirUGC( UGC* ugc );
 //      Agilizan los procesos para dar de alta al paciente.
 //      verifican el estado del paciente. y sus días de estancia.
 typedef struct {
-    int      id;
-    int      idHospital;
-    RefQueue pacientes;
+    int       id;
+    Hospital* hospital;
+    RefQueue  pacientes;
 } GestorCama;
-void construirGestorCama( GestorCama* g , int id ); 
+void construirGestorCama( GestorCama* g , int id , Hospital* hospital );
 void destruirGestorCama ( GestorCama* g );
 
 
@@ -172,8 +203,8 @@ typedef struct {
     int      id;
     RefQueue pacientes;
 } Voluntario;
-void construirVoluntario( Voluntario* g , int id );
-void destruirVoluntario ( Voluntario* g );
+void construirVoluntario( Voluntario* v , int id );
+void destruirVoluntario ( Voluntario* v );
 
 // Se podría utilizar si se decide emplear tuplas como llaves dentro de los diccionarios.
 void EXTRAER_SI_BASICO   ( void* personal );

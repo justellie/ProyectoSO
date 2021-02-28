@@ -255,6 +255,7 @@ void refqueue_destroy( RefQueue* qs ){
     pthread_mutex_destroy( &self->lock );
     pthread_cond_destroy( &self->has_item );
 }
+
 void refqueue_deallocateAll( RefQueue* qs ){
     RefQueue* self    = qs;
     void (*freeObj)() = self->free? self->free : free;
