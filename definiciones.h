@@ -1,7 +1,7 @@
 #ifndef __DEFINICIONES_H__
 #define __DEFINICIONES_H__
 
-#define MAX_ATENCION    4       // Maximo número de pacientes que pueden atender.
+#define MAX_ATENCION    5       // Maximo número de pacientes que pueden atender.
 #define NHOSPITALES     10      // Maximo número de pacientes.
 #define NPACIENTES      100     // Se asume un número máximo de pacientes en el sistema.
 #define NMEDICOS        15      // Se asume un número máximo de médicos a nivel nacional.
@@ -17,6 +17,7 @@
 #define NSALA_ESPERA        20  // # de puestos en la sala de espera.
 #define NSALA_MUESTRA       5   // # de habitaciones de toma de muestras.
 
+#include <stdbool.h>
 
 // [>] POSIX ----------------------
 #include <pthread.h>
@@ -64,6 +65,7 @@ typedef struct {
     Ubicacion    donde;
     char*        sintomas;
     TipoAtencion servicio;
+    int          tiene_cama;
 
     // Uno de cada uno a la vez. ni más, ni menos.
     int       medID[MAX_ATENCION];  // TODO: Verificar el número de médicos.
@@ -83,7 +85,7 @@ void destruirPaciente ( Paciente* p );
 // [*] HOSPITAL:
 //      medicos y pacientes deben ser diccionarios de la forma:
 //      { (TipoPersonal,id) : Personal }
-typedef enum { TIPO_A , TIPO_B , TIPO_C } TipoHospital;
+typedef enum { Centinela , Intermedio , General } TipoHospital;
 // Agrupa ciertos campos de una vez.
 typedef struct {
     int ncamasBas;
@@ -138,7 +140,7 @@ typedef struct {
     //                   para pedir algún médico del servicio básico y
     //                      `un_medico = refmap_extract_min_if_key( MEDICOS , EXTRAER_SI_INTENSIVO );`
     //
-
+    RefQueue     pacientes;
     sem_t        salaEspera;
     sem_t        salaMuestra;
 
@@ -156,6 +158,8 @@ typedef struct {
 
 void construirHospital( Hospital* h , int id , TuplaRecursos* descripcion );
 void destruirHospital ( Hospital* h );
+
+Hospital H[MAX_ATENCION];
 
 // [*] INVENTARIO UGC:
 //      Inventario de Transferencias de la UGC
@@ -191,7 +195,6 @@ void destruirUGC ( UGC* ugc );
 typedef struct {
     int       id;
     Hospital* hospital;
-    RefQueue  pacientes;
 } GestorCama;
 void construirGestorCama( GestorCama* g , int id , Hospital* hospital );
 void destruirGestorCama ( GestorCama* g );
