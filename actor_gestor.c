@@ -1,7 +1,7 @@
 /**
  * @file actor_gestor.c
  * @author Luis Alfonzo 26581268 (elalfonzo2.1@gmail.com)
- * @brief 
+ * @brief acciones que deben realizar los gestores de camas
  * @version 0.1
  * @date 2021-02-28
  * 
@@ -24,7 +24,9 @@ TipoAtencion obtenerDiagnostico(Paciente *); //esto es para que no me muestre el
 ///@param diagPrevio diagnostico que se le dio al paciente en el pasado, este permitira determinar que recursos deben liberarse
 int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, TipoAtencion diag)
 {
-    bool resultado = false;
+    //se esta suponiendo que refHospital-><arreglo de mapas personal>[0] es el nivel mas bajo y por tanto en el que esta completamente ocupado el personal
+    // por lo tanto refHospital-><arreglo de mapas personal>[4] es el nivel mas alto, en el que se encuentran totalmente disponibles
+    bool exito = false;
     switch (diag)
     {
         case Intensivo:
@@ -39,8 +41,8 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                 atendiendo->medID[i]=-1;
                 refmap_put(&refHospital->medicos[4], med->id, med);
             }
-            if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad])
-                resultado=true;
+            if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad]==-1)
+                exito=true;
             
         break;
         
@@ -62,8 +64,8 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                     refmap_put(&refHospital->medicos[i+1], med->id, med);
                 }
             }
-            if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad])
-                resultado=true;
+            if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad]==-1)
+                exito=true;
             
         break;
 
@@ -76,7 +78,7 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
         break;
     }
 
-    return resultado;
+    return exito;
 }
 
 ///@fn int reservarRecursos(int, Paciente *, float, TipoAtencion);
@@ -85,12 +87,63 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
 ///@param atendiendo referencia al paciente que esta siendo atendido en el momento
 ///@param cantidad le dice a la funcion que cantidad de personal debe ser reservada, esto segun el tipo de hospital
 ///@param diagActual diagnostico que se le dio al paciente, este permitira determinar que recursos deben reservarse
-int reservarRecursos(Hospital *, Paciente *, int, TipoAtencion);
+int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, TipoAtencion diagActual)
+{
+    //se esta suponiendo que refHospital-><arreglo de mapas personal>[0] es el nivel mas bajo y por tanto en el que esta completamente ocupado el personal
+    //por lo tanto refHospital-><arreglo de mapas personal>[4] es el nivel mas alto, en el que se encuentran totalmente disponibles
+    bool exito = false;
+    switch (diagActual)
+    {
+        case Intensivo:
+            for (int i = 0; i < cantidad; i++)
+            {
+                //reservacion de enfermeras
+                Personal *enf = refmap_extract_max(&refHospital->enfermeras[4]);
+                atendiendo->enfID[i]=enf->id;
+                refmap_put(&refHospital->enfermeras[0], enf->id, enf);
+                //reservacion de medicos
+                Personal *med = refmap_extract_max(&refHospital->medicos[4]);
+                atendiendo->medID[i]=med->id;
+                refmap_put(&refHospital->medicos[0], med->id, med);
+
+            }
+            if(atendiendo->enfID[cantidad]!=-1 && atendiendo->medID[cantidad]!=-1)
+                exito=true;
+            
+        break;
+        
+        case Basica:
+            for (int i = 1; i > MAX_ATENCION; i++)
+            {
+                //reserva de enfermeras
+                Personal *enf = refmap_extract_max(&refHospital->enfermeras[i]);
+                if (enf!=NULL)
+                {
+                    atendiendo->enfID[0]=enf->id;
+                    refmap_put(&refHospital->enfermeras[i-1], enf->id, enf);
+                }
+                //resserva de medicos
+                Personal *med = refmap_extract_max(&refHospital->medicos[i]);
+                if (med!=NULL)
+                {
+                    atendiendo->medID[0]=med->id;
+                    refmap_put(&refHospital->medicos[i-1], med->id, med);
+                }
+                
+            }
+            
+        break;
+
+        case EnCasa:
+            //reservasion de voluntarios
+        break;
+    }
+    return exito;
+}
 
 ///@fn void actor_gestor(void *datos_gestor)
 ///@brief funcion que ejecuta el actor gestor para realizar sus funciones
 ///@param datos_gestor estructura que contiene los datos basicos de un gestor de camas
-
 void actor_gestor(void *datos_gestor)
 {
     GestorCama *datos = (GestorCama *) datos_gestor;
@@ -126,6 +179,7 @@ void actor_gestor(void *datos_gestor)
                                 }
                                 reservarRecursos(datos->hospital, atendiendo, 3, Intensivo);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                             
                         break;
 
@@ -143,6 +197,7 @@ void actor_gestor(void *datos_gestor)
                                 }
                                 reservarRecursos(datos->hospital, atendiendo, 2, Intensivo);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                         break;
                         
                         case General:
@@ -159,6 +214,7 @@ void actor_gestor(void *datos_gestor)
                                 }
                                 reservarRecursos(datos->hospital, atendiendo, 1, Intensivo);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                         break;
                     }
                     
@@ -181,6 +237,7 @@ void actor_gestor(void *datos_gestor)
                                 }
                                 reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                         break;
 
                         case Intermedio:
@@ -197,6 +254,7 @@ void actor_gestor(void *datos_gestor)
                                 }
                                 reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                         break;
                         
                         case General:
@@ -213,6 +271,7 @@ void actor_gestor(void *datos_gestor)
                                 }
                                 reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                         break;
                     }
                 break;
@@ -263,16 +322,19 @@ void actor_gestor(void *datos_gestor)
                     {
                         case Centinela:
                             liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
                             //finalizar el hilo
                         break;
 
                         case Intermedio:
                             liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
                             //finalizar el hilo
                         break;
                         
                         case General:
                             liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
                             //finalizar el hilo
                         break;
                     }
@@ -283,14 +345,20 @@ void actor_gestor(void *datos_gestor)
                     {
                         case Centinela:
                             liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
+                            //liberar el hilo
                         break;
 
                         case Intermedio:
                             liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
+                            //liberar el hilo
                         break;
                         
                         case General:
                             liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
+                            //liberar el hilo
                         break;
                     }
                 break;
