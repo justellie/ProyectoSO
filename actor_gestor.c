@@ -1,7 +1,7 @@
 /**
  * @file actor_gestor.c
  * @author Luis Alfonzo 26581268 (elalfonzo2.1@gmail.com)
- * @brief 
+ * @brief acciones que deben realizar los gestores de camas
  * @version 0.1
  * @date 2021-02-28
  * 
@@ -11,98 +11,210 @@
 
 #include "actores.h"
 #include "definiciones.h"
-///@fn diagnostico obtenerDiagnostico(Paciente *atendiendo);
+///@fn TipoAtencion obtenerDiagnostico(Paciente *atendiendo);
 ///@brief determina cual sera la atencion que se le de al paciente, segun sus sintomas
 ///@param atendiendo referencia a la informacion del paciente
-diagnostico obtenerDiagnostico(Paciente *atendiendo);
+TipoAtencion obtenerDiagnostico(Paciente *); //esto es para que no me muestre el error
 
 ///@fn int liberarRecursos(int, Paciente *, float, TipoAtencion);
 ///@brief libera los recursos que el paciente tenga reservados anteriormente, segun su diagnostico
-///@param idhospital necesario para saber de donde se reponen los recursos
+///@param refHospital necesario para saber de donde se reponen los recursos
 ///@param atendiendo referencia al paciente que esta siendo atendido en el momento
 ///@param cantidad le dice a la funcion que cantidad de personal debe ser liberada, esto segun el tipo de hospital
 ///@param diagPrevio diagnostico que se le dio al paciente en el pasado, este permitira determinar que recursos deben liberarse
-int liberarRecursos(int, Paciente *, float, TipoAtencion);
+int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, TipoAtencion diag)
+{
+    //se esta suponiendo que refHospital-><arreglo de mapas personal>[0] es el nivel mas bajo y por tanto en el que esta completamente ocupado el personal
+    // por lo tanto refHospital-><arreglo de mapas personal>[4] es el nivel mas alto, en el que se encuentran totalmente disponibles
+    bool exito = false;
+    switch (diag)
+    {
+        case Intensivo:
+            for (int i = 0; i < cantidad; i++)
+            {
+                //liberacion enfermeras
+                Personal *enf = refmap_extract(&refHospital->enfermeras[0], atendiendo->enfID[i]);
+                atendiendo->enfID[i]=-1;
+                refmap_put(&refHospital->enfermeras[4], enf->id, enf);
+                //liberacion medicos
+                Personal *med = refmap_extract(&refHospital->medicos[0], atendiendo->medID[i]);
+                atendiendo->medID[i]=-1;
+                refmap_put(&refHospital->medicos[4], med->id, med);
+            }
+            if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad]==-1)
+                exito=true;
+            
+        break;
+        
+        case Basica:
+            for (int i = 0; i < MAX_ATENCION; i++)
+            {
+                //liberacion enfermeras
+                Personal *enf = refmap_extract(&refHospital->enfermeras[i], atendiendo->enfID[0]);
+                if (enf!=NULL)
+                {
+                    atendiendo->enfID[0]=-1;
+                    refmap_put(&refHospital->enfermeras[i+1], enf->id, enf);
+                }
+                //liberacion medicos
+                Personal *med = refmap_extract(&refHospital->medicos[i], atendiendo->medID[0]);
+                if (med!=NULL)
+                {
+                    atendiendo->medID[0]=-1;
+                    refmap_put(&refHospital->medicos[i+1], med->id, med);
+                }
+            }
+            if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad]==-1)
+                exito=true;
+            
+        break;
+
+        case EnCasa:
+            for (int i = 0; i < NVOLUNTARIOS; i++)
+            {
+                //aun no se como se reservan y se liberan voluntarios
+            }
+            
+        break;
+    }
+
+    return exito;
+}
 
 ///@fn int reservarRecursos(int, Paciente *, float, TipoAtencion);
 ///@brief reserva los recursos que el paciente necesite, segun el diagnostico
-///@param idhospital necesario para saber de donde se toman los recursos
+///@param refHospital necesario para saber de donde se toman los recursos
 ///@param atendiendo referencia al paciente que esta siendo atendido en el momento
 ///@param cantidad le dice a la funcion que cantidad de personal debe ser reservada, esto segun el tipo de hospital
 ///@param diagActual diagnostico que se le dio al paciente, este permitira determinar que recursos deben reservarse
-int reservarRecursos(int, Paciente *, float, TipoAtencion);
+int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, TipoAtencion diagActual)
+{
+    //se esta suponiendo que refHospital-><arreglo de mapas personal>[0] es el nivel mas bajo y por tanto en el que esta completamente ocupado el personal
+    //por lo tanto refHospital-><arreglo de mapas personal>[4] es el nivel mas alto, en el que se encuentran totalmente disponibles
+    bool exito = false;
+    switch (diagActual)
+    {
+        case Intensivo:
+            for (int i = 0; i < cantidad; i++)
+            {
+                //reservacion de enfermeras
+                Personal *enf = refmap_extract_max(&refHospital->enfermeras[4]);
+                atendiendo->enfID[i]=enf->id;
+                refmap_put(&refHospital->enfermeras[0], enf->id, enf);
+                //reservacion de medicos
+                Personal *med = refmap_extract_max(&refHospital->medicos[4]);
+                atendiendo->medID[i]=med->id;
+                refmap_put(&refHospital->medicos[0], med->id, med);
+
+            }
+            if(atendiendo->enfID[cantidad]!=-1 && atendiendo->medID[cantidad]!=-1)
+                exito=true;
+            
+        break;
+        
+        case Basica:
+            for (int i = 1; i > MAX_ATENCION; i++)
+            {
+                //reserva de enfermeras
+                Personal *enf = refmap_extract_max(&refHospital->enfermeras[i]);
+                if (enf!=NULL)
+                {
+                    atendiendo->enfID[0]=enf->id;
+                    refmap_put(&refHospital->enfermeras[i-1], enf->id, enf);
+                }
+                //resserva de medicos
+                Personal *med = refmap_extract_max(&refHospital->medicos[i]);
+                if (med!=NULL)
+                {
+                    atendiendo->medID[0]=med->id;
+                    refmap_put(&refHospital->medicos[i-1], med->id, med);
+                }
+                
+            }
+            
+        break;
+
+        case EnCasa:
+            //reservasion de voluntarios
+        break;
+    }
+    return exito;
+}
 
 ///@fn void actor_gestor(void *datos_gestor)
 ///@brief funcion que ejecuta el actor gestor para realizar sus funciones
 ///@param datos_gestor estructura que contiene los datos basicos de un gestor de camas
-
 void actor_gestor(void *datos_gestor)
 {
     GestorCama *datos = (GestorCama *) datos_gestor;
-    TipoHospital hosp_type = H[datos->idHospital].tipo;
-    while(TRUE)
+    TipoHospital hosp_type = datos->hospital->tipo;
+    while(true)
     {
-        Paciente *atendiendo = malloc(sizeof(Paciente));
-        atendiendo = refqueue_get(&datos->pacientes);
-        diagnostico diag = obtenerDiagnostico(atendiendo);
-        if(atendiendo->tiene_cama && diag.diag_previo==diag.diag_actual)
+        Paciente *atendiendo = refqueue_get(&datos->hospital->pacientes);
+        TipoAtencion diagPrev = atendiendo->servicio;
+        TipoAtencion diagAct = obtenerDiagnostico(atendiendo);
+
+        if(atendiendo->tiene_cama && diagPrev==diagAct)
         {
-                refqueue_put(&datos->pacientes, atendiendo);
+                refqueue_put(&datos->hospital->pacientes, atendiendo);
         }
         else
         {
-            switch (diag.diag_actual)
+            switch (diagAct)
             {
                 case Intensivo:
                     switch (hosp_type)
                     {
-                        case centinela:
+                        case Centinela:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->idHospital, atendiendo, 3, diag.diag_previo);
-                                reservarRecursos(datos->idHospital, atendiendo, 3, Intensivo);
+                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                                reservarRecursos(datos->hospital, atendiendo, 3, Intensivo);
                             }
                             else
                             {
-                                if(diag.diag_previo==EnCasa)
+                                if(diagPrev==EnCasa)
                                 {
-                                    liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
+                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                                 }
-                                reservarRecursos(datos->idHospital, atendiendo, 3, Intensivo);
+                                reservarRecursos(datos->hospital, atendiendo, 3, Intensivo);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                             
                         break;
 
-                        case intermedio:
+                        case Intermedio:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->idHospital, atendiendo, 2, diag.diag_previo);
-                                reservarRecursos(datos->idHospital, atendiendo, 2, Intensivo);
+                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                                reservarRecursos(datos->hospital, atendiendo, 2, Intensivo);
                             }
                             else
                             {
-                                if(diag.diag_previo==EnCasa)
+                                if(diagPrev==EnCasa)
                                 {
-                                    liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
+                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                                 }
-                                reservarRecursos(datos->idHospital, atendiendo, 2, Intensivo);
+                                reservarRecursos(datos->hospital, atendiendo, 2, Intensivo);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                         break;
                         
-                        case general:
+                        case General:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
-                                reservarRecursos(datos->idHospital, atendiendo, 1, Intensivo);
+                                liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                                reservarRecursos(datos->hospital, atendiendo, 1, Intensivo);
                             }
                             else
                             {
-                                if(diag.diag_previo==EnCasa)
+                                if(diagPrev==EnCasa)
                                 {
-                                    liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
+                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                                 }
-                                reservarRecursos(datos->idHospital, atendiendo, 1, Intensivo);
+                                reservarRecursos(datos->hospital, atendiendo, 1, Intensivo);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                         break;
                     }
                     
@@ -111,52 +223,55 @@ void actor_gestor(void *datos_gestor)
                 case Basica:
                     switch (hosp_type)
                     {
-                        case centinela:
+                        case Centinela:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->idHospital, atendiendo, 3, diag.diag_previo);
-                                reservarRecursos(datos->idHospital, atendiendo, 0.25, Basica);
+                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                                reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                             }
                             else
                             {
-                                if(diag.diag_previo==EnCasa)
+                                if(diagPrev==EnCasa)
                                 {
-                                    liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
+                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                                 }
-                                reservarRecursos(datos->idHospital, atendiendo, 0.25, Basica);
+                                reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                         break;
 
-                        case intermedio:
+                        case Intermedio:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->idHospital, atendiendo, 2, diag.diag_previo);
-                                reservarRecursos(datos->idHospital, atendiendo, 0.25, Basica);
+                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                                reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                             }
                             else
                             {
-                                if(diag.diag_previo==EnCasa)
+                                if(diagPrev==EnCasa)
                                 {
-                                    liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
+                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                                 }
-                                reservarRecursos(datos->idHospital, atendiendo, 0.25, Basica);
+                                reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                         break;
                         
-                        case general:
+                        case General:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
-                                reservarRecursos(datos->idHospital, atendiendo, 0.25, Basica);
+                                liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                                reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                             }
                             else
                             {
-                                if(diag.diag_previo==EnCasa)
+                                if(diagPrev==EnCasa)
                                 {
-                                    liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
+                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                                 }
-                                reservarRecursos(datos->idHospital, atendiendo, 0.25, Basica);
+                                reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                             }
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
                         break;
                     }
                 break;
@@ -164,39 +279,39 @@ void actor_gestor(void *datos_gestor)
                 case EnCasa:
                     switch (hosp_type)
                     {
-                        case centinela:
+                        case Centinela:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->idHospital, atendiendo, 3, diag.diag_previo);
-                                reservarRecursos(datos->idHospital, atendiendo, 1, EnCasa);
+                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                                reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
                             }
                             else
                             {
-                                reservarRecursos(datos->idHospital, atendiendo, 1, EnCasa);
+                                reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
                             }
                         break;
 
-                        case intermedio:
+                        case Intermedio:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->idHospital, atendiendo, 2, diag.diag_previo);
-                                reservarRecursos(datos->idHospital, atendiendo, 1, EnCasa);
+                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                                reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
                             }
                             else
                             {
-                                reservarRecursos(datos->idHospital, atendiendo, 1, EnCasa);
+                                reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
                             }
                         break;
                         
-                        case general:
+                        case General:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
-                                reservarRecursos(datos->idHospital, atendiendo, 1, EnCasa);
+                                liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                                reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
                             }
                             else
                             {
-                                reservarRecursos(datos->idHospital, atendiendo, 1, EnCasa);
+                                reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
                             }
                         break;
                     }
@@ -205,18 +320,21 @@ void actor_gestor(void *datos_gestor)
                 case Muerto:
                     switch (hosp_type)
                     {
-                        case centinela:
-                            liberarRecursos(datos->idHospital, atendiendo, 3, diag.diag_previo);
+                        case Centinela:
+                            liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
                             //finalizar el hilo
                         break;
 
-                        case intermedio:
-                            liberarRecursos(datos->idHospital, atendiendo, 2, diag.diag_previo);
+                        case Intermedio:
+                            liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
                             //finalizar el hilo
                         break;
                         
-                        case general:
-                            liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
+                        case General:
+                            liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
                             //finalizar el hilo
                         break;
                     }
@@ -225,21 +343,26 @@ void actor_gestor(void *datos_gestor)
                 default://dar de alta
                     switch (hosp_type)
                     {
-                        case centinela:
-                            liberarRecursos(datos->idHospital, atendiendo, 3, diag.diag_previo);
+                        case Centinela:
+                            liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
+                            //liberar el hilo
                         break;
 
-                        case intermedio:
-                            liberarRecursos(datos->idHospital, atendiendo, 2, diag.diag_previo);
+                        case Intermedio:
+                            liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
+                            //liberar el hilo
                         break;
                         
-                        case general:
-                            liberarRecursos(datos->idHospital, atendiendo, 1, diag.diag_previo);
+                        case General:
+                            liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                            //no volver a poner el hilo en la cola de pacientes
+                            //liberar el hilo
                         break;
                     }
                 break;
             }
-        free(atendiendo);
         }
     }
 }
