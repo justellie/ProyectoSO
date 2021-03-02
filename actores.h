@@ -1,3 +1,12 @@
+/**
+ * @file actores.h
+ * @brief Define las tareas que se ejecutarán concurrentemente en el programa.
+ * @author Gabriel Peraza
+ * @version 0.0.0.1
+ * @date 2021-03-02
+ * @details Define a los hilos como actores, los cuales pueden tener atributos y comunicarse
+ *          mediante colas, diccionarios , semáforos, mutexes y otras estructuras de datos.
+ */
 #ifndef __ACTORES_H__
 #define __ACTORES_H__
 

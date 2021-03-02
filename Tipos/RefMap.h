@@ -62,8 +62,13 @@ typedef struct RefMap{
     void  (*freekey)( void* key );      ///< Protocolo para liberar el espacio reservado para las claves.
     int (*cmp) ( void* k1 , void* k2 ); ///< Protocolo para comparar las claves.
 
-    NodeRB*** callstack;                ///< 
-    int       callsz;                   ///<
+    NodeRB*** callstack;                ///< Pila de llamadas. Almacena las referencias a punteros a nodos,
+                                        ///< usados en los recorridos mutables (cuando hay una inserción o
+                                        ///< o eliminación de algún elemento)
+    int       callsz;                   ///< Capacidad de la pila de llamadas.
+    // NOTE: Al crear una pila de llamadas, que únicamente guarda referencias a punteros de nodos
+    //       se puede mejorar enormemente los tiempos de respuestas de las operaciones, sin mencionar
+    //       que se reduce por lo menos el volumen de las transacciones de datos a la mitad.
 } RefMap;
 
 //      -----------------------------

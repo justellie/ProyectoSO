@@ -279,25 +279,11 @@ void refmap_unsafe_put( RefMap* t , void* key , void* value ){
     int used = 0;
     int size = maxDepth( t->root ) + extra;
 
-    //TODO: If another call uses mutable traversal, then it must check t->callstack value before continue.
-    //      If it's NULL, that method will be able to resize the cache/callstack.
-    //      else, callstack must not be resize neither freed.
-    //stack = malloc( size * sizeof(NodeRB**) );
-    //STOP_IF_UNSAFE( stack , "refmap_unsafe_put: Unable to build stack" );
-
-    // It's the main call, so, cachestack so, this is able to resize the cachestack.
+    // Apply resize if it's required.
     RESIZE_STACK( t->callstack , t->callsz ,
                   CONDITION(t->callsz < size) ,
                   size         , "refmap_unsafe_init: Unable to resize call stack." );
     stack = t->callstack;
-    //if( t->callsz < size ){
-    //    // Resize without any copy:
-    //    if( t->cachestack != NULL ) free( t->cachestack );
-    //    t->cachestack = malloc( size * sizeof(NodeRB**) );
-    //    STOP_IF_UNSAFE( t->cachestack , "refmap_unsafe_init: Unable to resize call stack." );
-    //    t->callsz     = size;
-    //}
-    //stack = t->cachestack;
 
     // [F] Function Pointers:
     int   (*compare) (void*,void*) = t->cmp;
@@ -361,10 +347,6 @@ void refmap_unsafe_put( RefMap* t , void* key , void* value ){
         node->N = nodeSize(node->left) + nodeSize(node->right) + 1;
     }
 
-    // [$!] TOTALLY REQUIRED:
-    // TODO: Verify if this is required.
-    //free( stack );
-
     // :::::::::::::
     // Exit Protocol
     // :::::::::::::
@@ -397,23 +379,13 @@ void* refmap_extract( RefMap* t , void* key ){
 }
 
 // [$] Mutable traversal
-// Returns the retrieved key.
+// Returns the retrieved key. This doesn't care about callstack integrity
 static void* delete( NodeRB** root , void* key , int (*compare)(void*,void*) , NodeRB*** callstack ){
     static int extra = BOTTOM_STACK_SIZE;   // counts the head and the new node.
 
     // [^] Build Stack:
     NodeRB*** stack = callstack;
     int used = 0;
-    //int size = maxDepth( *root ) + extra;
-
-    //stack = malloc( size * sizeof(NodeRB**) );
-    //STOP_IF_UNSAFE( stack , "delete (NodeRB): Unable to build stack" );
-    
-    // DO NOT REQUIRED HERE. MUST BE INTO refmap_unsafe_delete
-    //RESIZE_STACK( t->callstack , t->callsz ,
-    //              (t->callsz / 4 + BOTTOM_STACK_SIZE < size),
-    //              size         , "refmap_unsafe_init: Unable to resize call stack." );
-    //stack = t->callstack;
 
     // [S] Search:
     NodeRB** head;
@@ -434,7 +406,7 @@ static void* delete( NodeRB** root , void* key , int (*compare)(void*,void*) , N
             }
 
             PUSH( stack , used , head );        // Requires to be balanced.
-            PUSH( stack , used , &node->left );  // Go to down-left
+            PUSH( stack , used , &node->left ); // Go to down-left
         } else {
             if( isRed(node->left) ){ // Adjust.
                 node  = rotateRight(node);
@@ -483,10 +455,6 @@ static void* delete( NodeRB** root , void* key , int (*compare)(void*,void*) , N
         *head = balance(*head);
     }
 
-    // [$!] TOTALLY REQUIRED:
-    // TODO: Verify if this is right!
-    //free( stack );
-
     return extracted_key;
 }
 
@@ -530,10 +498,6 @@ static void refmap_unsafe_deleteMin( RefMap* t ){
         t->root->color = RED;
 
     int size = maxDepth( root ) + extra;
-    //fprintf( stderr , "before: size: %d, callstack: %d,"
-    //                  "retrieved: %d, resize on: %d\n" ,
-    //                  t->root->N , t->callsz ,
-    //                  size       , t->callsz / 4 + BOTTOM_STACK_SIZE );
     RESIZE_STACK( t->callstack , t->callsz ,                                // Stack description: stack itself and size
                   CONDITION(t->callsz / 4 + BOTTOM_STACK_SIZE <= size),     // Resize condition.
                   size         ,                                            // New size
@@ -541,12 +505,6 @@ static void refmap_unsafe_deleteMin( RefMap* t ){
 
     void* old_key = deleteMin(&t->root, t->callstack);
     (*t->freekey)( old_key );
-
-    //if( !refmap_unsafe_empty(t) )
-    //    fprintf( stderr , "after:  size: %d, callstack: %d,"
-    //                      "retrieved: %d, resize on: %d\n" ,
-    //                      t->root->N , t->callsz ,
-    //                      size       , t->callsz / 4 + BOTTOM_STACK_SIZE );
 
     if( !refmap_unsafe_empty(t) )
         t->root->color = BLACK;
@@ -559,24 +517,6 @@ static void* deleteMin( NodeRB** root , NodeRB*** callstack ){
     // [^] Build Stack:
     NodeRB*** stack = callstack;
     int used = 0;
-    //int size = maxDepth( *root ) + extra;
-
-    ////stack = malloc( size * sizeof(NodeRB**) );
-    ////STOP_IF_UNSAFE( stack , "deleteMin (NodeRB): Unable to build stack" );
-    //if( t->callstack == NULL ){
-    //    // It's the main call, so, cachestack so, this is able to resize the cachestack.
-    //    if( t->callsz / 4 == size ){    // Reduces the resize operations:
-    //        // Resize without any copy:
-    //        if( t->cachestack != NULL ) free( t->cachestack );
-    //        t->cachestack = malloc( size * sizeof(NodeRB**) );
-    //        STOP_IF_UNSAFE( t->cachestack , "refmap_unsafe_init: Unable to build call stack." );
-    //        t->callsz     = size;
-    //    }
-    //    stack = t->cachestack;
-    //} else {
-    //    // just take the call stack
-    //    stack = t->callstack;
-    //}
 
     // [S] Search:
     NodeRB** head;
@@ -619,9 +559,6 @@ static void* deleteMin( NodeRB** root , NodeRB*** callstack ){
         *head = balance(*head);
     }
 
-    // [$!] TOTALLY REQUIRED:
-    // free( stack );
-
     return extracted_key;
 }
 
@@ -658,16 +595,13 @@ static void refmap_unsafe_deleteMax( RefMap* t ){
 }
 
 // [$] Mutable traversal
+// This doesn't care about callstack integrity
 static void* deleteMax( NodeRB** root , NodeRB*** callstack ){
     static int extra = BOTTOM_STACK_SIZE;   // counts the head and the new node.
 
     // [^] Build Stack:
     NodeRB*** stack = callstack;
     int used = 0;
-    //int size = maxDepth( *root ) + extra;
-
-    //stack = malloc( size * sizeof(NodeRB**) );
-    //STOP_IF_UNSAFE( stack , "deleteMax (NodeRB): Unable to build stack" );
 
     // [S] Search:
     NodeRB** head;
@@ -715,10 +649,6 @@ static void* deleteMax( NodeRB** root , NodeRB*** callstack ){
         POP( stack , used , head );
         *head = balance(*head);
     }
-
-    // [$!] TOTALLY REQUIRED:
-    // TODO: Verify if this is required!
-    // free( stack );
 
     return extracted_key;
 }
@@ -825,7 +755,6 @@ void refmap_destroy( RefMap* t ){
     pthread_mutex_destroy( &self->lock );
 }
 
-// TODO: Revisar si debe devolver la clave o el valor.
 void* refmap_unsafe_minkey( RefMap* t ){
     if( t->root == NULL ) return NULL;
     else                  return minimum(t->root)->key;
@@ -836,7 +765,6 @@ void*  refmap_unsafe_maxkey( RefMap* t ){
     else                  return maximum(t->root)->key;
 }
 
-// TODO: Arreglar, devuelven la clave en lugar del valor.
 void* refmap_extract_min( RefMap* t ){
     // |> BEGIN CRITICAL REGION
     pthread_mutex_lock( &t->lock );
@@ -844,8 +772,6 @@ void* refmap_extract_min( RefMap* t ){
     if( !refmap_unsafe_empty(t) ){
         value = minimum( t->root )->value;
         refmap_unsafe_deleteMin( t );
-        //void* value = refmap_unsafe_minkey(t);
-        //refmap_unsafe_deleteMin( t );
     }
     // <| END CRITICAL REGION
     pthread_mutex_unlock( &t->lock );
@@ -860,8 +786,6 @@ void* refmap_extract_max( RefMap* t ){
         value = maximum( t->root )->value;
         refmap_unsafe_deleteMax( t );
     }
-    //void* value = refmap_unsafe_maxkey(t);
-    //refmap_unsafe_deleteMax( t );
     // <| END CRITICAL REGION
     pthread_mutex_unlock( &t->lock );
     return value;
@@ -876,8 +800,6 @@ void* refmap_extract_min_if_key( RefMap* t , int (*predicate)(void*) ){
         if( (*predicate)(node->key) )
             refmap_unsafe_deleteMin( t );
     }
-    //void* value = refmap_unsafe_minkey(t);
-    //refmap_unsafe_deleteMin( t );
     // <| END CRITICAL REGION
     pthread_mutex_unlock( &t->lock );
     return value;
@@ -892,8 +814,6 @@ void* refmap_extract_max_if_key( RefMap* t , int (*predicate)(void*) ){
         if( (*predicate)(node->key) )
             refmap_unsafe_deleteMax( t );
     }
-    //void* value = refmap_unsafe_maxkey(t);
-    //refmap_unsafe_deleteMax( t );
     // <| END CRITICAL REGION
     pthread_mutex_unlock( &t->lock );
     return value;
