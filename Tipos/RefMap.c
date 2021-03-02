@@ -826,3 +826,6 @@ void* refmap_extract_max_if_key( RefMap* t , int (*predicate)(void*) ){
 #undef PUSH
 #undef POP
 #undef EMPTY
+#undef CONDITION
+#undef RESIZE_STACK
+#undef BOTTOM_STACK_SIZE

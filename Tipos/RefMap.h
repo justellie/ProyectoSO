@@ -8,8 +8,8 @@
  * @date 2021-02-08 */
 
 // Estándar usado: __PAQUETE__SUBPAQUETE__ ... __NOMBRE_MODULO_
-#ifndef __REFMAP_H__
-#define __REFMAP_H__
+#ifndef __TIPOS__REFMAP_H__
+#define __TIPOS__REFMAP_H__
 
 // Liberías de C y POSIX/Unix:
 #include <sys/types.h>
