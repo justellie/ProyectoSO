@@ -61,6 +61,9 @@ typedef struct RefMap{
     void* (*copykey)( void* key );      ///< Protocolo para copiar las claves. Asegura que sean inmutables.
     void  (*freekey)( void* key );      ///< Protocolo para liberar el espacio reservado para las claves.
     int (*cmp) ( void* k1 , void* k2 ); ///< Protocolo para comparar las claves.
+
+    NodeRB*** callstack;                ///< 
+    int       callsz;                   ///<
 } RefMap;
 
 //      -----------------------------
