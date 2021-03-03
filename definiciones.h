@@ -63,6 +63,7 @@ typedef struct{
 typedef struct {
     int          id;
     int          vivo;
+    int          fueAtendido;
     Ubicacion    donde;
     char*        sintomas;
     TipoAtencion servicio;
@@ -74,6 +75,8 @@ typedef struct {
     RWLock    medLock;
     RWLock    enfLock;
     RWLock    dondeLock;
+
+    sem_t muestraTomada;
 
     Mutex     atendidoLock;     // Permita pausar el hilo actor_paciente
     Condicion atendido;         // mientras espera por ser atendido por algún
