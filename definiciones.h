@@ -75,6 +75,8 @@ typedef struct {
     RWLock    enfLock;
     RWLock    dondeLock;
 
+    sem_t muestraTomada;
+
     Mutex     atendidoLock;     // Permita pausar el hilo actor_paciente
     Condicion atendido;         // mientras espera por ser atendido por algún
                                 // Médico/Enfermero ó Voluntario.
