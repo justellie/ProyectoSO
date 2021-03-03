@@ -23,12 +23,11 @@
 #include <pthread.h>
 #include <semaphore.h>
 typedef pthread_mutex_t  Mutex;
-typedef pthread_rwlock_t RWLock;
 typedef pthread_cond_t   Condicion;
 // --------------------------------
 
 // [T] Tipos de datos -------------
-#include "Tipos/Refmap.h"
+#include "Tipos/RefMap.h"
 #include "Tipos/RefQueue.h"
 // --------------------------------
 
@@ -52,17 +51,17 @@ void construirPersonal( Personal* p , int id , TipoPersonal profesion , TipoAten
 void destruirPersonal ( Personal* p );
 
 
-typedef enum { EnHospital , EnCasa } Lugar;
-typedef struct{
-    int   id_lugar; // Tiene sentido cuando es un hospital.
-    Lugar lugar;    // En casa o en Hospital
-} Ubicacion;
+//typedef enum { EnHospital , EnCasa } Lugar;
+//typedef struct{
+//    int   id_lugar; // Tiene sentido cuando es un hospital.
+//    Lugar lugar;    // En casa o en Hospital
+//} Ubicacion;
 
 // [*] PACIENTE:
 typedef struct {
     int          id;
     int          vivo;
-    Ubicacion    donde;
+    //Ubicacion    donde;
     char*        sintomas;
     TipoAtencion servicio;
     int          tiene_cama;
@@ -70,9 +69,9 @@ typedef struct {
     // Uno de cada uno a la vez. ni más, ni menos.
     int       medID[MAX_ATENCION];  // TODO: Verificar el número de médicos.
     int       enfID[MAX_ATENCION];  // 
-    RWLock    medLock;
-    RWLock    enfLock;
-    RWLock    dondeLock;
+    Mutex     medLock;
+    Mutex     enfLock;
+    //Mutex     dondeLock;
 
     Mutex     atendidoLock;     // Permita pausar el hilo actor_paciente
     Condicion atendido;         // mientras espera por ser atendido por algún
@@ -154,7 +153,7 @@ typedef struct {
     sem_t        respiradores;
 
     TuplaRecursos estadisticas;     // Se actualizan siempre (incremento en valores), pero son reiniciadas
-    RWLock        estadisticasLock; // 2 veces al día. Por ello usan un seguro de escritura/lectura
+    Mutex         estadisticasLock; // 2 veces al día. Por ello usan un seguro de escritura/lectura
                                     // (Así como en base de datos)
 } Hospital;
 
@@ -180,9 +179,9 @@ typedef struct {
     RefQueue     voluntarios;
 
     TuplaRecursos estadisticas[NACTUALIZACIONES];
-    RWLock        estadisticasLock;
+    Mutex         estadisticasLock;
     int           turno;        // Indica cuál tabla de estadisticas se debe leer
-    RWLock        turnoLock;    // Una vez que se necesite actualizar, simplemente se pasará al valor
+    Mutex         turnoLock;    // Una vez que se necesite actualizar, simplemente se pasará al valor
                                 // turno = (turno+1) % NACTUALIZACIONES;
 } UGC;
 void construirUGC( UGC* ugc , int id , TuplaRecursos* descripcion );
@@ -230,10 +229,6 @@ Personal   Tabla_Enfermeras[NENFERMERAS];
 Hospital   Tabla_Hospitales[NHOSPITALES];
 GestorCama Tabla_Gestores[NGESTORES];
 Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
-
-// TODO: Describir mejor los sintomas... Combinar con la función que elige aleatoriamente un síntoma.
-// TODO: Inicializar de forma estática en el archivo definiciones.c
-char Tabla_Sintomas[] = { "Algo" , "Nada" , "..." };
 
 void inicializarPacientes( char* ruta_archivo_pacientes );
 void inicializarMedicos( char* ruta_archivo_medicos );
