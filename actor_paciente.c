@@ -34,7 +34,6 @@ void actor_paciente(void *datos_paciente){
     {    
         // Se decide el hospital al que va a ir
 
-        time(3);
         seSienteMal = autoexamen();
 
         if (seSienteMal){
@@ -75,4 +74,9 @@ void actor_paciente(void *datos_paciente){
     printf("Adios mundo cruel\n");
 }
 
+
+int autoexamen(){
+    time(3);
+    return srand (time(NULL))%100 < 30; //Hay un 30% de posibilidades de que se sienta mal
+}
 #endif
