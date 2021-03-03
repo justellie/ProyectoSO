@@ -44,13 +44,15 @@ void actor_paciente(void *datos_paciente){
 
 
             // Entra a la sala de espera para poder ir luego a la sala de muestras
-            sem_wait(HospElegid->salaEspera);       // Espera a que haya espacio dentro de la sala de espera hospital
-                sem_wait(HospElegid->salaMuestra);  // Espera a que esté disponible la entrada a la sala de muestra
-            sem_signal(HospElegid->salaEspera);     // Sale de la sala de espera
+            sem_wait(&HospElegid->salaEspera);       // Espera a que haya espacio dentro de la sala de espera hospital
+            sem_wait(&HospElegid->salaMuestra);      // Espera a que esté disponible la entrada a la sala de muestra
+            sem_signal(&HospElegid->salaEspera);     // Sale de la sala de espera
 
             // Se realiza la cola para ingresar
             refqueue_put(&HospElegid->pacientesEnSilla, datos); // Hace la cola en la sala de muestra
-            
+            sem_wait(&datos->muestraTomada);                    // Espera a que le tomen la muestra
+            sem_signal(&HospElegid->salaMuestra);               // Sale de la sala de muestra
+
             // Espera a que lo atiendan
             pthread_mutex_lock( &datos->atendidoLock);
                 while (!datos->fueAtendido) {
@@ -58,24 +60,15 @@ void actor_paciente(void *datos_paciente){
                 }
             pthread_mutex_unlock( &datos->atendidoLock);
             
-            // Sale de la sala de muestra
-            sem_signal(HospElegid->salaMuestra);
 
-                
-
+            //Espera a estar sano
+            pthread_mutex_lock( &datos->medLock);
+                while (!datos->vivo ||datos->deAlta) {
+                    pthread_cond_wait(&datos->atendidoLock, &datos->atendidoLock);
+                }
+            pthread_mutex_unlock( &datos->medLock);
             
-            while (1)
-            {  
-                // El paciente comprueba que siga vivo
-                pthread_rwlock_rdlock(&datos->medLock);
-                    // En caso de morir, o dejar de tener síntomas sale
-                    if(!datos->vivo || datos->deAlta)
-                        break;
-                    
-                pthread_rwlock_unlock(&datos->medLock);
-
-                
-            }
+            
         }
     }
 
