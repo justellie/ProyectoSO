@@ -109,6 +109,8 @@ typedef struct {
     //       error. y manejarlo según corresponda.
     RefMap       medicos   [MAX_ATENCION];
     RefMap       enfermeras[MAX_ATENCION];
+    RefQueue       pacientesEnSilla;	
+    RefQueue       pacientesListoParaAtender;
     // TODO:    ^^^ Inicializar ambos grupos de diccionarios.
     //       >>>    Se indexarán por su id.     <<<
     // NOTE: No se necesita saber cuántos hay
