@@ -1,6 +1,10 @@
 #include "definiciones.h"
 #include "Tipos/RefMap.h"
 #include "Tipos/RefQueue.h"
+#include <stdlib.h>
+#include <time.h>
+#include <unistd.h>
+
 #define COMPARE(x,y) (                          \
                         ((x) < (y))?            \
                             -1 :                \
@@ -222,4 +226,23 @@ void destruirVoluntario( Voluntario* v ){
     refqueue_destroy( &v->pacientes );
 }
 
+TipoAtencion obtener_diagnostico_simple()
+{
+    srand(time(NULL));
+    return rand()% 4;
+}
 
+TipoAtencion obtener_diagnostico_compuesta(void *paciente)
+{
+    Paciente *atendiendo=(Paciente *)paciente;
+    int diagnostico_nuevo=0;
+    
+
+    srand(time(NULL));
+    diagnostico_nuevo= rand()% 5;
+
+    diagnostico_nuevo=atendiendo->servicio*0.5+diagnostico_nuevo*0.5;
+    diagnostico_nuevo=(diagnostico_nuevo-2)/2;
+    return diagnostico_nuevo;
+
+}

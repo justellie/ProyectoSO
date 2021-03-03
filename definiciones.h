@@ -18,6 +18,7 @@
 #define NSALA_MUESTRA       5   // # de habitaciones de toma de muestras.
 
 #include <stdbool.h>
+#include <errno.h>
 
 // [>] POSIX ----------------------
 #include <pthread.h>
@@ -50,18 +51,11 @@ typedef struct {
 void construirPersonal( Personal* p , int id , TipoPersonal profesion , TipoAtencion servicio );
 void destruirPersonal ( Personal* p );
 
-
-//typedef enum { EnHospital , EnCasa } Lugar;
-//typedef struct{
-//    int   id_lugar; // Tiene sentido cuando es un hospital.
-//    Lugar lugar;    // En casa o en Hospital
-//} Ubicacion;
-
 // [*] PACIENTE:
 typedef struct {
     int          id;
     int          vivo;
-    //Ubicacion    donde;
+    int          fueAtendido;
     char*        sintomas;
     TipoAtencion servicio;
     int          tiene_cama;
@@ -72,6 +66,8 @@ typedef struct {
     Mutex     medLock;
     Mutex     enfLock;
     //Mutex     dondeLock;
+
+    sem_t muestraTomada;
 
     Mutex     atendidoLock;     // Permita pausar el hilo actor_paciente
     Condicion atendido;         // mientras espera por ser atendido por algún
@@ -107,8 +103,7 @@ typedef struct {
     //       error. y manejarlo según corresponda.
     RefMap       medicos   [MAX_ATENCION];
     RefMap       enfermeras[MAX_ATENCION];
-    RefQueue       pacientesEnSilla;
-    RefQueue       pacientesListoParaAtender;
+    RefQueue       pacientesEnSilla;	
     // TODO:    ^^^ Inicializar ambos grupos de diccionarios.
     //       >>>    Se indexarán por su id.     <<<
     // NOTE: No se necesita saber cuántos hay
@@ -149,8 +144,8 @@ typedef struct {
     TipoHospital tipo;
     sem_t        camasBasico;
     sem_t        camasIntensivo;
-    sem_t        tanquesOxigeno;
-    sem_t        respiradores;
+    RefQueue     tanquesOxigeno;
+    RefQueue     respiradores;
 
     TuplaRecursos estadisticas;     // Se actualizan siempre (incremento en valores), pero son reiniciadas
     Mutex         estadisticasLock; // 2 veces al día. Por ello usan un seguro de escritura/lectura
