@@ -55,10 +55,13 @@ void destruirPersonal ( Personal* p );
 typedef struct {
     int          id;
     int          vivo;
+    int          deAlta;
     int          fueAtendido;
+    int          ingresando;
+    int          tiene_cama;
     char*        sintomas;
     TipoAtencion servicio;
-    int          tiene_cama;
+    
 
     // Uno de cada uno a la vez. ni más, ni menos.
     int       medID[MAX_ATENCION];  // TODO: Verificar el número de médicos.
@@ -78,6 +81,15 @@ void destruirPaciente ( Paciente* p );
 
 
 // [*] HOSPITAL:
+
+//Permite llevar el conteo de los movimientos de los pacientes
+typedef struct {
+    int muertos;
+    int hospitalizados;
+    int dadosDeAlta;
+    int monitoreados;
+    int covid;
+}Estadistica;
 //      medicos y pacientes deben ser diccionarios de la forma:
 //      { (TipoPersonal,id) : Personal }
 typedef enum { Centinela , Intermedio , General } TipoHospital;
@@ -136,6 +148,8 @@ typedef struct {
     //                   para pedir algún médico del servicio básico y
     //                      `un_medico = refmap_extract_min_if_key( MEDICOS , EXTRAER_SI_INTENSIVO );`
     //
+
+    Estadistica  estadis_pacientes;
     RefQueue     pacientes;
     sem_t        salaEspera;
     sem_t        salaMuestra;
@@ -147,15 +161,13 @@ typedef struct {
     RefQueue     tanquesOxigeno;
     RefQueue     respiradores;
 
-    TuplaRecursos estadisticas;     // Se actualizan siempre (incremento en valores), pero son reiniciadas
+    TuplaRecursos estadis_recursos; // Se actualizan siempre (incremento en valores), pero son reiniciadas
     Mutex         estadisticasLock; // 2 veces al día. Por ello usan un seguro de escritura/lectura
                                     // (Así como en base de datos)
 } Hospital;
 
 void construirHospital( Hospital* h , int id , TuplaRecursos* descripcion );
 void destruirHospital ( Hospital* h );
-
-Hospital H[MAX_ATENCION];
 
 // [*] INVENTARIO UGC:
 //      Inventario de Transferencias de la UGC
@@ -200,10 +212,11 @@ void destruirGestorCama ( GestorCama* g );
 //      Similar al gestor de cama, pero fuera del hospital.
 typedef struct {
     int      id;
-    RefQueue pacientes;
 } Voluntario;
 void construirVoluntario( Voluntario* v , int id );
 void destruirVoluntario ( Voluntario* v );
+
+RefQueue pacienteEnCasa;
 
 // Se podría utilizar si se decide emplear tuplas como llaves dentro de los diccionarios.
 void EXTRAER_SI_BASICO   ( void* personal );
