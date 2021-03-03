@@ -29,8 +29,8 @@ typedef pthread_cond_t   Condicion;
 // --------------------------------
 
 // [T] Tipos de datos -------------
-#include "Tipos/Refmap.h"
-#include "Tipos/RefQueue.h"
+#include "./Tipos/RefMap.h"
+#include "./Tipos/RefQueue.h"
 // --------------------------------
 
 
@@ -113,7 +113,6 @@ typedef struct {
     RefMap       medicos   [MAX_ATENCION];
     RefMap       enfermeras[MAX_ATENCION];
     RefQueue       pacientesEnSilla;	
-    RefQueue       pacientesListoParaAtender;
     // TODO:    ^^^ Inicializar ambos grupos de diccionarios.
     //       >>>    Se indexarán por su id.     <<<
     // NOTE: No se necesita saber cuántos hay

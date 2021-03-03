@@ -22,9 +22,9 @@ void actor_analista(void *datos_hospital)
     while (true)
     {
         Paciente *atendiendo = refqueue_get(&hospital->pacientesEnSilla);
-        atendiendo->sintomas=obtener_diagnostico();
-        refqueue_put(&hospital->pacientesListoParaAtender, atendiendo);
-        //TODO avisar del diagnostico
+        atendiendo->servicio=obtener_diagnostico_simple();
+        sem_signal(&atendiendo->muestraTomada);
+        refqueue_put(&hospital->pacientes, atendiendo);
     }
     
 }
