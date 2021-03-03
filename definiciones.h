@@ -18,6 +18,7 @@
 #define NSALA_MUESTRA       5   // # de habitaciones de toma de muestras.
 
 #include <stdbool.h>
+#include <errno.h>
 
 // [>] POSIX ----------------------
 #include <pthread.h>
@@ -52,7 +53,7 @@ void construirPersonal( Personal* p , int id , TipoPersonal profesion , TipoAten
 void destruirPersonal ( Personal* p );
 
 
-typedef enum { EnHospital , EnCasa } Lugar;
+typedef enum { inHospital , incasa } Lugar;
 typedef struct{
     int   id_lugar; // Tiene sentido cuando es un hospital.
     Lugar lugar;    // En casa o en Hospital
@@ -108,8 +109,6 @@ typedef struct {
     //       error. y manejarlo según corresponda.
     RefMap       medicos   [MAX_ATENCION];
     RefMap       enfermeras[MAX_ATENCION];
-    RefQueue       pacientesEnSilla;
-    RefQueue       pacientesListoParaAtender;
     // TODO:    ^^^ Inicializar ambos grupos de diccionarios.
     //       >>>    Se indexarán por su id.     <<<
     // NOTE: No se necesita saber cuántos hay
@@ -150,8 +149,8 @@ typedef struct {
     TipoHospital tipo;
     sem_t        camasBasico;
     sem_t        camasIntensivo;
-    sem_t        tanquesOxigeno;
-    sem_t        respiradores;
+    RefQueue     tanquesOxigeno;
+    RefQueue     respiradores;
 
     TuplaRecursos estadisticas;     // Se actualizan siempre (incremento en valores), pero son reiniciadas
     RWLock        estadisticasLock; // 2 veces al día. Por ello usan un seguro de escritura/lectura
@@ -233,7 +232,7 @@ Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
 
 // TODO: Describir mejor los sintomas... Combinar con la función que elige aleatoriamente un síntoma.
 // TODO: Inicializar de forma estática en el archivo definiciones.c
-char Tabla_Sintomas[] = { "Algo" , "Nada" , "..." };
+//char Tabla_Sintomas[] = { 'Algo' , 'Nada' , '...' };
 
 void inicializarPacientes( char* ruta_archivo_pacientes );
 void inicializarMedicos( char* ruta_archivo_medicos );
