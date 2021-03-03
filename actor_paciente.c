@@ -14,7 +14,8 @@
 
 #include "actores.h"
 #include "definiciones.h"
-#include "time.h"
+#include <time.h>
+#include <unistd.h>
 
 
 
@@ -76,7 +77,8 @@ void actor_paciente(void *datos_paciente){
 
 
 int autoexamen(){
-    time(3);
+    //Espera 3 segundos
+    sleep(3);
     return srand (time(NULL))%100 < 30; //Hay un 30% de posibilidades de que se sienta mal
 }
 #endif
