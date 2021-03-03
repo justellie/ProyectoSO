@@ -226,7 +226,7 @@ char* refqueue_str( RefQueue* qs ){ // New string must be freed.
     str = refqueue_unsafe_str( self );
     pthread_mutex_unlock( &self->lock );
     return str;
-}     
+}
 
 void refqueue_show_in( RefQueue* qs , FILE* stream ){
     char* strQueue = refqueue_str(qs);
@@ -270,4 +270,4 @@ void refqueue_deallocateAll( RefQueue* qs ){
     pthread_cond_destroy( &self->has_item );
 }
 
-#undef IS_SAFE_PTR
+#undef STOP_IF_UNSAFE

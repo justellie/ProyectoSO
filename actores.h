@@ -1,3 +1,12 @@
+/**
+ * @file actores.h
+ * @brief Define las tareas que se ejecutarán concurrentemente en el programa.
+ * @author Gabriel Peraza
+ * @version 0.0.0.1
+ * @date 2021-03-02
+ * @details Define a los hilos como actores, los cuales pueden tener atributos y comunicarse
+ *          mediante colas, diccionarios , semáforos, mutexes y otras estructuras de datos.
+ */
 #ifndef __ACTORES_H__
 #define __ACTORES_H__
 
@@ -16,10 +25,11 @@ void actor_personal_ugc  ( void* inv_ugc );
 // daemon. Estadísticas, inventario, uso, resumen de todo, etc.
 void actor_status_ugc    ( void* inv_ugc );
 
-void actor_jefe_admin   ( void* hospital );
-void actor_jefe_epidemia( void* hospital );
-void actor_director     ( void* hospital );
-void actor_analista     ( void* hospital );
+void actor_jefe_admin              ( void* hospital );
+void actor_jefe_epidemia           ( void* hospital );
+void actor_director                ( void* hospital );
+void actor_jefe_cuidados_intensivos( void* hospital );
+void actor_analista                ( void* hospital );
 
 // Revisan la cola de pacientes interna, 
 void actor_voluntario( void* datos_voluntario );

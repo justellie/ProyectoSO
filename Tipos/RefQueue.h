@@ -7,8 +7,8 @@
  * @date 2021-02-01
  */
 
-#ifndef __QUEUE__H__
-#define __QUEUE__H__
+#ifndef __TIPOS_REFQUEUE_H__
+#define __TIPOS_REFQUEUE_H__
 
 #include <stdlib.h> // Memoria dinámica
 #include <assert.h> // Pruebas y errores

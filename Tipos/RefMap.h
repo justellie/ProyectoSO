@@ -8,8 +8,8 @@
  * @date 2021-02-08 */
 
 // Estándar usado: __PAQUETE__SUBPAQUETE__ ... __NOMBRE_MODULO_
-#ifndef __REFMAP_H__
-#define __REFMAP_H__
+#ifndef __TIPOS__REFMAP_H__
+#define __TIPOS__REFMAP_H__
 
 // Liberías de C y POSIX/Unix:
 #include <sys/types.h>
@@ -61,6 +61,14 @@ typedef struct RefMap{
     void* (*copykey)( void* key );      ///< Protocolo para copiar las claves. Asegura que sean inmutables.
     void  (*freekey)( void* key );      ///< Protocolo para liberar el espacio reservado para las claves.
     int (*cmp) ( void* k1 , void* k2 ); ///< Protocolo para comparar las claves.
+
+    NodeRB*** callstack;                ///< Pila de llamadas. Almacena las referencias a punteros a nodos,
+                                        ///< usados en los recorridos mutables (cuando hay una inserción o
+                                        ///< o eliminación de algún elemento)
+    int       callsz;                   ///< Capacidad de la pila de llamadas.
+    // NOTE: Al crear una pila de llamadas, que únicamente guarda referencias a punteros de nodos
+    //       se puede mejorar enormemente los tiempos de respuestas de las operaciones, sin mencionar
+    //       que se reduce por lo menos el volumen de las transacciones de datos a la mitad.
 } RefMap;
 
 //      -----------------------------
