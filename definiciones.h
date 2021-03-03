@@ -62,6 +62,7 @@ typedef struct{
 typedef struct {
     int          id;
     int          vivo;
+    int          fueAtendido;
     Ubicacion    donde;
     char*        sintomas;
     TipoAtencion servicio;
