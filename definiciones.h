@@ -42,7 +42,7 @@ typedef pthread_cond_t   Condicion;
 
 // [*] PERSONAL:
 typedef enum { Ninguno, EnCasa, Basica, Intensivo, Muerto} TipoAtencion; // Antes: enum cama.
-typedef enum { PidePCR , PideTanque, PideRespirador} Recurso; 
+typedef enum { PidePCR , PideTanque, PideRespirador,PideEnfermera,PideMedico} Recurso; 
 typedef enum { Medico , Enfermera } TipoPersonal;
 typedef struct {
     int          id;
@@ -199,6 +199,7 @@ typedef struct {
     RefQueue     pacientes;
     RefQueue     voluntarios;
     RefQueue     peticiones;
+    RefQueue     peticionesPersonal;
 
     TuplaRecursos estadisticas[NACTUALIZACIONES];
     Mutex         estadisticasLock;
