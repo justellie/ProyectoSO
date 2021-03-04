@@ -1,44 +1,3 @@
-<<<<<<< HEAD
-#include "actores.h"
-#include "definiciones.h"
-#include <stdlib.h>
-
-#include <time.h>
-#include <signal.h>
-
-// Crea los timers y eventos particulares:
-// SIGUSR1 <-- Llegó el momento de hacer un reporte.
-#define NANOSEGUNDOS_EN_SEGUNDOS 1000000000;
-#define ABSOLUTO TIMER_ABSTIME
-#define RELATIVO 0
-typedef struct DatosTemporizador{
-    int               tipo;
-    struct sigevent   ptr_evento:
-    struct itimerspec intervalo;
-}DatosTemporizador;
-
-void activar_estadisticas_ugc( int segundos , int nano_segundos ){
-
-    timerspec_t start    = { segundos , nano_segundos };
-    timerspec_t interval = { segundos , nano_segundos };
-    // start    != 0 -> sin expiración. en seguida. interval != 0 -> recarga
-    DatosTemporizador info = { ABSOLUTO , {0,SIGUSR1} , {start,interval} }
-
-    union sigval evento;
-    struct sigevent evento = { };
-
-    timer_create();
-    // TODO: Usar al limipiar esto.
-    // timer_delete();
-
-
-
-}
-
-int main(){
-    exit( EXIT_SUCCESS );
-}
-=======
 /**
  * @file main.c
  * @brief Programa principal. Inicializa todas las variables e hilos para el funcionamiento del programa.
@@ -63,12 +22,20 @@ int main(){
 #define ABSOLUTE TIMER_ABSTIME
 #define RELATIVE 0
 
+// [@] Sincronizacion global ---------
+Barrier    Paso_Inicializacion;
 
-// TODO: Finalizar. Tienen que inicializar todo.
-void inicializar_hospitales();
-void inicializar_ugc();
+// [+] Tablas globales global -------------------
+Paciente   Tabla_Pacientes[NPACIENTES];
+Personal   Tabla_Medicos[NMEDICOS];
+Personal   Tabla_Enfermeras[NENFERMERAS];
+Hospital   Tabla_Hospitales[NHOSPITALES];
+GestorCama Tabla_Gestores[NGESTORES];
+Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
 
-///
+// [*] Voluntarios -----------
+RefQueue pacienteEnCasa;
+
 /// @brief Cambia las condiciones globales para obligar a la actualización de las estadísticas.
 /// @details Cambia ciertos flags y variables de condición en el programa para forzar la evaluación y
 ///          actualización de las estadísticas globales. **Debe usarse como manejador de la señal**
@@ -89,11 +56,17 @@ void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* conte
 /// @param context contexto de control.
 void forzar_finalizacion( int signo , siginfo_t* info , void* context );
 
-
 int main(){
     int SYS_CLOCK = CLOCK_REALTIME;
-    inicializar_hospitales();
-    inicializar_ugc();
+    int status;
+
+    inicializarPacientes();
+    inicializarMedicos();
+    inicializarEnfermeras();
+    inicializarHospitales( 0.20 , 0.30 , 0.50 ); // 0.20 + 0.30 + 0.50 ~= 1.0
+    inicializarPacientesEnCasa();
+    inicializarVoluntarios();
+
 
     // ----------------------------------------------------------------------------------
     // Se establecen los manejadores de señales y los timers específicos para generarlas:
@@ -114,7 +87,6 @@ int main(){
     // ------------------------------------------------------------------------
     // Conjunto que cambia el comportamiento de los hilos bajo ciertas señales:
     sigset_t mask, oldmask;
-    int      status;
     sigemptyset( &mask );
 
     // Bloquea Ctrl+C (Finalizar programa), SIGUSR1: (Acciones regulares definidas por nosotros)
@@ -128,6 +100,7 @@ int main(){
     }
     // Desde aquí se pueden crear el resto de los hilos.
     // TODO: Crear hilos aquí
+    // TODO: Añadir un barrier a todos los hilos para que esperen hasta que el main esté listo para continuar.
     // pthread_create(...)
     // ...
     // ------------------------------------------------------------------------
@@ -145,6 +118,8 @@ int main(){
     if( sigaction( SIGINT  , &on_quit_request , NULL ) == -1 )
         { fprintf(stderr, "Unable to set sigaction\n"); exit( EXIT_FAILURE); }
     // ------------------------------------------------------------------------
+
+
 
 
     // ------------------------------------------------------------------------
@@ -195,9 +170,3 @@ void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* conte
     if( signo != SIGUSR1 ) return;
     fprintf( stderr , "Peticion: Actualizar estadisticas:..." );
 }
-
-
-// TODO: Finalizar. Tienen que inicializar todo.
-void inicializar_hospitales(){ return; }
-void inicializar_ugc(){ return; }
->>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d

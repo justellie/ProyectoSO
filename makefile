@@ -30,14 +30,14 @@ LIBFLG := -c
 TARGET := proyecto.$(EXT)
 MFILES := main.c
 TYPES  := Tipos
-OBJS   := RefQueue.o RefMap.o
+OBJS   := RefQueue.o RefMap.o definiciones.o
 EXAMPL := ejemplos
 TXAMPL := $(TYPES)/$(EXAMPL)
 
 .PHONY: all
 
 # TODO: Agregar los objetos generados por definiciones y actores
-all: refmap generic-queue
+all: refmap generic-queue definiciones
 	@echo -e "$(BL) [@] Generando archivo principal $(GL)($(TARGET))$(BL)...$(RE)"
 	$(CC) $(COMMON) $(OBJS) $(MFILES) -o $(TARGET)
 run:
@@ -54,7 +54,7 @@ definiciones: refmap generic-queue
 	$(CC) $(COMMON) $(LIBFLG) RefQueue.o RefMap.o definiciones.h definiciones.c
 =======
 	@echo -e "$(BL) [D] Generando definiciones: $(RE)"
-	$(CC) $(COMMON) $(LIBFLG) definiciones.h definiciones.c
+	$(CC) $(COMMON) $(LIBFLG) definiciones.c definiciones.h
 	@echo -e "$(GL)Hecho\n$(RE)"
 >>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
 
@@ -66,6 +66,7 @@ tests: queue-tests refmap-tests
 # Genera los casos de prueba para el tipo "Cola de Referencias":
 queue-tests: generic-queue
 	@echo -e "$(BL) [Q] Generando ejemplos de uso para la $(GL)Cola de Referencias$(BL)...$(RE)"
+	$(CC) $(COMMON) $(TXAMPL)/simple_queue-long.c  RefQueue.o -o $(TXAMPL)/simple_queue-long.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/simple_queue.c       RefQueue.o -o $(TXAMPL)/simple_queue.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/shared_queue.c       RefQueue.o -o $(TXAMPL)/shared_queue.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/quick_shared_queue.c RefQueue.o -o $(TXAMPL)/quick_shared_queue.$(EXT)
