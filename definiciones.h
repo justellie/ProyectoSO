@@ -14,10 +14,10 @@
 #define NMEDICOS        15      // Se asume un número máximo de médicos a nivel nacional.
 #define NENFERMERAS     30      // Se asume un número máximo de enfermeras a nivel nacional.
 #define GESTORES_H      1       // Numeros de gestores por hospital
+#define NANALISTAS      (NHOSPITALES * NSALA_MUESTRA)
 
 // Más gestores por cada hospital.
 // NOTE: posiblemente sólo se necesite uno de ellos, no estoy seguro.
-#define NGESTORES   (NHOSPITALES * GESTORES_H) 
 #define NVOLUNTARIOS        5   // Cuántos voluntarios hay en el país
 #define NACTUALIZACIONES    2   // Cuántas veces se actualizan las estadísticas de la UGC.
 
@@ -39,6 +39,11 @@
 #include <errno.h>
 #include <math.h>
 
+// [T] Tipos de datos -------------
+#include "Tipos/RefMap.h"
+#include "Tipos/RefQueue.h"
+// --------------------------------
+
 // [>] POSIX ----------------------
 #include <pthread.h>
 #include <semaphore.h>
@@ -47,10 +52,6 @@ typedef pthread_cond_t    Condicion;
 typedef pthread_barrier_t Barrier;
 // --------------------------------
 
-// [T] Tipos de datos -------------
-#include "Tipos/RefMap.h"
-#include "Tipos/RefQueue.h"
-// --------------------------------
 
 // [@] Sincronizacion global ------
 //Barrier Paso_Inicializacion;
@@ -262,7 +263,7 @@ void destruirVoluntario ( Voluntario* v );
 //Personal   Tabla_Medicos[NMEDICOS];
 //Personal   Tabla_Enfermeras[NENFERMERAS];
 //Hospital   Tabla_Hospitales[NHOSPITALES];
-//GestorCama Tabla_Gestores[NGESTORES];
+//GestorCama Tabla_Gestores[NHOSPITALES];
 //Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
 
 void inicializarPacientes();

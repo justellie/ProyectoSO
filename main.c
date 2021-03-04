@@ -25,13 +25,35 @@
 // [@] Sincronizacion global ---------
 Barrier    Paso_Inicializacion;
 
-// [+] Tablas globales global -------------------
+// [+] Tablas globales de Datos -----------------
 Paciente   Tabla_Pacientes[NPACIENTES];
 Personal   Tabla_Medicos[NMEDICOS];
 Personal   Tabla_Enfermeras[NENFERMERAS];
 Hospital   Tabla_Hospitales[NHOSPITALES];
-GestorCama Tabla_Gestores[NGESTORES];
+GestorCama Tabla_Gestores[NHOSPITALES];
 Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+UGC        gestor_central;
+
+// [^] Tablas globales de Hilos(Actores) --------
+typedef struct HilosActores{
+    pthread_t Pacientes  [NPACIENTES];
+
+    pthread_t Gestores   [NHOSPITALES];
+    pthread_t Analistas  [NANALISTAS];
+    pthread_t Voluntarios[NVOLUNTARIOS];
+
+    //pthread_t Director  [NHOSPITALES];    //TODO: Verificar si se puede eliminar. (¿Hace algo?)
+    pthread_t JefeEpidemia[NHOSPITALES];
+    pthread_t JefeCuidados[NHOSPITALES];
+    //pthread_t JefeAdmin   [NHOSPITALES];
+
+    pthread_t InventarioUGC;
+    pthread_t PersonalUGC;
+    //pthread_t StatusUGC;
+} HilosActores;
+
+HilosActores Actores;
+
 
 // [*] Voluntarios -----------
 RefQueue pacienteEnCasa;
@@ -103,6 +125,76 @@ int main(){
     // TODO: Añadir un barrier a todos los hilos para que esperen hasta que el main esté listo para continuar.
     // pthread_create(...)
     // ...
+    
+    HilosActores* act = &Actores;
+
+    for( int id = 0 ; id < NPACIENTES ; id += 1 ){
+        pthread_create( act->Pacientes + id ,   // Thread-id reference.
+                        NULL,                   // No special attributes.
+                        &actor_paciente,        // routine.
+                        &Tabla_Pacientes + id); // ref. attributes.
+    }
+
+    // Hilos relacionados con los hospitales:
+    int analista      = 0;
+    for( int id = 0 ; id < NHOSPITALES ; id += 1 ){
+        // TODO: Verificar si se puede eliminar. Hace algo?
+        //pthread_create( &act->StatusUGC    ,        // Thread-id reference.
+        //                NULL,                       // No special attributes.
+        //                &actor_status_ugc,          // routine.
+        //                &gestion_central        );  // ref. attributes.
+
+        pthread_create( act->Gestores + id,     // Thread-id reference.
+                        NULL,                   // No special attributes.
+                        &actor_gestor,          // routine.
+                        &Tabla_Gestores + id);  // ref. attributes.
+
+        //pthread_create( act->JefeEpidemia + id, // Thread-id reference.
+        //                NULL,                   // No special attributes.
+        //                &actor_jefe_epidemia,   // routine.
+        //                &Tabla_Hospitales + id);// ref. attributes.
+
+        pthread_create( act->JefeCuidados + id, // Thread-id reference.
+                        NULL,                   // No special attributes.
+                        &actor_jefe_cuidados_intensivos, // routine
+                        &Tabla_Hospitales + id);// ref. attributes.
+
+        //pthread_create( act->JefeAdmin + id,    // Thread-id reference.
+        //                NULL,                   // No special attributes.
+        //                &actor_jefe_admin;      // routine
+        //                &Tabla_Hospitales + id);// ref. attributes.
+
+        for( int iter = 0 ; iter < NSALA_MUESTRA ; iter += 1 ){
+            pthread_create( act->Analistas + analista,      // Thread-id reference.
+                            NULL,                           // No special attributes.
+                            &actor_analista,                // routine.
+                            &Tabla_Hospitales + analista ); // ref. attributes.
+            analista += 1;
+        }
+    }
+
+    // UGC:
+    pthread_create( &act->InventarioUGC,        // Thread-id reference.
+                    NULL,                       // No special attributes.
+                    &actor_inventario_ugc,      // routine.
+                    &gestor_central);           // ref. attributes.
+
+    pthread_create( &act->PersonalUGC  ,        // Thread-id reference.
+                    NULL,                       // No special attributes.
+                    &actor_personal_ugc,        // routine.
+                    &gestor_central         );  // ref. attributes.
+
+    //pthread_create( &act->StatusUGC    ,        // Thread-id reference.
+    //                NULL,                       // No special attributes.
+    //                &actor_status_ugc,          // routine.
+    //                &gestor_central         );  // ref. attributes.
+
+    for( int id = 0 ; id < NVOLUNTARIOS ; id += 1 ){
+        pthread_create( act->Voluntarios + id ,     // Thread-id reference.
+                        NULL,                       // No special attributes.
+                        &actor_voluntario,          // routine.
+                        &Tabla_Voluntarios + id);   // ref. attributes.
+    }
     // ------------------------------------------------------------------------
 
 

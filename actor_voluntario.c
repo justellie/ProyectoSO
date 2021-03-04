@@ -10,11 +10,11 @@
 #include "actores.h"
 #include "definiciones.h"
 
-
+extern UGC        gestor_central;
 ///@fn void actor_voluntario(void* datos_voluntario)
 ///@brief funcion que ejecuta el actor voluntario para realizar sus funciones
 ///@param datos_voluntario estructura que contiene los datos basicos de un voluntario
-void actor_voluntario(void* datos_voluntario)
+void* actor_voluntario(void* datos_voluntario)
 {
 	
 	Voluntario *datos = (Voluntario *) datos_voluntario;
@@ -57,4 +57,6 @@ void actor_voluntario(void* datos_voluntario)
         atendiendo->fueAtendido++;
 		pthread_cond_signal(&atendiendo->atendido);
 	}
+
+    return NULL;
 }

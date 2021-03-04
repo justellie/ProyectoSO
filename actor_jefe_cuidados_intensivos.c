@@ -12,8 +12,9 @@
 #include "definiciones.h"
 #include "actores.h"
 
+extern UGC        gestor_central;
 
-void actor_jefe_cuidados_intensivos( void * datos)
+void* actor_jefe_cuidados_intensivos( void * datos)
 {
     jefe_uci *datos_jefe = (jefe_uci *) datos;
     int cantidad;
@@ -61,4 +62,6 @@ void actor_jefe_cuidados_intensivos( void * datos)
         pthread_mutex_unlock(&datos_jefe->espera);
             
     }
+
+    return NULL;
 }
