@@ -2,28 +2,41 @@
 # Elige la extensión del ejecutable según el Sistema Operativo:
 # (para el caso en el que se utilice la librería pthread en windows)
 EXT	   :=
+# Colores: Azul(BL), Rojo(RL),
+# 		   Reiniciar Color(RE). Sólo en Unix/Linux.
+RL     :=
+BL     :=
+RE     :=
 ifeq ($(OS),Windows_NT)
 	EXT +=exe
 else
 	EXT +=out
+	BL  += \u001b[38;5;32m
+	RL  += \u001b[38;5;9m
+	RE  += \u001b[0m
 endif
 # ------------------------------------------------------------------
+
+# COMMON -> -lm:  enlaza librería matemática,
+#           -lrt: enlaza con la librería de temporizadores a tiempo real.
 
 # Variables de compilación
 CC	   := gcc
 DEBUG  := -g -O0
-COMMON := -pthread $(DEBUG) -lm
+COMMON := -pthread $(DEBUG) -lm -lrt
 LIBFLG := -c
 TARGET := proyecto.$(EXT)
-MFILES := hospitales.c
+MFILES := main.c
 TYPES  := Tipos
+OBJS   := RefQueue.o RefMap.o
 EXAMPL := ejemplos
 TXAMPL := $(TYPES)/$(EXAMPL)
 
 .PHONY: all
 
-all:
-	$(CC) $(COMMON) $(MFILES) -o $(TARGET)
+# TODO: Agregar los objetos generados por definiciones y actores
+all: refmap generic-queue
+	$(CC) $(COMMON) $(OBJS) $(MFILES) -o $(TARGET)
 run:
 	@echo "Ejecutando Programa..."
 	@command ./$(TARGET)
@@ -33,7 +46,7 @@ run:
 # Crea los archivos de definiciones:
 definiciones: refmap generic-queue
 	@echo [D] Generando definiciones:
-	$(CC) $(COMMON) $(LIBFLG) RefQueue.o RefMap.o definiciones.h definiciones.c
+	$(CC) $(COMMON) $(LIBFLG) definiciones.h definiciones.c
 
 
 # ------------------------------------------------------
