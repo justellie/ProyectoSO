@@ -111,12 +111,17 @@ void*  refmap_extract_max_if_key( RefMap* t , int (*predicate)(void*) );
 void*  refmap_unsafe_lock  ( RefMap* t );
 int    refmap_unsafe_unlock( RefMap* t );
 
+void refmap_unsafe_put( RefMap* t , void* key , void* value );
+void   refmap_unsafe_delete   ( RefMap* t , void* key );
+void   refmap_unsafe_deleteMin( RefMap* t );
+void   refmap_unsafe_deleteMax( RefMap* t );
 void*  refmap_unsafe_get   ( RefMap* t , void* key );
 int    refmap_unsafe_empty ( RefMap* t );
 int    refmap_unsafe_size  ( RefMap* t );
 int    refmap_unsafe_contains ( RefMap* t , void* key );
 void*  refmap_unsafe_minkey( RefMap* t );
 void*  refmap_unsafe_maxkey( RefMap* t );
+
 /// @brief Muestra el mapa en stderr.
 /// @param t Mapa objetivo.
 /// @param use_ascii_color Lógico. si es 0, no muestra colores. si es 1 muestra colores. (Formato Unix)
@@ -202,12 +207,41 @@ void   refmap_debug( RefMap* t , int use_ascii_color , void (*print_key)(void*) 
 /// @details Permite liberar a t, luego de que haber sido reservado con refmap_unsafe_lock.
 /// @see refmap_unsafe_lock
 
+/// @fn void refmap_unsafe_put( RefMap* t , void* key , void* value )
+/// @brief Inserta o Reemplaza la referencia de un valor dentro del mapa.
+/// @param t Mapa objetivo.
+/// @param key Clave de comparación.
+/// @param value Referencia del valor a insertar/reemplazar.
+/// @warning No es Thread-Safe.
+/// @details Inserta la referencias en el mapa. **NO BLOQUEA EL MAPA.**
+
 /// @fn void* refmap_unsafe_get( RefMap* t , void* key )
 /// @brief Consulta el valor asociado a la clave proporcionada dentro de un mapa.
 /// @param t Mapa objetivo.
 /// @param key Clave de comparación.
 /// @warning No es Thread-safe.
 /// @return Referencia del objeto asociado con key. NULL si no se encuentra dentro del mapa.
+
+/// @fn void refmap_unsafe_delete( RefMap* t , void* key )
+/// @brief Remueve el valor asociado para la clave proporcionada.
+/// @param t Mapa objetivo.
+/// @param key Clave de comparación.
+/// @warning No es Thread-Safe.
+/// @details Remueve la referencia del mapa. **NO BLOQUEA EL MAPA.**
+
+/// @fn void refmap_unsafe_deleteMin( RefMap* t )
+/// @brief Remueve el valor asociado para la clave más pequeña del mapa.
+/// @param t Mapa objetivo.
+/// @warning No es Thread-Safe.
+/// @details Remueve la referencia del mapa. **NO BLOQUEA EL MAPA.**
+/// @see refmap_unsafe_delete
+//
+/// @fn void refmap_unsafe_deleteMax( RefMap* t )
+/// @brief Remueve el valor asociado para la clave más grande del mapa.
+/// @param t Mapa objetivo.
+/// @warning No es Thread-Safe.
+/// @details Remueve la referencia del mapa. **NO BLOQUEA EL MAPA.**
+/// @see refmap_unsafe_delete
 
 /// @fn int refmap_unsafe_empty( RefMap* t );
 /// @brief Verifica si el mapa está vacío.
