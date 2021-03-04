@@ -40,17 +40,19 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                 //Liberacion enfermeras
                 Personal *enf = refmap_extract(&refHospital->enfermeras[0], &atendiendo->enfID[i]);
                 atendiendo->enfID[i]=-1;
-                refmap_put(&refHospital->enfermeras[4], &enf->id, enf);
+                refHospital->estadis_recursos.nenfermeras++;
+                refmap_put(&refHospital->enfermeras[4], &enf, enf);
+                pthread_cond_signal(&refHospital->stast);
                 //Liberacion medicos
                 Personal *med = refmap_extract(&refHospital->medicos[0], &atendiendo->medID[i]);
                 atendiendo->medID[i]=-1;
-                refmap_put(&refHospital->medicos[4], &med->id, med);
+                refHospital->estadis_recursos.nmedicos++;
+                refmap_put(&refHospital->medicos[4], &med, med);
+                pthread_cond_signal(&refHospital->stast);
             }
             //Liberacion de los respiradores
-            sem_wait(&refHospital->consultaOxigeno);
-            refqueue_put(&refHospital->respiradores, NULL);
+            refqueue_put(&refHospital->respiradores, (void *) 1);
             refHospital->estadis_recursos.nrespira++;
-            sem_post(&refHospital->consultaOxigeno);
             //Liberacion de la cama
             sem_post(&refHospital->camasIntensivo);
             refHospital->estadis_recursos.ncamasInt++;
@@ -71,21 +73,24 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                 {
                     //Se quita el id de la enfermera del registro del paciente
                     atendiendo->enfID[0]=-1; //Siempre sera 0 ya que, un paciente basico no puede tener mas de una enfermera
-                    refmap_put(&refHospital->enfermeras[i+1], &enf->id, enf); //Se recoloca a la enfermera en el mapa, un nivel de ocupacion por debajo
+                    refmap_put(&refHospital->enfermeras[i+1], &enf, enf); //Se recoloca a la enfermera en el mapa, un nivel de ocupacion por debajo
                                                                               //por como esta pensado, bajar un nivel de ocupacion implica sumar 
+                    if(i+1==4)
+                        refHospital->estadis_recursos.nenfermeras++;
                 }
+
                 //liberacion medicos, se comporta de la misma forma que la liberacion de enfermeras
                 Personal *med = refmap_extract(&refHospital->medicos[i], &atendiendo->medID[0]);
                 if (med!=NULL)
                 {
                     atendiendo->medID[0]=-1;
-                    refmap_put(&refHospital->medicos[i+1], &med->id, med);
+                    refmap_put(&refHospital->medicos[i+1], &med, med);
+                    if(i+1==4)
+                        refHospital->estadis_recursos.nmedicos++;
                 }
             }
-            //Liberacion del tanque de oxigeno que esta en uso por el paciente
-            sem_wait(&refHospital->consultaTanques);
-            refqueue_put(&refHospital->tanquesOxigeno, NULL);
-            sem_post(&refHospital->consultaTanques);
+            //Liberacion del tanque de oxigeno que esta en uso por el paciente            
+            refqueue_put(&refHospital->tanquesOxigeno, (void *) 1);
             refHospital->estadis_recursos.ntanques++;
             //Liberacion de la cama basica
             sem_post(&refHospital->camasBasico);
@@ -147,7 +152,8 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     {
                         //Al encontrar una enfermera, se le asigna al paciente y se coloca en el nivel mas alto de ocupacion
                         atendiendo->enfID[i]=enf->id;
-                        refmap_put(&refHospital->enfermeras[0], &enf->id, enf);
+                        refHospital->estadis_recursos.nenfermeras--;
+                        refmap_put(&refHospital->enfermeras[0], &enf, enf);
                         //Este contador indica si se reservo la cantidad necesaria de enfermeras
                         enf_flag++;
                     }
@@ -156,46 +162,57 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     if (enf!=NULL)
                     {
                         atendiendo->medID[i]=med->id;
-                        refmap_put(&refHospital->medicos[0], &med->id, med);
+                        refHospital->estadis_recursos.nmedicos--;
+                        refmap_put(&refHospital->medicos[0], &med, med);
                         med_flag++;
                     }
                 }
                 //reservacion respirador artificial
-                sem_wait(&refHospital->consultaOxigeno);
                 if(refqueue_tryget(&refHospital->respiradores)==NULL)
                 {
-                    if (errno==EAGAIN)
-                        respirador_flag=false;
+                    if (errno==EAGAIN){
+                        TuplaInventario *pedir = malloc (sizeof(TuplaInventario));
+                        pedir->idHospital=refHospital->id;
+                        pedir->cantidad=1;
+                        pedir->tipo_recurso=PideRespirador;
+                        refqueue_put(&gestor_central.peticiones, pedir);
+                        sem_wait(&refHospital->EsperandoPorRecurso);
+                        if(refqueue_tryget(&refHospital->respiradores)==NULL)
+                        {
+                            if (errno==EAGAIN)
+                                respirador_flag=false;
+                        }
+                        else
+                        {
+                            refHospital->estadis_recursos.nrespira--;
+                            respirador_flag=true;
+                        }  
+                    }   
                 }
                 else
                 {
                     refHospital->estadis_recursos.nrespira--;
                     respirador_flag=true;
                 }
-                sem_post(&refHospital->consultaOxigeno);
                 //verificacion de que todos los insumos necesarios fueron reservados con exito
                 if(respirador_flag && (med_flag==cantidad) && (enf_flag==cantidad))
                     resultado=1;
                 else
                 {
-                    //antes de las condiciones inferiores se debe realizar la pedida del recurso al UGC
-                    //por ahora no se como se realizara esto, asi que lo dejo como devolucion de los recursos
-
                     //En caso de que la UGC no pueda brindar los insumos, se liberan los recursos que se tomaron 
                     //y se procede a transferir al paciente
                     if(respirador_flag)
                     {
-                        sem_wait(&refHospital->consultaOxigeno);
-                        refqueue_put(&refHospital->respiradores, NULL);
+                        refqueue_put(&refHospital->respiradores, (void *) 1);
                         refHospital->estadis_recursos.nrespira++;
-                        sem_post(&refHospital->consultaOxigeno);
                     }
                     for (int i = 0; i < enf_flag; i++)
                     {
                         if(atendiendo->enfID[i]!=-1){
                             Personal *enf = refmap_extract(&refHospital->enfermeras[0], &atendiendo->enfID[i]);
                             atendiendo->enfID[i]=-1;
-                            refmap_put(&refHospital->enfermeras[4], &enf->id, enf);
+                            refmap_put(&refHospital->enfermeras[4], &enf, enf);
+                            refHospital->estadis_recursos.nenfermeras++;
                         }
                     }
                     for (int i = 0; i < med_flag; i++)
@@ -203,7 +220,8 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                         if(atendiendo->medID[i]!=-1){
                             Personal *med = refmap_extract(&refHospital->medicos[0], &atendiendo->medID[i]);
                             atendiendo->medID[i]=-1;
-                            refmap_put(&refHospital->medicos[4], &med->id, med);
+                            refmap_put(&refHospital->medicos[4], &med, med);
+                            refHospital->estadis_recursos.nmedicos++;
                         }
                     }
                     resultado=-1;
@@ -238,29 +256,45 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     {
                         //Al encontrar una enfermera, se le asigna al paciente y se coloca en una nivel mas alto de ocupacion
                         atendiendo->enfID[0]=enf->id;
-                        refmap_put(&refHospital->enfermeras[i-1], &enf->id, enf);
+                        refmap_put(&refHospital->enfermeras[i-1], &enf, enf);
                     }
                     //resserva de medicos, comportamiento similar a la enfermeras
                     Personal *med = refmap_extract_max(&refHospital->medicos[i]);
                     if (med!=NULL)
                     {
                         atendiendo->medID[0]=med->id;
-                        refmap_put(&refHospital->medicos[i-1], &med->id, med);
+                        refmap_put(&refHospital->medicos[i-1], &med, med);
                     }
                 }
                 //reserva de tanque de oxigeno
-                sem_wait(&refHospital->consultaTanques);
                 if(refqueue_tryget(&refHospital->tanquesOxigeno)==NULL)
                 {
                     if (errno= EAGAIN)
-                       oxigeno_flag=false;
+                    {
+                        TuplaInventario *pedir = malloc (sizeof(TuplaInventario));
+                        pedir->idHospital=refHospital->id;
+                        pedir->cantidad=1;
+                        pedir->tipo_recurso=PideTanque;
+                        refqueue_put(&gestor_central.peticiones, pedir);
+                        sem_wait(&refHospital->EsperandoPorRecurso);
+                        if(refqueue_tryget(&refHospital->tanquesOxigeno)==NULL)
+                        {
+                            if (errno==EAGAIN)
+                                respirador_flag=false;
+                        }
+                        else
+                        {
+                            refHospital->estadis_recursos.nrespira--;
+                            respirador_flag=true;
+                        }
+                    }
+                       
                 }
                 else
                 {
                     refHospital->estadis_recursos.ntanques--;
                     oxigeno_flag=true;
                 }
-                sem_post(&refHospital->consultaTanques);
 
                 //Verificacion de que todos lo recursos fueron reservados correctamente
                 if (oxigeno_flag && (atendiendo->enfID[0]!=-1) && (atendiendo->medID[0]!=-1))
@@ -269,14 +303,11 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                 }
                 else
                 {
-                    //antes de las condiciones inferiores se debe realizar la pedida del recurso al UGC
-                    //por ahora no se como se realizara esto, asi que lo dejo como devolucion de los recursos
-
                     //En caso de que la UGC no pueda brindar los insumos, se liberan los recursos que se tomaron 
                     //y se procede a transferir al paciente
                     if(respirador_flag)
                     {
-                        refqueue_put(&refHospital->tanquesOxigeno, NULL);
+                        refqueue_put(&refHospital->tanquesOxigeno, (void *) 1);
                         refHospital->estadis_recursos.ntanques++;
                     }
 
@@ -287,7 +318,9 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                             if (enf!=NULL)
                             {
                                 atendiendo->enfID[0]=-1;
-                                refmap_put(&refHospital->enfermeras[i+1], &enf->id, enf);
+                                refmap_put(&refHospital->enfermeras[i+1], &enf, enf);
+                                if(i+1==4)
+                                    refHospital->estadis_recursos.nenfermeras++;
                             }                        
                         }
                     }
@@ -299,7 +332,9 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                             if (med!=NULL)
                             {
                                 atendiendo->medID[0]=-1;
-                                refmap_put(&refHospital->medicos[i+1], &med->id, med);
+                                refmap_put(&refHospital->medicos[i+1], &med, med);
+                                if(i+1==4)
+                                    refHospital->estadis_recursos.nmedicos--;
                             }
                         }                                        
                     }
@@ -327,6 +362,12 @@ void actor_gestor(void *datos_gestor)
         ///Paciente que esta siendo atendio por el gestor 
         Paciente *atendiendo = refqueue_get(&datos->hospital->pacientes);
         
+        if (atendiendo->fueAtendido==0)
+        {
+            atendiendo->fueAtendido++;
+            pthread_cond_signal(&atendiendo->atendido);
+        }
+
         //Si el paciente esta ingresando por primera vez 
         if(atendiendo->ingresando)
         {
@@ -524,7 +565,8 @@ void actor_gestor(void *datos_gestor)
             //si el estatus es -1, implica que al paciente no se le pudieron asignar recursos suficientes y debe ser transferido de hospial
             if (status==-1)
             {
-                //refqueue_put(&UGC, atendiendo);
+                atendiendo->ingresando=1;
+                refqueue_put(&gestor_central.pacientes, atendiendo);
                 continue;
             } 
             else
@@ -533,12 +575,14 @@ void actor_gestor(void *datos_gestor)
                 {
                     atendiendo->deAlta++;
                     atendiendo->ingresando=1;
+                    pthread_cond_signal(&atendiendo->atendido);
                 }
                 else
                 {
                     if (dead)
                     {
                         atendiendo->vivo=0;
+                        pthread_cond_signal(&atendiendo->atendido);
                     }
                     else 
                     {
@@ -558,8 +602,6 @@ void actor_gestor(void *datos_gestor)
         }
         //aviso al paciente de que ha sido atendido
         atendiendo->servicio=diagAct;
-        atendiendo->fueAtendido++;
-        
-        
+          
     }
 }

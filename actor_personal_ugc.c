@@ -15,26 +15,31 @@
  * 
  * @param datos_hospital estructura que contiene los datos basicos del hospital 
  */
-void actor_inventario_ugc(void *datos_UGC)
+void actor_personal_ugc(void *datos_UGC)
 {
     UGC *gestion_central = (UGC *) datos_UGC;
     
-    
+    /**
+     * refmap_unsafe_lock()
+     * refmap_unsafe_unlock()
+     * 
+     */
     while (true)
     {
-        TuplaInventario *peticion = refqueue_get(&gestion_central->peticiones);
+        TuplaInventario *peticion = refqueue_get(&gestion_central->peticionesPersonal);
         int maxDisponible=0,indexMax=0;
         int actual=0, i=0, j=0,contadorHospital=0;
+        TipoPersonal *t;
 
         for (i = 0; i < NHOSPITALES; i++)
         {
             switch (peticion->tipo_recurso)
             {
-            case PideTanque:
-                sem_wait(&Tabla_Hospitales[i].consultaTanques);
+            case PideEnfermera:
+                refmap_unsafe_lock(&Tabla_Hospitales[i].enfermeras);
                 break;
-            case PideRespirador:
-                sem_wait(&Tabla_Hospitales[i].consultaOxigeno);
+            case PideMedico:
+                refmap_unsafe_lock(&Tabla_Hospitales[i].medicos);
                 break;
             default:
                 break;
@@ -45,9 +50,8 @@ void actor_inventario_ugc(void *datos_UGC)
         {
             switch (peticion->tipo_recurso)
             {
-            case PideTanque:
-                actual = refqueue_unsafe_len(&Tabla_Hospitales[i].tanquesOxigeno); // verifico cual es la cantidad del recurso en ese momento
-                Tanque *t;
+            case PideEnfermera:
+                actual = refmap_unsafe_size(&Tabla_Hospitales[i].enfermeras[4]); // verifico cual es la cantidad del recurso en ese momento
                 for (i = 0; i < NHOSPITALES; i++)
                 {
                     if (actual >= peticion->cantidad) // encontre el uno que tiene la cantidad o mas del recurso
@@ -66,16 +70,14 @@ void actor_inventario_ugc(void *datos_UGC)
                 }
                 for ( j = 0; j < maxDisponible; j++)
                 {
-                    t = refqueue_get(&Tabla_Hospitales[indexMax].tanquesOxigeno);
-                    refqueue_put(&Tabla_Hospitales[peticion->idHospital].tanquesOxigeno, t);
+                    t = refmap_unsafe_minkey(&Tabla_Hospitales[indexMax].enfermeras[4]);
+                    refmap_unsafe_put(&Tabla_Hospitales[peticion->idHospital].enfermeras[4],t,t);
                 }
                 peticion->cantidad -= maxDisponible;
-                Tabla_Hospitales[peticion->idHospital].estadis_recursos.ntanques+=maxDisponible;
                 break;
 
-            case PideRespirador:
-                actual = refqueue_unsafe_len(&Tabla_Hospitales[i].respiradores); // verifico cual es la cantidad del recurso en ese momento
-                Respirador *r;
+            case PideMedico:
+                actual = refmap_unsafe_size(&Tabla_Hospitales[i].medicos[4]); // verifico cual es la cantidad del recurso en ese momento
                 for (i = 0; i < NHOSPITALES; i++)
                 {
                     if (actual >= peticion->cantidad) // encontre el uno que tiene la cantidad o mas del recurso
@@ -94,21 +96,11 @@ void actor_inventario_ugc(void *datos_UGC)
                 }
                 for (j = 0; j < maxDisponible; j++)
                 {
-                    r = refqueue_get(&Tabla_Hospitales[indexMax].respiradores);
-                    refqueue_put(&Tabla_Hospitales[peticion->idHospital].respiradores, r);
+                    t = refmap_unsafe_minkey(&Tabla_Hospitales[indexMax].medicos[4]);
+                    refmap_unsafe_put(&Tabla_Hospitales[peticion->idHospital].medicos[4],t,t);
                     
                 }
                 peticion->cantidad -= maxDisponible;
-                Tabla_Hospitales[peticion->idHospital].estadis_recursos.nrespira+=maxDisponible;
-                break;
-            case PidePCR:
-                for (i = 0; i < peticion->cantidad ; i++)
-                {
-                       
-                    refqueue_put(&Tabla_Hospitales[peticion->idHospital].PCR, &VAR_PCR);
-                    
-                }
-                peticion->cantidad=0;
                 break;
             default:
                 break;
@@ -120,19 +112,17 @@ void actor_inventario_ugc(void *datos_UGC)
             switch (peticion->tipo_recurso)
             {
             case PideTanque:
-                sem_signal(&Tabla_Hospitales[i].consultaTanques);
+                refmap_unsafe_unlock(&Tabla_Hospitales[i].enfermeras);
                 break;
             case PideRespirador:
-                sem_signal(&Tabla_Hospitales[i].consultaOxigeno);
+                refmap_unsafe_unlock(&Tabla_Hospitales[i].medicos);
                 break;
             default:
                 break;
             }
             
         }
-        sem_signal(&Tabla_Hospitales[peticion->idHospital].EsperandoPorRecurso);
         free(peticion);
-        
 
     }
     

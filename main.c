@@ -170,4 +170,3 @@ void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* conte
     if( signo != SIGUSR1 ) return;
     fprintf( stderr , "Peticion: Actualizar estadisticas:..." );
 }
-

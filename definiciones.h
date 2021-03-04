@@ -59,7 +59,7 @@ typedef pthread_barrier_t Barrier;
 
 // [*] PERSONAL:
 typedef enum { Ninguno, EnCasa, Basica, Intensivo, Muerto} TipoAtencion; // Antes: enum cama.
-typedef enum { PidePCR , PideTanque, PideRespirador} Recurso; 
+typedef enum { PidePCR , PideTanque, PideRespirador,PideEnfermera,PideMedico} Recurso; 
 typedef enum { Medico , Enfermera } TipoPersonal;
 typedef struct {
     int          id;
@@ -114,6 +114,8 @@ typedef enum { Centinela , Intermedio , General } TipoHospital;
 typedef struct {
     int ncamasBas;
     int ncamasInt;
+    int nenfermeras;
+    int nmedicos;
     int ntanques;
     int nrespira;
 } TuplaRecursos;
@@ -180,6 +182,7 @@ typedef struct {
     RefQueue     respiradores;
     RefQueue     PCR;
 
+    Condicion        stast;
     TuplaRecursos estadis_recursos; // Se actualizan siempre (incremento en valores), pero son reiniciadas
     Mutex         estadisticasLock; // 2 veces al día. Por ello usan un seguro de escritura/lectura
                                     // (Así como en base de datos)
@@ -196,6 +199,7 @@ typedef struct {
     sem_t        camasIntensivo;
     sem_t        tanquesOxigeno;
     sem_t        respiradores;
+    sem_t        espera_personal;
 
     // TODO: Inicializar primero antes de usar.
     // Todos están disponibles.
@@ -203,6 +207,9 @@ typedef struct {
     RefQueue     enfermeras;
     RefQueue     pacientes;
     RefQueue     voluntarios;
+    RefQueue     peticiones;
+    RefQueue     peticionesPersonal;
+    
 
     TuplaRecursos estadisticas[NACTUALIZACIONES];
     Mutex         estadisticasLock;
@@ -242,9 +249,8 @@ typedef struct {
 void construirVoluntario( Voluntario* v , int id );
 void destruirVoluntario ( Voluntario* v );
 
+
 //RefQueue pacienteEnCasa;
-
-
 
 // referencias globales que se puedan alcanzar desde
 // cualquier hilo.
@@ -265,6 +271,13 @@ void inicializarEnfermeras();
 void inicializarHospitales( float porc_centinelas, float porc_intermedio , float porc_general );
 void inicializarPacientesEnCasa();
 void inicializarVoluntarios();
+
+typedef struct {
+    int id;
+    Hospital         refHospital;
+    pthread_mutex_t  espera;
+}jefe_uci;
+
 TipoAtencion obtener_diagnostico_simple();
 TipoAtencion obtener_diagnostico_compuesta(void *paciente);
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
