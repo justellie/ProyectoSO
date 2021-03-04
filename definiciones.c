@@ -123,8 +123,8 @@ void construirHospital( Hospital* h , int id , TuplaRecursos* descripcion ){
 
     sem_init( &h->camasBasico    , CompartidoEntreHilos , descripcion->ncamasBas );
     sem_init( &h->camasIntensivo , CompartidoEntreHilos , descripcion->ncamasInt );
-    sem_init( &h->tanquesOxigeno , CompartidoEntreHilos , descripcion->ntanques  );
-    sem_init( &h->respiradores   , CompartidoEntreHilos , descripcion->nrespira  );
+    refqueue_singleton( &h->tanquesOxigeno );
+    refqueue_singleton( &h->respiradores   );
 
     // No se ha usado nada:
     h->estadis_recursos.ncamasBas = 0;
@@ -145,8 +145,8 @@ void destruirHospital ( Hospital* h ){
 
     sem_destroy( &h->camasBasico    );
     sem_destroy( &h->camasIntensivo );
-    sem_destroy( &h->tanquesOxigeno );
-    sem_destroy( &h->respiradores   );
+    refqueue_destroy( &h->tanquesOxigeno );
+    refqueue_destroy( &h->respiradores   );
 
     // No se ha usado nada:
     h->estadis_recursos.ncamasBas = 0;

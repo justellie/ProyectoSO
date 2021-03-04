@@ -70,9 +70,6 @@ static int     isRed        ( NodeRB* node );
 static COLOR _flipcolor ( COLOR c );
 
 // Refmap private functions:
-static void refmap_unsafe_delete   ( RefMap* t , void* key );
-static void refmap_unsafe_deleteMin( RefMap* t );
-static void refmap_unsafe_deleteMax( RefMap* t );
 
 static void print_opaque( void *unknow );
 static void debug( NodeRB* x , int indent , int incr ,
@@ -251,6 +248,9 @@ void refmap_init( RefMap* t                            ,
     t->callstack = malloc( t->callsz * sizeof(NodeRB**) );
     STOP_IF_UNSAFE( t->callstack , "refmap_init: Unable to build call stack." );
 }
+
+void*  refmap_unsafe_lock  ( RefMap* t ){ pthread_mutex_lock( &t->lock );   }
+int    refmap_unsafe_unlock( RefMap* t ){ pthread_mutex_unlock( &t->lock ); }
 
 int refmap_unsafe_empty( RefMap* t ){ return t->root == NULL; }
 int refmap_unsafe_size ( RefMap* t ){ return nodeSize( t->root ); }
@@ -458,7 +458,7 @@ static void* delete( NodeRB** root , void* key , int (*compare)(void*,void*) , N
     return extracted_key;
 }
 
-static void refmap_unsafe_delete( RefMap* t , void* key ){
+void refmap_unsafe_delete( RefMap* t , void* key ){
     static int extra = BOTTOM_STACK_SIZE;
     if( !refmap_unsafe_contains(t,key) ) return;
 
@@ -487,7 +487,7 @@ void refmap_delete( RefMap* t , void* key ){
     pthread_mutex_unlock( &t->lock );
 }
 
-static void refmap_unsafe_deleteMin( RefMap* t ){
+void refmap_unsafe_deleteMin( RefMap* t ){
     static int extra = BOTTOM_STACK_SIZE;
 
     // Initial Interface:
@@ -571,7 +571,7 @@ void refmap_deleteMin( RefMap* t ){
 }
 
 
-static void refmap_unsafe_deleteMax( RefMap* t ){
+void refmap_unsafe_deleteMax( RefMap* t ){
     static int extra = BOTTOM_STACK_SIZE;
 
     // Initial Interface:
