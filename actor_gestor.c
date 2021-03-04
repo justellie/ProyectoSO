@@ -11,10 +11,6 @@
 
 #include "actores.h"
 #include "definiciones.h"
-///@fn TipoAtencion obtenerDiagnostico(Paciente *atendiendo);
-///@brief determina cual sera la atencion que se le de al paciente, segun sus sintomas
-///@param atendiendo referencia a la informacion del paciente
-TipoAtencion obtenerDiagnostico(Paciente *); //esto es para que no me muestre el error
 
 ///@fn int liberarRecursos(int, Paciente *, float, TipoAtencion);
 ///@brief libera los recursos que el paciente tenga reservados anteriormente, segun su diagnostico
@@ -44,6 +40,7 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
             }
             refqueue_put(&refHospital->respiradores, NULL);
             sem_post(&refHospital->camasIntensivo);
+            atendiendo->tiene_cama=0;
             if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad]==-1)
                 resultado=true;
             
@@ -69,16 +66,9 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
             }
             refqueue_put(&refHospital->tanquesOxigeno, NULL);
             sem_post(&refHospital->camasBasico);
+            atendiendo->tiene_cama=0;
             if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad]==-1)
                 resultado=true;
-            
-        break;
-
-        case EnCasa:
-            for (int i = 0; i < NVOLUNTARIOS; i++)
-            {
-                //aun no se como se reservan y se liberan voluntarios
-            }
             
         break;
     }
@@ -97,6 +87,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
 {
     //se esta suponiendo que refHospital-><arreglo de mapas personal>[0] es el nivel mas bajo y por tanto en el que esta completamente ocupado el personal
     //por lo tanto refHospital-><arreglo de mapas personal>[4] es el nivel mas alto, en el que se encuentran totalmente disponibles
+    
     bool respirador_flag, oxigeno_flag;
     int resultado = -1, enf_flag= 0, med_flag = 0;
     switch (diagActual)
@@ -108,8 +99,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                 if( errno == EAGAIN )
                 {
                     // Enviar al paciente a la UGC para que sea transferido de hospital
-                    // avisar al paciente de esta accion 
-                    resultado = 2;
+                    resultado = -1;
                 }
             }
             else
@@ -118,7 +108,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                 {
                     //reservacion de enfermeras
                     Personal *enf = refmap_extract_max(&refHospital->enfermeras[4]);
-                    if (!enf==NULL)
+                    if (enf!=NULL)
                     {
                         atendiendo->enfID[i]=enf->id;
                         refmap_put(&refHospital->enfermeras[0], &enf->id, enf);
@@ -126,7 +116,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     }
                     //reservacion de medicos
                     Personal *med = refmap_extract_max(&refHospital->medicos[4]);
-                    if (!enf==NULL)
+                    if (enf!=NULL)
                     {
                         atendiendo->medID[i]=med->id;
                         refmap_put(&refHospital->medicos[0], &med->id, med);
@@ -182,8 +172,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                 if( errno == EAGAIN )
                 {
                     // Enviar al paciente a la UGC para que sea transferido de hospital
-                    // avisar al paciente de esta accion 
-                    resultado = 2;
+                    resultado = -1;
                 }
             }
             else
@@ -254,12 +243,6 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     resultado=-1;
                 }                
             }
-            
-            
-        break;
-
-        case EnCasa:
-            //reservasion de voluntarios
         break;
     }
     return resultado;
@@ -272,15 +255,28 @@ void actor_gestor(void *datos_gestor)
 {
     GestorCama *datos = (GestorCama *) datos_gestor;
     TipoHospital hosp_type = datos->hospital->tipo;
+    TipoAtencion diagAct;
+    TipoAtencion diagPrev;
     while(true)
     {
+        ///Paciente que esta siendo atendio por el gestor 
         Paciente *atendiendo = refqueue_get(&datos->hospital->pacientes);
-        //avisar al paciente que esta siendo atendido
-        TipoAtencion diagPrev = atendiendo->servicio;
-        TipoAtencion diagAct = obtenerDiagnostico(atendiendo);
+        
+        if(atendiendo->ingresando)
+        {
+            atendiendo->ingresando=0;
+            diagAct = atendiendo->servicio;
+            diagPrev = Ninguno;
+        }
+        else 
+        {
+            diagPrev = atendiendo->servicio;
+            diagAct = obtener_diagnostico_compuesta(atendiendo);
+        }
         int status=0;
+        bool alta = false, dead=false;
 
-        if(atendiendo->tiene_cama && diagPrev==diagAct)
+        if(atendiendo->tiene_cama && diagPrev==diagAct && diagAct!=Ninguno)
         {
                 refqueue_put(&datos->hospital->pacientes, atendiendo);
         }
@@ -294,83 +290,37 @@ void actor_gestor(void *datos_gestor)
                         case Centinela:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
-                                status=reservarRecursos(datos->hospital, atendiendo, 3, Intensivo);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);                                
                             }
                             else
                             {
-                                if(diagPrev==EnCasa)
-                                {
-                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                                }
-                                status=reservarRecursos(datos->hospital, atendiendo, 3, Intensivo);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                datos->hospital->estadis_pacientes.hospitalizados++;
                             }
-                            refqueue_put(&datos->hospital->pacientes, atendiendo);
-                            
+                            status=reservarRecursos(datos->hospital, atendiendo, 3, Intensivo);                                                        
                         break;
 
                         case Intermedio:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
-                                status=reservarRecursos(datos->hospital, atendiendo, 2, Intensivo);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);                                                             
                             }
                             else
                             {
-                                if(diagPrev==EnCasa)
-                                {
-                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                                }
-                                status=reservarRecursos(datos->hospital, atendiendo, 2, Intensivo);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                datos->hospital->estadis_pacientes.hospitalizados++;
                             }
-                            refqueue_put(&datos->hospital->pacientes, atendiendo);
+                            status=reservarRecursos(datos->hospital, atendiendo, 2, Intensivo);
                         break;
                         
                         case General:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                                status=reservarRecursos(datos->hospital, atendiendo, 1, Intensivo);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);                                
                             }
                             else
                             {
-                                if(diagPrev==EnCasa)
-                                {
-                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                                }
-                                status=reservarRecursos(datos->hospital, atendiendo, 1, Intensivo);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                datos->hospital->estadis_pacientes.hospitalizados++;
                             }
-                            refqueue_put(&datos->hospital->pacientes, atendiendo);
+                            status=reservarRecursos(datos->hospital, atendiendo, 1, Intensivo);
                         break;
                     }
                     
@@ -382,82 +332,37 @@ void actor_gestor(void *datos_gestor)
                         case Centinela:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
-                                status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);                                                                
                             }
                             else
                             {
-                                if(diagPrev==EnCasa)
-                                {
-                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                                }
-                                status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
-                            }
-                            refqueue_put(&datos->hospital->pacientes, atendiendo);
+                                datos->hospital->estadis_pacientes.hospitalizados++;
+                            }                             
+                            status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                         break;
 
                         case Intermedio:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
-                                status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);                               
                             }
                             else
                             {
-                                if(diagPrev==EnCasa)
-                                {
-                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                                }
-                                status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                datos->hospital->estadis_pacientes.hospitalizados++;
                             }
-                            refqueue_put(&datos->hospital->pacientes, atendiendo);
+                            status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                         break;
                         
                         case General:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                                status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);                                
                             }
                             else
                             {
-                                if(diagPrev==EnCasa)
-                                {
-                                    liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                                }
-                                status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
-                            }
-                            refqueue_put(&datos->hospital->pacientes, atendiendo);
+                                datos->hospital->estadis_pacientes.hospitalizados++;
+                            }                            
+                            status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                         break;
                     }
                 break;
@@ -468,67 +373,37 @@ void actor_gestor(void *datos_gestor)
                         case Centinela:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
-                                status=reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);                                
                             }
                             else
                             {
-                                status=reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                datos->hospital->estadis_pacientes.monitoreados++;
                             }
+                            refqueue_put(&pacienteEnCasa, atendiendo);
                         break;
 
                         case Intermedio:
                             if(atendiendo->tiene_cama)
                             {
-                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
-                                status=reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);                                                                
                             }
                             else
                             {
-                                status=reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                datos->hospital->estadis_pacientes.monitoreados++;
                             }
+                            refqueue_put(&pacienteEnCasa, atendiendo);
                         break;
                         
                         case General:
                             if(atendiendo->tiene_cama)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                                status=reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
                             }
                             else
                             {
-                                status=reservarRecursos(datos->hospital, atendiendo, 1, EnCasa);
-                                if(status==2)
-                                {
-                                    //transferir
-                                    continue;
-                                }
+                                datos->hospital->estadis_pacientes.monitoreados++;
                             }
+                            refqueue_put(&pacienteEnCasa, atendiendo);
                         break;
                     }
                 break;
@@ -538,20 +413,20 @@ void actor_gestor(void *datos_gestor)
                     {
                         case Centinela:
                             liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
-                            //no volver a poner el hilo en la cola de pacientes
-                            //finalizar el hilo
+                            datos->hospital->estadis_pacientes.muertos++;
+                            dead=true;
                         break;
 
                         case Intermedio:
                             liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
-                            //no volver a poner el hilo en la cola de pacientes
-                            //finalizar el hilo
+                            datos->hospital->estadis_pacientes.muertos++;
+                            dead=true;
                         break;
                         
                         case General:
                             liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                            //no volver a poner el hilo en la cola de pacientes
-                            //finalizar el hilo
+                            datos->hospital->estadis_pacientes.muertos++;
+                            dead=true;
                         break;
                     }
                 break;
@@ -561,25 +436,46 @@ void actor_gestor(void *datos_gestor)
                     {
                         case Centinela:
                             liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
-                            //no volver a poner el hilo en la cola de pacientes
-                            //liberar el hilo
+                            datos->hospital->estadis_pacientes.dadosDeAlta++;
+                            alta = true;
                         break;
 
                         case Intermedio:
                             liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
-                            //no volver a poner el hilo en la cola de pacientes
-                            //liberar el hilo
+                            datos->hospital->estadis_pacientes.dadosDeAlta++;
+                            alta = true;
                         break;
                         
                         case General:
                             liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
-                            //no volver a poner el hilo en la cola de pacientes
-                            //liberar el hilo
+                            datos->hospital->estadis_pacientes.dadosDeAlta++;
+                            alta = true;
                         break;
                     }
                 break;
             }
+            if (status==-1)
+            {
+                //refqueue_put(&UGC, atendiendo);
+                continue;
+            } 
+            else
+            {
+                atendiendo->tiene_cama=1;
+                refqueue_put(&datos->hospital->pacientes, atendiendo);
+            }
         }
-        //avisar al paciente que ya fue atendido
+        //aviso al paciente de que ha sido atendido
+        atendiendo->servicio=diagAct;
+        atendiendo->fueAtendido++;
+        if (alta)
+        {
+            atendiendo->deAlta++;
+            atendiendo->ingresando=1;
+        }
+            
+        if (dead)
+            atendiendo->vivo=0;
+        
     }
 }
