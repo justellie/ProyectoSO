@@ -69,6 +69,9 @@ void construirPaciente( Paciente* p , int id ){
     // Permite pausar al paciente hasta que sea necesario.
     pthread_mutex_init( &p->atendidoLock , NULL );
     pthread_cond_init  ( &p->atendido     , NULL );
+
+
+    pthread_mutex_init( &p->medLock , NULL );
 }
 
 void destruirPaciente ( Paciente* p ){
