@@ -21,7 +21,7 @@ void actor_voluntario(void* datos_voluntario)
 	TipoAtencion diagAct;
 	while(true)
 	{
-		Paciente *atendiendo = refqueue_get(pacienteEnCasa);
+		Paciente *atendiendo = refqueue_get(&pacienteEnCasa);
 		diagAct = obtener_diagnostico_compuesta(atendiendo);
 		atendiendo->servicio=diagAct;
 
@@ -48,12 +48,13 @@ void actor_voluntario(void* datos_voluntario)
 			default: // Ingresa de nuevo al hospital
 			{
 				atendiendo->ingresando = 1;
-				refqueue_put(UGC->pacientes, atendiendo);
+				refqueue_put(&gestor_central.pacientes, atendiendo);
 				break;
 			}
 			
 		}
 
         atendiendo->fueAtendido++;
+		pthread_cond_signal(&atendiendo->atendido);
 	}
 }

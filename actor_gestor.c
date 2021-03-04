@@ -40,14 +40,14 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                 //Liberacion enfermeras
                 Personal *enf = refmap_extract(&refHospital->enfermeras[0], &atendiendo->enfID[i]);
                 atendiendo->enfID[i]=-1;
-                refmap_put(&refHospital->enfermeras[4], &enf->id, enf);
+                refmap_put(&refHospital->enfermeras[4], &enf, enf);
                 //Liberacion medicos
                 Personal *med = refmap_extract(&refHospital->medicos[0], &atendiendo->medID[i]);
                 atendiendo->medID[i]=-1;
-                refmap_put(&refHospital->medicos[4], &med->id, med);
+                refmap_put(&refHospital->medicos[4], &med, med);
             }
             //Liberacion de los respiradores
-            refqueue_put(&refHospital->respiradores, NULL);
+            refqueue_put(&refHospital->respiradores, (void *) 1);
             refHospital->estadis_recursos.nrespira++;
             //Liberacion de la cama
             sem_post(&refHospital->camasIntensivo);
@@ -69,7 +69,7 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                 {
                     //Se quita el id de la enfermera del registro del paciente
                     atendiendo->enfID[0]=-1; //Siempre sera 0 ya que, un paciente basico no puede tener mas de una enfermera
-                    refmap_put(&refHospital->enfermeras[i+1], &enf->id, enf); //Se recoloca a la enfermera en el mapa, un nivel de ocupacion por debajo
+                    refmap_put(&refHospital->enfermeras[i+1], &enf, enf); //Se recoloca a la enfermera en el mapa, un nivel de ocupacion por debajo
                                                                               //por como esta pensado, bajar un nivel de ocupacion implica sumar 
                 }
                 //liberacion medicos, se comporta de la misma forma que la liberacion de enfermeras
@@ -77,11 +77,11 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                 if (med!=NULL)
                 {
                     atendiendo->medID[0]=-1;
-                    refmap_put(&refHospital->medicos[i+1], &med->id, med);
+                    refmap_put(&refHospital->medicos[i+1], &med, med);
                 }
             }
             //Liberacion del tanque de oxigeno que esta en uso por el paciente            
-            refqueue_put(&refHospital->tanquesOxigeno, NULL);
+            refqueue_put(&refHospital->tanquesOxigeno, (void *) 1);
             refHospital->estadis_recursos.ntanques++;
             //Liberacion de la cama basica
             sem_post(&refHospital->camasBasico);
@@ -143,7 +143,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     {
                         //Al encontrar una enfermera, se le asigna al paciente y se coloca en el nivel mas alto de ocupacion
                         atendiendo->enfID[i]=enf->id;
-                        refmap_put(&refHospital->enfermeras[0], &enf->id, enf);
+                        refmap_put(&refHospital->enfermeras[0], &enf, enf);
                         //Este contador indica si se reservo la cantidad necesaria de enfermeras
                         enf_flag++;
                     }
@@ -152,7 +152,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     if (enf!=NULL)
                     {
                         atendiendo->medID[i]=med->id;
-                        refmap_put(&refHospital->medicos[0], &med->id, med);
+                        refmap_put(&refHospital->medicos[0], &med, med);
                         med_flag++;
                     }
                 }
@@ -192,7 +192,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     //y se procede a transferir al paciente
                     if(respirador_flag)
                     {
-                        refqueue_put(&refHospital->respiradores, NULL);
+                        refqueue_put(&refHospital->respiradores, (void *) 1);
                         refHospital->estadis_recursos.nrespira++;
                     }
                     for (int i = 0; i < enf_flag; i++)
@@ -200,7 +200,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                         if(atendiendo->enfID[i]!=-1){
                             Personal *enf = refmap_extract(&refHospital->enfermeras[0], &atendiendo->enfID[i]);
                             atendiendo->enfID[i]=-1;
-                            refmap_put(&refHospital->enfermeras[4], &enf->id, enf);
+                            refmap_put(&refHospital->enfermeras[4], &enf, enf);
                         }
                     }
                     for (int i = 0; i < med_flag; i++)
@@ -208,7 +208,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                         if(atendiendo->medID[i]!=-1){
                             Personal *med = refmap_extract(&refHospital->medicos[0], &atendiendo->medID[i]);
                             atendiendo->medID[i]=-1;
-                            refmap_put(&refHospital->medicos[4], &med->id, med);
+                            refmap_put(&refHospital->medicos[4], &med, med);
                         }
                     }
                     resultado=-1;
@@ -243,14 +243,14 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     {
                         //Al encontrar una enfermera, se le asigna al paciente y se coloca en una nivel mas alto de ocupacion
                         atendiendo->enfID[0]=enf->id;
-                        refmap_put(&refHospital->enfermeras[i-1], &enf->id, enf);
+                        refmap_put(&refHospital->enfermeras[i-1], &enf, enf);
                     }
                     //resserva de medicos, comportamiento similar a la enfermeras
                     Personal *med = refmap_extract_max(&refHospital->medicos[i]);
                     if (med!=NULL)
                     {
                         atendiendo->medID[0]=med->id;
-                        refmap_put(&refHospital->medicos[i-1], &med->id, med);
+                        refmap_put(&refHospital->medicos[i-1], &med, med);
                     }
                 }
                 //reserva de tanque de oxigeno
@@ -294,7 +294,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     //y se procede a transferir al paciente
                     if(respirador_flag)
                     {
-                        refqueue_put(&refHospital->tanquesOxigeno, NULL);
+                        refqueue_put(&refHospital->tanquesOxigeno, (void *) 1);
                         refHospital->estadis_recursos.ntanques++;
                     }
 
@@ -305,7 +305,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                             if (enf!=NULL)
                             {
                                 atendiendo->enfID[0]=-1;
-                                refmap_put(&refHospital->enfermeras[i+1], &enf->id, enf);
+                                refmap_put(&refHospital->enfermeras[i+1], &enf, enf);
                             }                        
                         }
                     }
@@ -317,7 +317,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                             if (med!=NULL)
                             {
                                 atendiendo->medID[0]=-1;
-                                refmap_put(&refHospital->medicos[i+1], &med->id, med);
+                                refmap_put(&refHospital->medicos[i+1], &med, med);
                             }
                         }                                        
                     }
@@ -345,6 +345,12 @@ void actor_gestor(void *datos_gestor)
         ///Paciente que esta siendo atendio por el gestor 
         Paciente *atendiendo = refqueue_get(&datos->hospital->pacientes);
         
+        if (atendiendo->fueAtendido==0)
+        {
+            atendiendo->fueAtendido++;
+            pthread_cond_signal(&atendiendo->atendido);
+        }
+
         //Si el paciente esta ingresando por primera vez 
         if(atendiendo->ingresando)
         {
@@ -552,12 +558,14 @@ void actor_gestor(void *datos_gestor)
                 {
                     atendiendo->deAlta++;
                     atendiendo->ingresando=1;
+                    pthread_cond_signal(&atendiendo->atendido);
                 }
                 else
                 {
                     if (dead)
                     {
                         atendiendo->vivo=0;
+                        pthread_cond_signal(&atendiendo->atendido);
                     }
                     else 
                     {
@@ -577,8 +585,6 @@ void actor_gestor(void *datos_gestor)
         }
         //aviso al paciente de que ha sido atendido
         atendiendo->servicio=diagAct;
-        atendiendo->fueAtendido++;
-        
-        
+          
     }
 }
