@@ -22,12 +22,20 @@
 #define ABSOLUTE TIMER_ABSTIME
 #define RELATIVE 0
 
+// [@] Sincronizacion global ---------
+Barrier    Paso_Inicializacion;
 
-// TODO: Finalizar. Tienen que inicializar todo.
-void inicializar_hospitales();
-void inicializar_ugc();
+// [+] Tablas globales global -------------------
+Paciente   Tabla_Pacientes[NPACIENTES];
+Personal   Tabla_Medicos[NMEDICOS];
+Personal   Tabla_Enfermeras[NENFERMERAS];
+Hospital   Tabla_Hospitales[NHOSPITALES];
+GestorCama Tabla_Gestores[NGESTORES];
+Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
 
-///
+// [*] Voluntarios -----------
+RefQueue pacienteEnCasa;
+
 /// @brief Cambia las condiciones globales para obligar a la actualización de las estadísticas.
 /// @details Cambia ciertos flags y variables de condición en el programa para forzar la evaluación y
 ///          actualización de las estadísticas globales. **Debe usarse como manejador de la señal**
@@ -48,11 +56,17 @@ void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* conte
 /// @param context contexto de control.
 void forzar_finalizacion( int signo , siginfo_t* info , void* context );
 
-
 int main(){
     int SYS_CLOCK = CLOCK_REALTIME;
-    inicializar_hospitales();
-    inicializar_ugc();
+    int status;
+
+    inicializarPacientes();
+    inicializarMedicos();
+    inicializarEnfermeras();
+    inicializarHospitales( 0.20 , 0.30 , 0.50 ); // 0.20 + 0.30 + 0.50 ~= 1.0
+    inicializarPacientesEnCasa();
+    inicializarVoluntarios();
+
 
     // ----------------------------------------------------------------------------------
     // Se establecen los manejadores de señales y los timers específicos para generarlas:
@@ -73,7 +87,6 @@ int main(){
     // ------------------------------------------------------------------------
     // Conjunto que cambia el comportamiento de los hilos bajo ciertas señales:
     sigset_t mask, oldmask;
-    int      status;
     sigemptyset( &mask );
 
     // Bloquea Ctrl+C (Finalizar programa), SIGUSR1: (Acciones regulares definidas por nosotros)
@@ -87,6 +100,7 @@ int main(){
     }
     // Desde aquí se pueden crear el resto de los hilos.
     // TODO: Crear hilos aquí
+    // TODO: Añadir un barrier a todos los hilos para que esperen hasta que el main esté listo para continuar.
     // pthread_create(...)
     // ...
     // ------------------------------------------------------------------------
@@ -104,6 +118,8 @@ int main(){
     if( sigaction( SIGINT  , &on_quit_request , NULL ) == -1 )
         { fprintf(stderr, "Unable to set sigaction\n"); exit( EXIT_FAILURE); }
     // ------------------------------------------------------------------------
+
+
 
 
     // ------------------------------------------------------------------------
@@ -155,7 +171,3 @@ void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* conte
     fprintf( stderr , "Peticion: Actualizar estadisticas:..." );
 }
 
-
-// TODO: Finalizar. Tienen que inicializar todo.
-void inicializar_hospitales(){ return; }
-void inicializar_ugc(){ return; }
