@@ -37,8 +37,9 @@ void actor_paciente(void *datos_paciente)
 
         if (seSienteMal){
             decidirHosp = rand ()%NHOSPITALES;
-            HospElegid =&(Tabla_Hospitales[decidirHosp]);
-            datos->fueAtendido=0;
+            HospElegid = &(Tabla_Hospitales[decidirHosp]);
+            datos->fueAtendido = 0;
+            datos->deAlta = 0;
 
 
 
@@ -55,7 +56,7 @@ void actor_paciente(void *datos_paciente)
             // Espera a que lo atiendan
             pthread_mutex_lock( &datos->atendidoLock);
                 while (!datos->fueAtendido) {
-                    pthread_cond_wait(&datos->atendidoLock, &datos->atendidoLock);
+                    pthread_cond_wait(&datos->atendido, &datos->atendidoLock);
                 }
             pthread_mutex_unlock( &datos->atendidoLock);
             
@@ -63,7 +64,7 @@ void actor_paciente(void *datos_paciente)
             //Espera a estar sano
             pthread_mutex_lock( &datos->medLock);
                 while (!datos->vivo ||datos->deAlta) {
-                    pthread_cond_wait(&datos->atendidoLock, &datos->atendidoLock);
+                    pthread_cond_wait(&datos->atendido, &datos->medLock);
                 }
             pthread_mutex_unlock( &datos->medLock);
             

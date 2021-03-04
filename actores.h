@@ -97,7 +97,7 @@ void actor_gestor    ( void* hospital );
 //                                     la UGC.
 //
 
-// ---- RESPONSABILIDADES DEL PACIENTE ----
+// ---- RESPONSABILIDADES DEL PACIENTE ----    sem_signal(HospElegid->salaMuestra);                // Sa
 // [Trayecto al hospital]
 // 1. Ir al hospital
 // 2. Esperar su turno en la cola
