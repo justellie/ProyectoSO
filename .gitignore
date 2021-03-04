@@ -2,6 +2,7 @@
 *.docx
 *.pdf
 *.txt
+.vscode
 
 # Archivos Objetos y misceláneos del compilador
 *.out
@@ -11,3 +12,5 @@
 # Archivos generados por Doxygen
 /html
 /latex
+
+propuesta.c

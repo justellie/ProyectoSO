@@ -50,7 +50,7 @@ void   refqueue_init   ( RefQueue* qs , void  (*free)(void*) ,
 // Operaciones Atómicas:
 void   refqueue_put    ( RefQueue* qs , void* item );
 void*  refqueue_get    ( RefQueue* qs );
-void*  refqueue_tryget ( RefQueue* qs );    // retorna NULL y errno = EBUSY si qs está vacío.
+void*  refqueue_tryget ( RefQueue* qs );    // retorna NULL y errno = EAGAIN si qs está vacío.
 void   refqueue_clean  ( RefQueue* qs );    // Just uses pop.
 void   refqueue_destroy( RefQueue* qs );
 void   refqueue_deallocateAll( RefQueue* qs );   // Applies free() to each object and q gets empty.
@@ -91,7 +91,7 @@ int    refqueue_unsafe_empty( RefQueue* qs );
 /// @brief Intenta extraer un elemento de la cola.
 /// @param qs Cola objetivo.
 /// @return la referencia del objeto en caso de exito. NULL en caso contrario.
-/// @details Similar a refqueue_get. retorna NULL y se establece a errno = EBUSY cuando la cola está
+/// @details Similar a refqueue_get. retorna NULL y se establece a errno = EAGAIN cuando la cola está
 //           vacía. Se puede utilizar para extraer elementos de manera segura y manejar los errores
 //           cuando sea necesario.
 /// @see refqueue_get.

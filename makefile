@@ -29,6 +29,11 @@ run:
 	@command ./$(TARGET)
 
 
+# ------------------------------------------------------
+# Crea los archivos de definiciones:
+definiciones: refmap generic-queue
+	@echo [D] Generando definiciones:
+	$(CC) $(COMMON) $(LIBFLG) RefQueue.o RefMap.o definiciones.h definiciones.c
 
 
 # ------------------------------------------------------

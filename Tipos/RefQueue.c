@@ -98,7 +98,7 @@ void* refqueue_get( RefQueue* qs ){
     return item;
 }
 
-// Si qs está vacío, retorna NULL y establece a errno = EBUSY.
+// Si qs está vacío, retorna NULL y establece a errno = EAGAIN.
 void* refqueue_tryget( RefQueue* qs ){
     RefQueue* self = qs;
     void*     item;
@@ -109,7 +109,7 @@ void* refqueue_tryget( RefQueue* qs ){
     if( refqueue_unsafe_empty(self) ){
         // |> End Critical Region:
         pthread_mutex_unlock( &self->lock );
-        errno = EBUSY;
+        errno = EAGAIN;
         return NULL;
     } else {
         item = refqueue_unsafe_get( self );
