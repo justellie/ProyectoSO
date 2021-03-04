@@ -23,10 +23,9 @@
 ///@fn void actor_paciente(void *datos_paciente)
 ///@brief funcion que ejecuta el actor paciente para realizar sus funciones
 ///@param datos_paciente estructura que contiene los datos basicos de un paciente
-void actor_paciente(void *datos_paciente){
+void actor_paciente(void *datos_paciente)
 {
     Paciente *datos = (Paciente *) datos_paciente;
-    int fueAtendido = 0;                            // Condición de espera a que lo atiendan
     int decidirHosp;                                // Entero que se obtiene al azar y decide a cual hospital ir
     int seSienteMal;
     Hospital * HospElegid = NULL;                   // Variable que almacena el hospital elegido con el valor entero
@@ -34,12 +33,13 @@ void actor_paciente(void *datos_paciente){
     while (datos->vivo)
     {    
         // Se decide el hospital al que va a ir
-
         seSienteMal = autoexamen();
 
         if (seSienteMal){
-            decidirHosp = srand (time(NULL))%NHOSPITALES;
-            HospElegid =(Hospital *) Tabla_Hospitales[decidirHosp];
+            decidirHosp = rand ()%NHOSPITALES;
+            HospElegid = &(Tabla_Hospitales[decidirHosp]);
+            datos->fueAtendido = 0;
+            datos->deAlta = 0;
 
 
 
@@ -56,7 +56,7 @@ void actor_paciente(void *datos_paciente){
             // Espera a que lo atiendan
             pthread_mutex_lock( &datos->atendidoLock);
                 while (!datos->fueAtendido) {
-                    pthread_cond_wait(&datos->atendidoLock, &datos->atendidoLock);
+                    pthread_cond_wait(&datos->atendido, &datos->atendidoLock);
                 }
             pthread_mutex_unlock( &datos->atendidoLock);
             
@@ -64,7 +64,7 @@ void actor_paciente(void *datos_paciente){
             //Espera a estar sano
             pthread_mutex_lock( &datos->medLock);
                 while (!datos->vivo ||datos->deAlta) {
-                    pthread_cond_wait(&datos->atendidoLock, &datos->atendidoLock);
+                    pthread_cond_wait(&datos->atendido, &datos->medLock);
                 }
             pthread_mutex_unlock( &datos->medLock);
             
@@ -76,9 +76,10 @@ void actor_paciente(void *datos_paciente){
 }
 
 
-int autoexamen(){
+int autoexamen()
+{
     //Espera 3 segundos
     sleep(3);
-    return srand (time(NULL))%100 < 30; //Hay un 30% de posibilidades de que se sienta mal
+    return rand ()%100 < 30; //Hay un 30% de posibilidades de que se sienta mal
 }
 #endif
