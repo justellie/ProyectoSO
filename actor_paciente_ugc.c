@@ -45,7 +45,7 @@ void actor_paciente_ugc(void *inv_ugc)
                 // Discriminador de camas si requiere cuidado intensivo o no //
                 if(busqHospital->tipo == i)
                 {   
-                    if(peticion->servicio = Intensivo)
+                    if(peticion->servicio == Intensivo)
                         sem_getvalue(&busqHospital->camasIntensivo,&numDisp);   // Ve cuantas camas tiene disponible
                     else
                         sem_getvalue(&busqHospital->camasBasico,&numDisp);      // Ve cuantas camas tiene disponible
