@@ -1,44 +1,3 @@
-<<<<<<< HEAD
-#include "actores.h"
-#include "definiciones.h"
-#include <stdlib.h>
-
-#include <time.h>
-#include <signal.h>
-
-// Crea los timers y eventos particulares:
-// SIGUSR1 <-- Llegó el momento de hacer un reporte.
-#define NANOSEGUNDOS_EN_SEGUNDOS 1000000000;
-#define ABSOLUTO TIMER_ABSTIME
-#define RELATIVO 0
-typedef struct DatosTemporizador{
-    int               tipo;
-    struct sigevent   ptr_evento:
-    struct itimerspec intervalo;
-}DatosTemporizador;
-
-void activar_estadisticas_ugc( int segundos , int nano_segundos ){
-
-    timerspec_t start    = { segundos , nano_segundos };
-    timerspec_t interval = { segundos , nano_segundos };
-    // start    != 0 -> sin expiración. en seguida. interval != 0 -> recarga
-    DatosTemporizador info = { ABSOLUTO , {0,SIGUSR1} , {start,interval} }
-
-    union sigval evento;
-    struct sigevent evento = { };
-
-    timer_create();
-    // TODO: Usar al limipiar esto.
-    // timer_delete();
-
-
-
-}
-
-int main(){
-    exit( EXIT_SUCCESS );
-}
-=======
 /**
  * @file main.c
  * @brief Programa principal. Inicializa todas las variables e hilos para el funcionamiento del programa.
@@ -63,12 +22,42 @@ int main(){
 #define ABSOLUTE TIMER_ABSTIME
 #define RELATIVE 0
 
+// [@] Sincronizacion global ---------
+Barrier    Paso_Inicializacion;
 
-// TODO: Finalizar. Tienen que inicializar todo.
-void inicializar_hospitales();
-void inicializar_ugc();
+// [+] Tablas globales de Datos -----------------
+Paciente   Tabla_Pacientes[NPACIENTES];
+Personal   Tabla_Medicos[NMEDICOS];
+Personal   Tabla_Enfermeras[NENFERMERAS];
+Hospital   Tabla_Hospitales[NHOSPITALES];
+GestorCama Tabla_Gestores[NHOSPITALES];
+Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+UGC        gestor_central;
 
-///
+// [^] Tablas globales de Hilos(Actores) --------
+typedef struct HilosActores{
+    pthread_t Pacientes  [NPACIENTES];
+
+    pthread_t Gestores   [NHOSPITALES];
+    pthread_t Analistas  [NANALISTAS];
+    pthread_t Voluntarios[NVOLUNTARIOS];
+
+    //pthread_t Director  [NHOSPITALES];    //TODO: Verificar si se puede eliminar. (¿Hace algo?)
+    pthread_t JefeEpidemia[NHOSPITALES];
+    pthread_t JefeCuidados[NHOSPITALES];
+    //pthread_t JefeAdmin   [NHOSPITALES];
+
+    pthread_t InventarioUGC;
+    pthread_t PersonalUGC;
+    //pthread_t StatusUGC;
+} HilosActores;
+
+HilosActores Actores;
+
+
+// [*] Voluntarios -----------
+RefQueue pacienteEnCasa;
+
 /// @brief Cambia las condiciones globales para obligar a la actualización de las estadísticas.
 /// @details Cambia ciertos flags y variables de condición en el programa para forzar la evaluación y
 ///          actualización de las estadísticas globales. **Debe usarse como manejador de la señal**
@@ -89,11 +78,17 @@ void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* conte
 /// @param context contexto de control.
 void forzar_finalizacion( int signo , siginfo_t* info , void* context );
 
-
 int main(){
     int SYS_CLOCK = CLOCK_REALTIME;
-    inicializar_hospitales();
-    inicializar_ugc();
+    int status;
+
+    inicializarPacientes();
+    inicializarMedicos();
+    inicializarEnfermeras();
+    inicializarHospitales( 0.20 , 0.30 , 0.50 ); // 0.20 + 0.30 + 0.50 ~= 1.0
+    inicializarPacientesEnCasa();
+    inicializarVoluntarios();
+
 
     // ----------------------------------------------------------------------------------
     // Se establecen los manejadores de señales y los timers específicos para generarlas:
@@ -114,7 +109,6 @@ int main(){
     // ------------------------------------------------------------------------
     // Conjunto que cambia el comportamiento de los hilos bajo ciertas señales:
     sigset_t mask, oldmask;
-    int      status;
     sigemptyset( &mask );
 
     // Bloquea Ctrl+C (Finalizar programa), SIGUSR1: (Acciones regulares definidas por nosotros)
@@ -128,8 +122,79 @@ int main(){
     }
     // Desde aquí se pueden crear el resto de los hilos.
     // TODO: Crear hilos aquí
+    // TODO: Añadir un barrier a todos los hilos para que esperen hasta que el main esté listo para continuar.
     // pthread_create(...)
     // ...
+    
+    HilosActores* act = &Actores;
+
+    for( int id = 0 ; id < NPACIENTES ; id += 1 ){
+        pthread_create( act->Pacientes + id ,   // Thread-id reference.
+                        NULL,                   // No special attributes.
+                        &actor_paciente,        // routine.
+                        &Tabla_Pacientes + id); // ref. attributes.
+    }
+
+    // Hilos relacionados con los hospitales:
+    int analista      = 0;
+    for( int id = 0 ; id < NHOSPITALES ; id += 1 ){
+        // TODO: Verificar si se puede eliminar. Hace algo?
+        //pthread_create( &act->StatusUGC    ,        // Thread-id reference.
+        //                NULL,                       // No special attributes.
+        //                &actor_status_ugc,          // routine.
+        //                &gestion_central        );  // ref. attributes.
+
+        pthread_create( act->Gestores + id,     // Thread-id reference.
+                        NULL,                   // No special attributes.
+                        &actor_gestor,          // routine.
+                        &Tabla_Gestores + id);  // ref. attributes.
+
+        //pthread_create( act->JefeEpidemia + id, // Thread-id reference.
+        //                NULL,                   // No special attributes.
+        //                &actor_jefe_epidemia,   // routine.
+        //                &Tabla_Hospitales + id);// ref. attributes.
+
+        pthread_create( act->JefeCuidados + id, // Thread-id reference.
+                        NULL,                   // No special attributes.
+                        &actor_jefe_cuidados_intensivos, // routine
+                        &Tabla_Hospitales + id);// ref. attributes.
+
+        //pthread_create( act->JefeAdmin + id,    // Thread-id reference.
+        //                NULL,                   // No special attributes.
+        //                &actor_jefe_admin;      // routine
+        //                &Tabla_Hospitales + id);// ref. attributes.
+
+        for( int iter = 0 ; iter < NSALA_MUESTRA ; iter += 1 ){
+            pthread_create( act->Analistas + analista,      // Thread-id reference.
+                            NULL,                           // No special attributes.
+                            &actor_analista,                // routine.
+                            &Tabla_Hospitales + analista ); // ref. attributes.
+            analista += 1;
+        }
+    }
+
+    // UGC:
+    pthread_create( &act->InventarioUGC,        // Thread-id reference.
+                    NULL,                       // No special attributes.
+                    &actor_inventario_ugc,      // routine.
+                    &gestor_central);           // ref. attributes.
+
+    pthread_create( &act->PersonalUGC  ,        // Thread-id reference.
+                    NULL,                       // No special attributes.
+                    &actor_personal_ugc,        // routine.
+                    &gestor_central         );  // ref. attributes.
+
+    //pthread_create( &act->StatusUGC    ,        // Thread-id reference.
+    //                NULL,                       // No special attributes.
+    //                &actor_status_ugc,          // routine.
+    //                &gestor_central         );  // ref. attributes.
+
+    for( int id = 0 ; id < NVOLUNTARIOS ; id += 1 ){
+        pthread_create( act->Voluntarios + id ,     // Thread-id reference.
+                        NULL,                       // No special attributes.
+                        &actor_voluntario,          // routine.
+                        &Tabla_Voluntarios + id);   // ref. attributes.
+    }
     // ------------------------------------------------------------------------
 
 
@@ -145,6 +210,8 @@ int main(){
     if( sigaction( SIGINT  , &on_quit_request , NULL ) == -1 )
         { fprintf(stderr, "Unable to set sigaction\n"); exit( EXIT_FAILURE); }
     // ------------------------------------------------------------------------
+
+
 
 
     // ------------------------------------------------------------------------
@@ -195,9 +262,3 @@ void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* conte
     if( signo != SIGUSR1 ) return;
     fprintf( stderr , "Peticion: Actualizar estadisticas:..." );
 }
-
-
-// TODO: Finalizar. Tienen que inicializar todo.
-void inicializar_hospitales(){ return; }
-void inicializar_ugc(){ return; }
->>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d

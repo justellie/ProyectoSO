@@ -18,22 +18,22 @@
 // que debe realizar.
 // NOTE: SE DEBE USAR snake_case PARA CADA ACTOR.
 
-void actor_paciente( void* datos_iniciales );
+void* actor_paciente( void* datos_iniciales );
 
-void actor_inventario_ugc( void* inv_ugc );
-void actor_personal_ugc  ( void* inv_ugc );
+void* actor_inventario_ugc( void* datos_ugc );
+void* actor_personal_ugc  ( void* datos_ugc );
 // daemon. Estadísticas, inventario, uso, resumen de todo, etc.
-void actor_status_ugc    ( void* inv_ugc );
+void* actor_status_ugc    ( void* datos_ugc );
 
-void actor_jefe_admin              ( void* hospital );
-void actor_jefe_epidemia           ( void* hospital );
-void actor_director                ( void* hospital );
-void actor_jefe_cuidados_intensivos( void* hospital );
-void actor_analista                ( void* hospital );
+void* actor_jefe_admin              ( void* hospital );
+void* actor_jefe_epidemia           ( void* hospital );
+void* actor_director                ( void* hospital );
+void* actor_jefe_cuidados_intensivos( void* hospital );
+void* actor_analista                ( void* hospital );
 
 // Revisan la cola de pacientes interna, 
-void actor_voluntario( void* datos_voluntario );
-void actor_gestor    ( void* hospital );
+void* actor_voluntario( void* datos_voluntario );
+void* actor_gestor    ( void* hospital );
 
 // ---------------------------- RELACIONES ENTRE ACTORES -----------------------------------------
 // actor_paciente       --> actor_analista, actor_gestor, actor_inventario_ugc*, actor_voluntario*
