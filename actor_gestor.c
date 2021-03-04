@@ -12,6 +12,8 @@
 #include "actores.h"
 #include "definiciones.h"
 
+extern UGC        gestor_central;
+
 ///@fn int liberarRecursos(int, Paciente *, float, TipoAtencion);
 ///@brief Libera los recursos que el paciente tenga reservados anteriormente, segun su diagnostico
 ///@param refHospital Necesario para saber de donde se reponen los recursos
@@ -349,7 +351,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
 ///@fn void actor_gestor(void *datos_gestor)
 ///@brief funcion que ejecuta el actor gestor para realizar sus funciones
 ///@param datos_gestor estructura que contiene los datos basicos de un gestor de camas
-void actor_gestor(void *datos_gestor)
+void* actor_gestor(void *datos_gestor)
 {
     GestorCama *datos = (GestorCama *) datos_gestor;
     TipoHospital hosp_type = datos->hospital->tipo;
@@ -604,4 +606,6 @@ void actor_gestor(void *datos_gestor)
         atendiendo->servicio=diagAct;
           
     }
+
+    return NULL;
 }

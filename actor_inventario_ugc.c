@@ -27,7 +27,7 @@ extern RefQueue pacienteEnCasa;
  * 
  * @param datos_hospital estructura que contiene los datos basicos del hospital 
  */
-void actor_inventario_ugc(void *datos_UGC)
+void* actor_inventario_ugc(void *datos_UGC)
 {
     UGC *gestion_central = (UGC *) datos_UGC;
     
@@ -148,4 +148,5 @@ void actor_inventario_ugc(void *datos_UGC)
 
     }
     
+    return NULL;
 }
