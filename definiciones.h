@@ -170,6 +170,7 @@ typedef struct {
     sem_t        consultaTanques;
     sem_t        consultaOxigeno;
     
+    sem_t        EsperandoPorRecurso;
     RefQueue     tanquesOxigeno;
     RefQueue     respiradores;
     RefQueue     PCR;
@@ -197,6 +198,7 @@ typedef struct {
     RefQueue     enfermeras;
     RefQueue     pacientes;
     RefQueue     voluntarios;
+    RefQueue     peticiones;
 
     TuplaRecursos estadisticas[NACTUALIZACIONES];
     Mutex         estadisticasLock;
@@ -261,6 +263,7 @@ Personal   Tabla_Enfermeras[NENFERMERAS];
 Hospital   Tabla_Hospitales[NHOSPITALES];
 GestorCama Tabla_Gestores[NGESTORES];
 Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+UGC        gestor_central;
 
 void inicializarPacientes( char* ruta_archivo_pacientes );
 void inicializarMedicos( char* ruta_archivo_medicos );
