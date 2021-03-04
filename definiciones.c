@@ -127,10 +127,10 @@ void construirHospital( Hospital* h , int id , TuplaRecursos* descripcion ){
     sem_init( &h->respiradores   , CompartidoEntreHilos , descripcion->nrespira  );
 
     // No se ha usado nada:
-    h->estadisticas.ncamasBas = 0;
-    h->estadisticas.ncamasInt = 0;
-    h->estadisticas.ntanques  = 0;
-    h->estadisticas.nrespira  = 0;
+    h->estadis_recursos.ncamasBas = 0;
+    h->estadis_recursos.ncamasInt = 0;
+    h->estadis_recursos.ntanques  = 0;
+    h->estadis_recursos.nrespira  = 0;
     pthread_mutex_init( &h->estadisticasLock , NULL );
 }
 
@@ -149,10 +149,10 @@ void destruirHospital ( Hospital* h ){
     sem_destroy( &h->respiradores   );
 
     // No se ha usado nada:
-    h->estadisticas.ncamasBas = 0;
-    h->estadisticas.ncamasInt = 0;
-    h->estadisticas.ntanques  = 0;
-    h->estadisticas.nrespira  = 0;
+    h->estadis_recursos.ncamasBas = 0;
+    h->estadis_recursos.ncamasInt = 0;
+    h->estadis_recursos.ntanques  = 0;
+    h->estadis_recursos.nrespira  = 0;
     pthread_mutex_destroy( &h->estadisticasLock );
 
 }
@@ -218,12 +218,10 @@ void destruirGestorCama ( GestorCama* g ){
 
 void construirVoluntario( Voluntario* v , int id ){
     v->id       = id;
-    refqueue_singleton( &v->pacientes );
 }
 
 void destruirVoluntario( Voluntario* v ){
     v->id       = -1;
-    refqueue_destroy( &v->pacientes );
 }
 
 TipoAtencion obtener_diagnostico_simple()
