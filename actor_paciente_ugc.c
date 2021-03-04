@@ -1,6 +1,6 @@
 /**
  * @file actor_paciente_ugc.c
- * @author Juan Herrera
+ * @author Juan Herrera 26.972.881
  * @brief 
  * @version 0.1
  * @date 2021-03-03
@@ -18,7 +18,8 @@
  */
 void actor_paciente_ugc(void *inv_ugc)
 {
-    int i,     
+    int i,      // Discriminador de tipo de hospital 0)General 1)Intermedio 2)Centinela  
+    j,          // Recorre todos los hospitales    
     numDisp,    // Valor de camas disponibles en el hospital
     maxCamDisp, // Valor máximo de camas encontrados en la lista de hospitales
     hospMaxCam; // Id del hospital con más camas
@@ -32,26 +33,47 @@ void actor_paciente_ugc(void *inv_ugc)
         
         peticion = refqueue_get(&gestion_central->pacientes);   // Revisa si hay un paciente disponible, en caso contrario se queda esperando
         maxCamDisp = 0;                                         // Se establece el valor de referencia del máximo
-
-        for(i=0; i < NHOSPITALES; i++)
+        
+        for ( i = General; i <= Centinela; i++)
         {
-
-            busqHospital = &(Tabla_Hospitales[i]);              // Consulta el hospital
-            sem_getvalue(&busqHospital->camasBasico,&numDisp);  // Ve cuantas camas tiene disponible
-
-            if(! numDisp < maxCamDisp)
+            for(j = 0; j < NHOSPITALES; j++)
             {
-                maxCamDisp = numDisp;
-                hospMaxCam = i;
+
+                busqHospital = &(Tabla_Hospitales[i]);              // Consulta el hospital
+
+                
+                // Discriminador de camas si requiere cuidado intensivo o no //
+                if(busqHospital->tipo == i)
+                {   
+                    if(peticion->servicio = Intensivo)
+                        sem_getvalue(&busqHospital->camasIntensivo,&numDisp);   // Ve cuantas camas tiene disponible
+                    else
+                        sem_getvalue(&busqHospital->camasBasico,&numDisp);      // Ve cuantas camas tiene disponible
+
+
+                    if(! numDisp < maxCamDisp)
+                    {
+                        maxCamDisp = numDisp;
+                        hospMaxCam = i;
+                    }
+                }
+
             }
 
+            if(maxCamDisp) 
+                break;
         }
+            
+
         if (maxCamDisp)
         {
             busqHospital = &(Tabla_Hospitales[hospMaxCam]); 
-            peticion->fueAtendido;
+            peticion->fueAtendido = 1;
             refqueue_put(&busqHospital->pacientes, peticion);
-        }else{
+
+        }
+        else
+        {
             i=-1;       // Se reinicia la búsqueda
             sleep (1);  // Espera antes de reiniciar la búsqueda
         }
