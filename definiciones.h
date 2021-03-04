@@ -105,6 +105,8 @@ typedef enum { Centinela , Intermedio , General } TipoHospital;
 typedef struct {
     int ncamasBas;
     int ncamasInt;
+    int nenfermeras;
+    int nmedicos;
     int ntanques;
     int nrespira;
 } TuplaRecursos;
@@ -172,6 +174,7 @@ typedef struct {
     RefQueue     respiradores;
     RefQueue     PCR;
 
+    Condicion        stast;
     TuplaRecursos estadis_recursos; // Se actualizan siempre (incremento en valores), pero son reiniciadas
     Mutex         estadisticasLock; // 2 veces al día. Por ello usan un seguro de escritura/lectura
                                     // (Así como en base de datos)
@@ -188,6 +191,7 @@ typedef struct {
     sem_t        camasIntensivo;
     sem_t        tanquesOxigeno;
     sem_t        respiradores;
+    sem_t        espera_personal;
 
     // TODO: Inicializar primero antes de usar.
     // Todos están disponibles.
@@ -197,6 +201,7 @@ typedef struct {
     RefQueue     voluntarios;
     RefQueue     peticiones;
     RefQueue     peticionesPersonal;
+    
 
     TuplaRecursos estadisticas[NACTUALIZACIONES];
     Mutex         estadisticasLock;
@@ -242,10 +247,17 @@ void destruirVoluntario ( Voluntario* v );
 
 RefQueue pacienteEnCasa;
 
+//[*] JEFE DE CUIDADOS INTENSIVOS
+//Encargado de garantizar el personal en el hospital
+typedef struct {
+    int id;
+    Hospital         refHospital;
+    pthread_mutex_t  espera;
+}jefe_uci;
+
 // Se podría utilizar si se decide emplear tuplas como llaves dentro de los diccionarios.
 void EXTRAER_SI_BASICO   ( void* personal );
 void EXTRAER_SI_INTENSIVO( void* personal );
-
 
 
 

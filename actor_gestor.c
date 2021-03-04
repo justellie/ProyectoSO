@@ -40,11 +40,15 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                 //Liberacion enfermeras
                 Personal *enf = refmap_extract(&refHospital->enfermeras[0], &atendiendo->enfID[i]);
                 atendiendo->enfID[i]=-1;
+                refHospital->estadis_recursos.nenfermeras++;
                 refmap_put(&refHospital->enfermeras[4], &enf, enf);
+                pthread_cond_signal(&refHospital->stast);
                 //Liberacion medicos
                 Personal *med = refmap_extract(&refHospital->medicos[0], &atendiendo->medID[i]);
                 atendiendo->medID[i]=-1;
+                refHospital->estadis_recursos.nmedicos++;
                 refmap_put(&refHospital->medicos[4], &med, med);
+                pthread_cond_signal(&refHospital->stast);
             }
             //Liberacion de los respiradores
             refqueue_put(&refHospital->respiradores, (void *) 1);
@@ -71,13 +75,18 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                     atendiendo->enfID[0]=-1; //Siempre sera 0 ya que, un paciente basico no puede tener mas de una enfermera
                     refmap_put(&refHospital->enfermeras[i+1], &enf, enf); //Se recoloca a la enfermera en el mapa, un nivel de ocupacion por debajo
                                                                               //por como esta pensado, bajar un nivel de ocupacion implica sumar 
+                    if(i+1==4)
+                        refHospital->estadis_recursos.nenfermeras++;
                 }
+
                 //liberacion medicos, se comporta de la misma forma que la liberacion de enfermeras
                 Personal *med = refmap_extract(&refHospital->medicos[i], &atendiendo->medID[0]);
                 if (med!=NULL)
                 {
                     atendiendo->medID[0]=-1;
                     refmap_put(&refHospital->medicos[i+1], &med, med);
+                    if(i+1==4)
+                        refHospital->estadis_recursos.nmedicos++;
                 }
             }
             //Liberacion del tanque de oxigeno que esta en uso por el paciente            
@@ -143,6 +152,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     {
                         //Al encontrar una enfermera, se le asigna al paciente y se coloca en el nivel mas alto de ocupacion
                         atendiendo->enfID[i]=enf->id;
+                        refHospital->estadis_recursos.nenfermeras--;
                         refmap_put(&refHospital->enfermeras[0], &enf, enf);
                         //Este contador indica si se reservo la cantidad necesaria de enfermeras
                         enf_flag++;
@@ -152,6 +162,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     if (enf!=NULL)
                     {
                         atendiendo->medID[i]=med->id;
+                        refHospital->estadis_recursos.nmedicos--;
                         refmap_put(&refHospital->medicos[0], &med, med);
                         med_flag++;
                     }
@@ -201,6 +212,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                             Personal *enf = refmap_extract(&refHospital->enfermeras[0], &atendiendo->enfID[i]);
                             atendiendo->enfID[i]=-1;
                             refmap_put(&refHospital->enfermeras[4], &enf, enf);
+                            refHospital->estadis_recursos.nenfermeras++;
                         }
                     }
                     for (int i = 0; i < med_flag; i++)
@@ -209,6 +221,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                             Personal *med = refmap_extract(&refHospital->medicos[0], &atendiendo->medID[i]);
                             atendiendo->medID[i]=-1;
                             refmap_put(&refHospital->medicos[4], &med, med);
+                            refHospital->estadis_recursos.nmedicos++;
                         }
                     }
                     resultado=-1;
@@ -306,6 +319,8 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                             {
                                 atendiendo->enfID[0]=-1;
                                 refmap_put(&refHospital->enfermeras[i+1], &enf, enf);
+                                if(i+1==4)
+                                    refHospital->estadis_recursos.nenfermeras++;
                             }                        
                         }
                     }
@@ -318,6 +333,8 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                             {
                                 atendiendo->medID[0]=-1;
                                 refmap_put(&refHospital->medicos[i+1], &med, med);
+                                if(i+1==4)
+                                    refHospital->estadis_recursos.nmedicos--;
                             }
                         }                                        
                     }
