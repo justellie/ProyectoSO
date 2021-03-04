@@ -13,34 +13,50 @@
 #include "definiciones.h"
 
 ///@fn int liberarRecursos(int, Paciente *, float, TipoAtencion);
-///@brief libera los recursos que el paciente tenga reservados anteriormente, segun su diagnostico
-///@param refHospital necesario para saber de donde se reponen los recursos
-///@param atendiendo referencia al paciente que esta siendo atendido en el momento
-///@param cantidad le dice a la funcion que cantidad de personal debe ser liberada, esto segun el tipo de hospital
-///@param diagPrevio diagnostico que se le dio al paciente en el pasado, este permitira determinar que recursos deben liberarse
-///@return -1 fallo al liberar, 1 exito al liberar
+///@brief Libera los recursos que el paciente tenga reservados anteriormente, segun su diagnostico
+///@param refHospital Necesario para saber de donde se reponen los recursos
+///@param atendiendo Referencia al paciente que esta siendo atendido en el momento
+///@param cantidad Le dice a la funcion que cantidad de personal debe ser liberada, esto segun el tipo de hospital
+///@param diagPrevio Diagnostico que se le dio al paciente en el pasado, este permitira determinar que recursos deben liberarse
+///@return -1 Fallo al liberar, 1 Exito al liberar
 int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, TipoAtencion diag)
 {
-    //se esta suponiendo que refHospital-><arreglo de mapas personal>[0] es el nivel mas bajo y por tanto en el que esta completamente ocupado el personal
-    // por lo tanto refHospital-><arreglo de mapas personal>[4] es el nivel mas alto, en el que se encuentran totalmente disponibles
+    //Se esta suponiendo que refHospital-><arreglo de mapas personal>[0] es el nivel mas bajo y por tanto en el que esta completamente ocupado el personal
+    //Por lo tanto refHospital-><arreglo de mapas personal>[4] es el nivel mas alto, en el que se encuentran totalmente disponibles
+    /*
+        totalmente ocupado 
+                 v
+                [0, 1, 2, 3, 4]
+                             ^
+                        totalmente libre
+    */
+    
     bool resultado = false;
     switch (diag)
     {
         case Intensivo:
             for (int i = 0; i < cantidad; i++)
             {
-                //liberacion enfermeras
+                //Liberacion enfermeras
                 Personal *enf = refmap_extract(&refHospital->enfermeras[0], &atendiendo->enfID[i]);
                 atendiendo->enfID[i]=-1;
                 refmap_put(&refHospital->enfermeras[4], &enf->id, enf);
-                //liberacion medicos
+                //Liberacion medicos
                 Personal *med = refmap_extract(&refHospital->medicos[0], &atendiendo->medID[i]);
                 atendiendo->medID[i]=-1;
                 refmap_put(&refHospital->medicos[4], &med->id, med);
             }
+            //Liberacion de los respiradores
+            sem_wait(&refHospital->consultaOxigeno);
             refqueue_put(&refHospital->respiradores, NULL);
+            refHospital->estadis_recursos.nrespira++;
+            sem_post(&refHospital->consultaOxigeno);
+            //Liberacion de la cama
             sem_post(&refHospital->camasIntensivo);
+            refHospital->estadis_recursos.ncamasInt++;
+            //Se especifica que el paciente ya no tiene una cama, es decir, no esta hospitalizado
             atendiendo->tiene_cama=0;
+            //Comprobacion de que la liberacion se hizo correctamente (no se si esto sea necesario)
             if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad]==-1)
                 resultado=true;
             
@@ -49,14 +65,16 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
         case Basica:
             for (int i = 0; i < MAX_ATENCION; i++)
             {
-                //liberacion enfermeras
+                //Liberacion enfermeras, se  busca a la enfermera en todos los niveles de ocupacion
                 Personal *enf = refmap_extract(&refHospital->enfermeras[i], &atendiendo->enfID[0]);
-                if (enf!=NULL)
+                if (enf!=NULL)//Si la enfermera es encontrada
                 {
-                    atendiendo->enfID[0]=-1;
-                    refmap_put(&refHospital->enfermeras[i+1], &enf->id, enf);
+                    //Se quita el id de la enfermera del registro del paciente
+                    atendiendo->enfID[0]=-1; //Siempre sera 0 ya que, un paciente basico no puede tener mas de una enfermera
+                    refmap_put(&refHospital->enfermeras[i+1], &enf->id, enf); //Se recoloca a la enfermera en el mapa, un nivel de ocupacion por debajo
+                                                                              //por como esta pensado, bajar un nivel de ocupacion implica sumar 
                 }
-                //liberacion medicos
+                //liberacion medicos, se comporta de la misma forma que la liberacion de enfermeras
                 Personal *med = refmap_extract(&refHospital->medicos[i], &atendiendo->medID[0]);
                 if (med!=NULL)
                 {
@@ -64,9 +82,17 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                     refmap_put(&refHospital->medicos[i+1], &med->id, med);
                 }
             }
+            //Liberacion del tanque de oxigeno que esta en uso por el paciente
+            sem_wait(&refHospital->consultaTanques);
             refqueue_put(&refHospital->tanquesOxigeno, NULL);
+            sem_post(&refHospital->consultaTanques);
+            refHospital->estadis_recursos.ntanques++;
+            //Liberacion de la cama basica
             sem_post(&refHospital->camasBasico);
+            refHospital->estadis_recursos.ncamasBas++;
+            //Se especifica que el paciente ya no posee una cama, es decir, ya no esta hospitalizado
             atendiendo->tiene_cama=0;
+            //Comprobacion de que la liberacion se hizo correctamente (no se si esto sea necesario)
             if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad]==-1)
                 resultado=true;
             
@@ -77,24 +103,31 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
 }
 
 ///@fn int reservarRecursos(int, Paciente *, float, TipoAtencion);
-///@brief reserva los recursos que el paciente necesite, segun el diagnostico
-///@param refHospital necesario para saber de donde se toman los recursos
-///@param atendiendo referencia al paciente que esta siendo atendido en el momento
-///@param cantidad le dice a la funcion que cantidad de personal debe ser reservada, esto segun el tipo de hospital
-///@param diagActual diagnostico que se le dio al paciente, este permitira determinar que recursos deben reservarse
-///@return -1 error al reservar, 1 exito al reservar, 2 transferencia del paciente
+///@brief Reserva los recursos que el paciente necesite, segun el diagnostico
+///@param refHospital Necesario para saber de donde se toman los recursos
+///@param atendiendo Referencia al paciente que esta siendo atendido en el momento
+///@param cantidad Le dice a la funcion que cantidad de personal debe ser reservada, esto segun el tipo de hospital
+///@param diagActual Diagnostico que se le dio al paciente, este permitira determinar que recursos deben reservarse
+///@return -1 Error al reservar, 1 Exito al reservar
 int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, TipoAtencion diagActual)
 {
     //se esta suponiendo que refHospital-><arreglo de mapas personal>[0] es el nivel mas bajo y por tanto en el que esta completamente ocupado el personal
     //por lo tanto refHospital-><arreglo de mapas personal>[4] es el nivel mas alto, en el que se encuentran totalmente disponibles
-    
+    /*
+        totalmente ocupado 
+                 v
+                [0, 1, 2, 3, 4]
+                             ^
+                        totalmente libre
+    */
+
     bool respirador_flag, oxigeno_flag;
     int resultado = -1, enf_flag= 0, med_flag = 0;
     switch (diagActual)
     {
         case Intensivo:
-            //reservacion cama intensiva
-            if( sem_trywait(&refHospital->camasIntensivo) == -1 )
+            //Reservacion cama intensiva
+            if( sem_trywait(&refHospital->camasIntensivo) == -1 )//Intento de reservar la cama
             {
                 if( errno == EAGAIN )
                 {
@@ -104,17 +137,21 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
             }
             else
             {
+                //Se pudo reservar cama
+                refHospital->estadis_recursos.ncamasInt--;
                 for (int i = 0; i < cantidad; i++)
                 {
-                    //reservacion de enfermeras
+                    //Reservacion de enfermeras, solo te busca en el nivel mas alto, pacientes intensivos reservan al perosnal por completo
                     Personal *enf = refmap_extract_max(&refHospital->enfermeras[4]);
                     if (enf!=NULL)
                     {
+                        //Al encontrar una enfermera, se le asigna al paciente y se coloca en el nivel mas alto de ocupacion
                         atendiendo->enfID[i]=enf->id;
                         refmap_put(&refHospital->enfermeras[0], &enf->id, enf);
+                        //Este contador indica si se reservo la cantidad necesaria de enfermeras
                         enf_flag++;
                     }
-                    //reservacion de medicos
+                    //reservacion de medicos, comportamiento similar a las enfermeras
                     Personal *med = refmap_extract_max(&refHospital->medicos[4]);
                     if (enf!=NULL)
                     {
@@ -124,16 +161,19 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     }
                 }
                 //reservacion respirador artificial
+                sem_wait(&refHospital->consultaOxigeno);
                 if(refqueue_tryget(&refHospital->respiradores)==NULL)
                 {
-                    if (errno= EAGAIN)
+                    if (errno==EAGAIN)
                         respirador_flag=false;
                 }
                 else
                 {
+                    refHospital->estadis_recursos.nrespira--;
                     respirador_flag=true;
                 }
-
+                sem_post(&refHospital->consultaOxigeno);
+                //verificacion de que todos los insumos necesarios fueron reservados con exito
                 if(respirador_flag && (med_flag==cantidad) && (enf_flag==cantidad))
                     resultado=1;
                 else
@@ -141,8 +181,15 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     //antes de las condiciones inferiores se debe realizar la pedida del recurso al UGC
                     //por ahora no se como se realizara esto, asi que lo dejo como devolucion de los recursos
 
+                    //En caso de que la UGC no pueda brindar los insumos, se liberan los recursos que se tomaron 
+                    //y se procede a transferir al paciente
                     if(respirador_flag)
+                    {
+                        sem_wait(&refHospital->consultaOxigeno);
                         refqueue_put(&refHospital->respiradores, NULL);
+                        refHospital->estadis_recursos.nrespira++;
+                        sem_post(&refHospital->consultaOxigeno);
+                    }
                     for (int i = 0; i < enf_flag; i++)
                     {
                         if(atendiendo->enfID[i]!=-1){
@@ -167,7 +214,8 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
         break;
         
         case Basica:
-        if( sem_trywait(&refHospital->camasBasico) == -1 )
+            //Reservacion de cama basica
+            if( sem_trywait(&refHospital->camasBasico) == -1 )//Intento de reservar la cama
             {
                 if( errno == EAGAIN )
                 {
@@ -177,16 +225,22 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
             }
             else
             {
+                //Se logro reservar cama
+                refHospital->estadis_recursos.ncamasInt--;
                 for (int i = 1; i > MAX_ATENCION; i++)
                 {
+                    //El personal se busca desde el nivel mas bajo de ocupacion hasta el nivel mas alto,
+                    //esto evita (en la medida de lo posible) que exista mucho personal ocupado a medias
+
                     //reserva de enfermeras
                     Personal *enf = refmap_extract_max(&refHospital->enfermeras[i]);
                     if (enf!=NULL)
                     {
+                        //Al encontrar una enfermera, se le asigna al paciente y se coloca en una nivel mas alto de ocupacion
                         atendiendo->enfID[0]=enf->id;
                         refmap_put(&refHospital->enfermeras[i-1], &enf->id, enf);
                     }
-                    //resserva de medicos
+                    //resserva de medicos, comportamiento similar a la enfermeras
                     Personal *med = refmap_extract_max(&refHospital->medicos[i]);
                     if (med!=NULL)
                     {
@@ -195,6 +249,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     }
                 }
                 //reserva de tanque de oxigeno
+                sem_wait(&refHospital->consultaTanques);
                 if(refqueue_tryget(&refHospital->tanquesOxigeno)==NULL)
                 {
                     if (errno= EAGAIN)
@@ -202,9 +257,12 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                 }
                 else
                 {
+                    refHospital->estadis_recursos.ntanques--;
                     oxigeno_flag=true;
                 }
+                sem_post(&refHospital->consultaTanques);
 
+                //Verificacion de que todos lo recursos fueron reservados correctamente
                 if (oxigeno_flag && (atendiendo->enfID[0]!=-1) && (atendiendo->medID[0]!=-1))
                 {
                     resultado=1;
@@ -214,8 +272,13 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     //antes de las condiciones inferiores se debe realizar la pedida del recurso al UGC
                     //por ahora no se como se realizara esto, asi que lo dejo como devolucion de los recursos
 
+                    //En caso de que la UGC no pueda brindar los insumos, se liberan los recursos que se tomaron 
+                    //y se procede a transferir al paciente
                     if(respirador_flag)
+                    {
                         refqueue_put(&refHospital->tanquesOxigeno, NULL);
+                        refHospital->estadis_recursos.ntanques++;
+                    }
 
                     if(atendiendo->enfID[0]!=-1){
                         for (int i = 0; i < MAX_ATENCION; i++)
@@ -257,31 +320,41 @@ void actor_gestor(void *datos_gestor)
     TipoHospital hosp_type = datos->hospital->tipo;
     TipoAtencion diagAct;
     TipoAtencion diagPrev;
+    int status;
+    bool alta, dead, volunt;
     while(true)
     {
         ///Paciente que esta siendo atendio por el gestor 
         Paciente *atendiendo = refqueue_get(&datos->hospital->pacientes);
         
+        //Si el paciente esta ingresando por primera vez 
         if(atendiendo->ingresando)
         {
+            //en servicio se encuentra el diagnostico dado en triaje
             atendiendo->ingresando=0;
             diagAct = atendiendo->servicio;
             diagPrev = Ninguno;
         }
         else 
         {
+            //si ya estaba hospitalizado, se debe realizar un nuevo diagnostico
             diagPrev = atendiendo->servicio;
             diagAct = obtener_diagnostico_compuesta(atendiendo);
         }
-        int status=0;
-        bool alta = false, dead=false;
+        status=0;
+        alta = false;
+        dead = false;
+        volunt = false;
 
+        //Si el diagnostico dado es el mismo que el anterior y este no es que el paciente esta sano, se coloca de nuevo en la cola
         if(atendiendo->tiene_cama && diagPrev==diagAct && diagAct!=Ninguno)
         {
                 refqueue_put(&datos->hospital->pacientes, atendiendo);
         }
         else
         {
+            //A todo paciente que tenga cama, se le quitan los recursos segun el servicio que estaba recibiendo antes, 
+            //para reservar los servicios del nuevo diagnostico
             switch (diagAct)
             {
                 case Intensivo:
@@ -366,7 +439,8 @@ void actor_gestor(void *datos_gestor)
                         break;
                     }
                 break;
-
+                
+                //Los pacientes que va a ser atendidos en casa son enviados con los voluntarios
                 case EnCasa:
                     switch (hosp_type)
                     {
@@ -375,11 +449,8 @@ void actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);                                
                             }
-                            else
-                            {
-                                datos->hospital->estadis_pacientes.monitoreados++;
-                            }
-                            refqueue_put(&pacienteEnCasa, atendiendo);
+                            datos->hospital->estadis_pacientes.monitoreados++;
+                            volunt=true;                            
                         break;
 
                         case Intermedio:
@@ -387,11 +458,8 @@ void actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);                                                                
                             }
-                            else
-                            {
-                                datos->hospital->estadis_pacientes.monitoreados++;
-                            }
-                            refqueue_put(&pacienteEnCasa, atendiendo);
+                            datos->hospital->estadis_pacientes.monitoreados++;
+                            volunt=true;
                         break;
                         
                         case General:
@@ -400,14 +468,13 @@ void actor_gestor(void *datos_gestor)
                                 liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                             }
                             else
-                            {
-                                datos->hospital->estadis_pacientes.monitoreados++;
-                            }
-                            refqueue_put(&pacienteEnCasa, atendiendo);
+                            datos->hospital->estadis_pacientes.monitoreados++;
+                            volunt=true;
                         break;
                     }
                 break;
 
+                //Los pacientes que son declarados muertos, se liberan los recursos asociados a los mismos
                 case Muerto:
                     switch (hosp_type)
                     {
@@ -454,6 +521,7 @@ void actor_gestor(void *datos_gestor)
                     }
                 break;
             }
+            //si el estatus es -1, implica que al paciente no se le pudieron asignar recursos suficientes y debe ser transferido de hospial
             if (status==-1)
             {
                 //refqueue_put(&UGC, atendiendo);
@@ -461,21 +529,37 @@ void actor_gestor(void *datos_gestor)
             } 
             else
             {
-                atendiendo->tiene_cama=1;
-                refqueue_put(&datos->hospital->pacientes, atendiendo);
+                if (alta)
+                {
+                    atendiendo->deAlta++;
+                    atendiendo->ingresando=1;
+                }
+                else
+                {
+                    if (dead)
+                    {
+                        atendiendo->vivo=0;
+                    }
+                    else 
+                    {
+                        if(volunt)
+                        {
+                            refqueue_put(&pacienteEnCasa, atendiendo);
+                        }
+                        else
+                        {
+                            //si el paciente no ha sido dado de alta, no ha muerto o no esta con los voluntarios, se le devuelve a la cola
+                            atendiendo->tiene_cama=1;
+                            refqueue_put(&datos->hospital->pacientes, atendiendo);
+                        }
+                    }                        
+                }                
             }
         }
         //aviso al paciente de que ha sido atendido
         atendiendo->servicio=diagAct;
         atendiendo->fueAtendido++;
-        if (alta)
-        {
-            atendiendo->deAlta++;
-            atendiendo->ingresando=1;
-        }
-            
-        if (dead)
-            atendiendo->vivo=0;
+        
         
     }
 }
