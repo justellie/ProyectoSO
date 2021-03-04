@@ -48,7 +48,7 @@ void actor_voluntario(void* datos_voluntario)
 			default: // Ingresa de nuevo al hospital
 			{
 				atendiendo->ingresando = 1;
-				refqueue_put(GestorCama->hospital->pacientes, atendiendo); // revisar bien cual es la cola del gestor
+				refqueue_put(UGC->pacientes, atendiendo);
 				break;
 			}
 			
