@@ -19,6 +19,7 @@
 // SIGUSR1 <-> Llegó el momento de hacer un reporte.
 // SIGINT  <-> Hay que liberar los recursos y finalizar el programa.
 #define NANOSEGUNDOS_EN_SEGUNDOS 1000000000;
+#define ABSOLUTE TIMER_ABSTIME
 #define RELATIVE 0
 
 
