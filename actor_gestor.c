@@ -53,10 +53,14 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
             sem_post(&refHospital->consultaOxigeno);
             //Liberacion de la cama
             sem_post(&refHospital->camasIntensivo);
+<<<<<<< HEAD
+            atendiendo->tiene_cama=0;
+=======
             refHospital->estadis_recursos.ncamasInt++;
             //Se especifica que el paciente ya no tiene una cama, es decir, no esta hospitalizado
             atendiendo->tiene_cama=0;
             //Comprobacion de que la liberacion se hizo correctamente (no se si esto sea necesario)
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
             if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad]==-1)
                 resultado=true;
             
@@ -89,10 +93,14 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
             refHospital->estadis_recursos.ntanques++;
             //Liberacion de la cama basica
             sem_post(&refHospital->camasBasico);
+<<<<<<< HEAD
+            atendiendo->tiene_cama=0;
+=======
             refHospital->estadis_recursos.ncamasBas++;
             //Se especifica que el paciente ya no posee una cama, es decir, ya no esta hospitalizado
             atendiendo->tiene_cama=0;
             //Comprobacion de que la liberacion se hizo correctamente (no se si esto sea necesario)
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
             if(atendiendo->enfID[cantidad]==-1 && atendiendo->medID[cantidad]==-1)
                 resultado=true;
             
@@ -113,6 +121,9 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
 {
     //se esta suponiendo que refHospital-><arreglo de mapas personal>[0] es el nivel mas bajo y por tanto en el que esta completamente ocupado el personal
     //por lo tanto refHospital-><arreglo de mapas personal>[4] es el nivel mas alto, en el que se encuentran totalmente disponibles
+<<<<<<< HEAD
+    
+=======
     /*
         totalmente ocupado 
                  v
@@ -121,6 +132,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                         totalmente libre
     */
 
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
     bool respirador_flag, oxigeno_flag;
     int resultado = -1, enf_flag= 0, med_flag = 0;
     switch (diagActual)
@@ -320,23 +332,39 @@ void actor_gestor(void *datos_gestor)
     TipoHospital hosp_type = datos->hospital->tipo;
     TipoAtencion diagAct;
     TipoAtencion diagPrev;
+<<<<<<< HEAD
+=======
     int status;
     bool alta, dead, volunt;
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
     while(true)
     {
         ///Paciente que esta siendo atendio por el gestor 
         Paciente *atendiendo = refqueue_get(&datos->hospital->pacientes);
         
+<<<<<<< HEAD
+        if(atendiendo->ingresando)
+        {
+=======
         //Si el paciente esta ingresando por primera vez 
         if(atendiendo->ingresando)
         {
             //en servicio se encuentra el diagnostico dado en triaje
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
             atendiendo->ingresando=0;
             diagAct = atendiendo->servicio;
             diagPrev = Ninguno;
         }
         else 
         {
+<<<<<<< HEAD
+            diagPrev = atendiendo->servicio;
+            diagAct = obtener_diagnostico_compuesta(atendiendo);
+        }
+        int status=0;
+        bool alta = false, dead=false;
+
+=======
             //si ya estaba hospitalizado, se debe realizar un nuevo diagnostico
             diagPrev = atendiendo->servicio;
             diagAct = obtener_diagnostico_compuesta(atendiendo);
@@ -347,6 +375,7 @@ void actor_gestor(void *datos_gestor)
         volunt = false;
 
         //Si el diagnostico dado es el mismo que el anterior y este no es que el paciente esta sano, se coloca de nuevo en la cola
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
         if(atendiendo->tiene_cama && diagPrev==diagAct && diagAct!=Ninguno)
         {
                 refqueue_put(&datos->hospital->pacientes, atendiendo);
@@ -448,18 +477,36 @@ void actor_gestor(void *datos_gestor)
                             if(atendiendo->tiene_cama)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);                                
+<<<<<<< HEAD
+                            }
+                            else
+                            {
+                                datos->hospital->estadis_pacientes.monitoreados++;
+                            }
+                            refqueue_put(&pacienteEnCasa, atendiendo);
+=======
                             }
                             datos->hospital->estadis_pacientes.monitoreados++;
                             volunt=true;                            
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
                         break;
 
                         case Intermedio:
                             if(atendiendo->tiene_cama)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);                                                                
+<<<<<<< HEAD
+                            }
+                            else
+                            {
+                                datos->hospital->estadis_pacientes.monitoreados++;
+                            }
+                            refqueue_put(&pacienteEnCasa, atendiendo);
+=======
                             }
                             datos->hospital->estadis_pacientes.monitoreados++;
                             volunt=true;
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
                         break;
                         
                         case General:
@@ -468,8 +515,15 @@ void actor_gestor(void *datos_gestor)
                                 liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                             }
                             else
+<<<<<<< HEAD
+                            {
+                                datos->hospital->estadis_pacientes.monitoreados++;
+                            }
+                            refqueue_put(&pacienteEnCasa, atendiendo);
+=======
                             datos->hospital->estadis_pacientes.monitoreados++;
                             volunt=true;
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
                         break;
                     }
                 break;
@@ -521,7 +575,10 @@ void actor_gestor(void *datos_gestor)
                     }
                 break;
             }
+<<<<<<< HEAD
+=======
             //si el estatus es -1, implica que al paciente no se le pudieron asignar recursos suficientes y debe ser transferido de hospial
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
             if (status==-1)
             {
                 //refqueue_put(&UGC, atendiendo);
@@ -529,6 +586,10 @@ void actor_gestor(void *datos_gestor)
             } 
             else
             {
+<<<<<<< HEAD
+                atendiendo->tiene_cama=1;
+                refqueue_put(&datos->hospital->pacientes, atendiendo);
+=======
                 if (alta)
                 {
                     atendiendo->deAlta++;
@@ -554,12 +615,24 @@ void actor_gestor(void *datos_gestor)
                         }
                     }                        
                 }                
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
             }
         }
         //aviso al paciente de que ha sido atendido
         atendiendo->servicio=diagAct;
         atendiendo->fueAtendido++;
+<<<<<<< HEAD
+        if (alta)
+        {
+            atendiendo->deAlta++;
+            atendiendo->ingresando=1;
+        }
+            
+        if (dead)
+            atendiendo->vivo=0;
+=======
         
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
         
     }
 }

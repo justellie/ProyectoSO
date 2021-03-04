@@ -49,9 +49,14 @@ run:
 # ------------------------------------------------------
 # Crea los archivos de definiciones:
 definiciones: refmap generic-queue
+<<<<<<< HEAD
+	@echo [D] Generando definiciones:
+	$(CC) $(COMMON) $(LIBFLG) RefQueue.o RefMap.o definiciones.h definiciones.c
+=======
 	@echo -e "$(BL) [D] Generando definiciones: $(RE)"
 	$(CC) $(COMMON) $(LIBFLG) definiciones.h definiciones.c
 	@echo -e "$(GL)Hecho\n$(RE)"
+>>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
 
 
 # ------------------------------------------------------
