@@ -36,6 +36,7 @@ typedef pthread_cond_t   Condicion;
 
 // [*] PERSONAL:
 typedef enum { Ninguno, EnCasa, Basica, Intensivo, Muerto} TipoAtencion; // Antes: enum cama.
+typedef enum { PidePCR , PideTanque, PideRespirador} Recurso; 
 typedef enum { Medico , Enfermera } TipoPersonal;
 typedef struct {
     int          id;
@@ -153,8 +154,13 @@ typedef struct {
     TipoHospital tipo;
     sem_t        camasBasico;
     sem_t        camasIntensivo;
+
+    sem_t        consultaTanques;
+    sem_t        consultaOxigeno;
+    
     RefQueue     tanquesOxigeno;
     RefQueue     respiradores;
+    RefQueue     PCR;
 
     TuplaRecursos estadisticas;     // Se actualizan siempre (incremento en valores), pero son reiniciadas
     RWLock        estadisticasLock; // 2 veces al día. Por ello usan un seguro de escritura/lectura
@@ -188,6 +194,17 @@ typedef struct {
     RWLock        turnoLock;    // Una vez que se necesite actualizar, simplemente se pasará al valor
                                 // turno = (turno+1) % NACTUALIZACIONES;
 } UGC;
+
+// Tupla de peticion a inventario.
+typedef struct {
+    int idHospital;
+    Recurso tipo_recurso; 
+    int cantidad;
+} TuplaInventario;
+
+
+
+
 void construirUGC( UGC* ugc , int id , TuplaRecursos* descripcion );
 void destruirUGC ( UGC* ugc );
 
@@ -242,7 +259,8 @@ void inicializarPacientes( char* ruta_archivo_pacientes );
 void inicializarMedicos( char* ruta_archivo_medicos );
 void inicializarEnfermeras( char* ruta_archivo_enfermeras );
 void inicializarHospitales();
-
+TipoAtencion obtener_diagnostico_simple();
+TipoAtencion obtener_diagnostico_compuesta(void *paciente);
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif
