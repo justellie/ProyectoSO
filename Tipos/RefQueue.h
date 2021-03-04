@@ -61,6 +61,12 @@ void   refqueue_show_in( RefQueue* qs , FILE* stream );
 size_t refqueue_unsafe_len  ( RefQueue* qs );
 int    refqueue_unsafe_empty( RefQueue* qs );
 
+void refqueue_unsafe_lock  ( RefQueue* qs );
+void refqueue_unsafe_unlock( RefQueue* qs );
+
+void  refqueue_unsafe_put  ( RefQueue* qs , void* elem );
+void* refqueue_unsafe_get  ( RefQueue* qs );
+
 /// @fn void refqueue_singleton( RefQueue* qs )
 /// @brief Crea una cola de referencias trivial.
 /// @param qs Cola a inicializar.
@@ -143,4 +149,31 @@ int    refqueue_unsafe_empty( RefQueue* qs );
 /// @warning No es Thread-Safe.
 /// @return Lógico. No se asegura la exclusión mutua.
 
+/// @fn void refqueue_unsafe_lock( RefQueue* qs )
+/// @brief Bloquea la cola qs.
+/// @param qs Cola objetivo.
+/// @warning **PUEDE CAUSAR INTERBLOQUEO.**
+/// @details Reserva a qs para realizar operaciones criticas.
+//
+/// @fn void refqueue_unsafe_unlock( RefQueue* qs )
+/// @brief Bloquea la cola qs.
+/// @param qs Cola objetivo.
+/// @warning **PUEDE GENERAR ERRORES DE EJECUCION SI qs NO ESTABA BLOQUEADO.**
+/// @details Libera a qs luego de realizar operaciones críticas.
+
+/// @fn void refqueue_unsafe_put( RefQueue* qs , void* elem )
+/// @brief Agrega un elemento de forma insegura.
+/// @param qs Cola objetivo.
+/// @param elem Elemento a insertar.
+/// @warning No es Thread-Safe.
+/// @details Inserta la referencia del objeto elem al final de la cola. **NO BLOQUEA LA COLA.**
+
+/// @fn void refqueue_unsafe_get( RefQueue* qs , void* elem )
+/// @brief Remueve un elemento de forma insegura.
+/// @param qs Cola objetivo.
+/// @param elem Elemento a insertar.
+/// @warning No es Thread-Safe.
+/// @return referencia del primer objeto que estaba en la cola.
+/// @details Elimina la referencia del objeto elem que estaba al principio de la cola
+//           y la devuelve. **NO SE BLOQUEARA SI NO HAY NADA EN LA COLA**
 #endif

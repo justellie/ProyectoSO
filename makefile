@@ -60,7 +60,7 @@ tests: queue-tests refmap-tests
 
 # Genera los casos de prueba para el tipo "Cola de Referencias":
 queue-tests: generic-queue
-	@echo -e "$(BL) [Q] Generando ejemplos de uso para la Cola de Referencias...$(RE)"
+	@echo -e "$(BL) [Q] Generando ejemplos de uso para la $(GL)Cola de Referencias$(BL)...$(RE)"
 	$(CC) $(COMMON) $(TXAMPL)/simple_queue.c       RefQueue.o -o $(TXAMPL)/simple_queue.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/shared_queue.c       RefQueue.o -o $(TXAMPL)/shared_queue.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/quick_shared_queue.c RefQueue.o -o $(TXAMPL)/quick_shared_queue.$(EXT)
@@ -69,7 +69,7 @@ queue-tests: generic-queue
 
 # Genera los casos de prueba para el tipo "Mapa de Referencias":
 refmap-tests: refmap
-	@echo -e "$(BL) [M] Generando ejemplos de uso para el Mapa de Referencias...$(RE)"
+	@echo -e "$(BL) [M] Generando ejemplos de uso para el $(GL)Mapa de Referencias$(BL)...$(RE)"
 	$(CC) $(COMMON) $(TXAMPL)/refmap-allocate.c  RefMap.o -o $(TXAMPL)/refmap-allocate.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/refmap-debug.c     RefMap.o -o $(TXAMPL)/refmap-debug.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/refmap-debug-max.c RefMap.o -o $(TXAMPL)/refmap-debug-max.$(EXT)

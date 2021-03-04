@@ -16,8 +16,6 @@
     } while(0);
 
 // Declaracion de funciones estáticas (visibles sólo para el archivo actual)
-static void  refqueue_unsafe_put  ( RefQueue* qs , void* elem );
-static void* refqueue_unsafe_get  ( RefQueue* qs );
 static char* refqueue_unsafe_str  ( RefQueue* xs );
 static char* opaque_object_str    ( void* ignored );
 
@@ -120,7 +118,7 @@ void* refqueue_tryget( RefQueue* qs ){
     }
 }
 
-static void refqueue_unsafe_put( RefQueue* qs , void* item ){
+void refqueue_unsafe_put( RefQueue* qs , void* item ){
     _LNode* node = new_node( item );
 
     if( refqueue_unsafe_empty(qs) ) {
@@ -133,7 +131,7 @@ static void refqueue_unsafe_put( RefQueue* qs , void* item ){
     qs->n         += 1;
 }
 
-static void* refqueue_unsafe_get( RefQueue* qs ){
+void* refqueue_unsafe_get( RefQueue* qs ){
     _LNode* target = qs->head;
     void*   item   = target->item;
 
@@ -222,9 +220,7 @@ static char* refqueue_unsafe_str( RefQueue* xs ){
 char* refqueue_str( RefQueue* qs ){ // New string must be freed.
     char* str; 
     RefQueue* self = qs;
-    pthread_mutex_lock( &self->lock );
-    str = refqueue_unsafe_str( self );
-    pthread_mutex_unlock( &self->lock );
+    pthread_mutex_lock( &self->lock ); str = refqueue_unsafe_str( self ); pthread_mutex_unlock( &self->lock );
     return str;
 }
 
@@ -269,5 +265,8 @@ void refqueue_deallocateAll( RefQueue* qs ){
     pthread_mutex_destroy( &self->lock );
     pthread_cond_destroy( &self->has_item );
 }
+
+void refqueue_unsafe_lock  ( RefQueue* qs ){ pthread_mutex_lock  ( &qs->lock ); }
+void refqueue_unsafe_unlock( RefQueue* qs ){ pthread_mutex_unlock( &qs->lock ); }
 
 #undef STOP_IF_UNSAFE
