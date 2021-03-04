@@ -65,7 +65,7 @@ void* konsumidor( void* pair_info ){
     forever {
         ext      = refqueue_tryget( &cola );
         safe_err = errno;
-        if( ext == NULL && safe_err == EBUSY ){
+        if( ext == NULL && safe_err == EAGAIN ){
             printf( "<| %s: Cola vacia.\n" , name );
             printf( "   %s: Manejando Errores.\n" , name );
         } else {

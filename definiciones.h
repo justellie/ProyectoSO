@@ -1,3 +1,10 @@
+/**
+ * @file definiciones.h
+ * @brief Definiciones de las estructuras y variables globales usadas dentro del programa.
+ * @author Todos
+ * @version 0.0.3.1
+ * @date 2021-03-04
+ */
 #ifndef __DEFINICIONES_H__
 #define __DEFINICIONES_H__
 
@@ -35,7 +42,7 @@ typedef pthread_cond_t   Condicion;
 
 // [*] PERSONAL:
 typedef enum { Ninguno, EnCasa, Basica, Intensivo, Muerto} TipoAtencion; // Antes: enum cama.
-typedef enum { PidePCR , PideTanque, PideRespirador} Recurso; 
+typedef enum { PidePCR , PideTanque, PideRespirador,PideEnfermera,PideMedico} Recurso; 
 typedef enum { Medico , Enfermera } TipoPersonal;
 typedef struct {
     int          id;
@@ -159,10 +166,8 @@ typedef struct {
     TipoHospital tipo;
     sem_t        camasBasico;
     sem_t        camasIntensivo;
-
-    sem_t        consultaTanques;
-    sem_t        consultaOxigeno;
     
+    sem_t        EsperandoPorRecurso;
     RefQueue     tanquesOxigeno;
     RefQueue     respiradores;
     RefQueue     PCR;
@@ -190,6 +195,8 @@ typedef struct {
     RefQueue     enfermeras;
     RefQueue     pacientes;
     RefQueue     voluntarios;
+    RefQueue     peticiones;
+    RefQueue     peticionesPersonal;
 
     TuplaRecursos estadisticas[NACTUALIZACIONES];
     Mutex         estadisticasLock;
@@ -254,6 +261,7 @@ Personal   Tabla_Enfermeras[NENFERMERAS];
 Hospital   Tabla_Hospitales[NHOSPITALES];
 GestorCama Tabla_Gestores[NGESTORES];
 Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+UGC        gestor_central;
 
 void inicializarPacientes( char* ruta_archivo_pacientes );
 void inicializarMedicos( char* ruta_archivo_medicos );

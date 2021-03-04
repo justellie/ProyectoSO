@@ -47,10 +47,8 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                 refmap_put(&refHospital->medicos[4], &med->id, med);
             }
             //Liberacion de los respiradores
-            sem_wait(&refHospital->consultaOxigeno);
             refqueue_put(&refHospital->respiradores, NULL);
             refHospital->estadis_recursos.nrespira++;
-            sem_post(&refHospital->consultaOxigeno);
             //Liberacion de la cama
             sem_post(&refHospital->camasIntensivo);
             refHospital->estadis_recursos.ncamasInt++;
@@ -82,10 +80,8 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                     refmap_put(&refHospital->medicos[i+1], &med->id, med);
                 }
             }
-            //Liberacion del tanque de oxigeno que esta en uso por el paciente
-            sem_wait(&refHospital->consultaTanques);
+            //Liberacion del tanque de oxigeno que esta en uso por el paciente            
             refqueue_put(&refHospital->tanquesOxigeno, NULL);
-            sem_post(&refHospital->consultaTanques);
             refHospital->estadis_recursos.ntanques++;
             //Liberacion de la cama basica
             sem_post(&refHospital->camasBasico);
@@ -161,34 +157,43 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     }
                 }
                 //reservacion respirador artificial
-                sem_wait(&refHospital->consultaOxigeno);
                 if(refqueue_tryget(&refHospital->respiradores)==NULL)
                 {
-                    if (errno==EAGAIN)
-                        respirador_flag=false;
+                    if (errno==EAGAIN){
+                        TuplaInventario *pedir = malloc (sizeof(TuplaInventario));
+                        pedir->idHospital=refHospital->id;
+                        pedir->cantidad=1;
+                        pedir->tipo_recurso=PideRespirador;
+                        refqueue_put(&gestor_central.peticiones, pedir);
+                        sem_wait(&refHospital->EsperandoPorRecurso);
+                        if(refqueue_tryget(&refHospital->respiradores)==NULL)
+                        {
+                            if (errno==EAGAIN)
+                                respirador_flag=false;
+                        }
+                        else
+                        {
+                            refHospital->estadis_recursos.nrespira--;
+                            respirador_flag=true;
+                        }  
+                    }   
                 }
                 else
                 {
                     refHospital->estadis_recursos.nrespira--;
                     respirador_flag=true;
                 }
-                sem_post(&refHospital->consultaOxigeno);
                 //verificacion de que todos los insumos necesarios fueron reservados con exito
                 if(respirador_flag && (med_flag==cantidad) && (enf_flag==cantidad))
                     resultado=1;
                 else
                 {
-                    //antes de las condiciones inferiores se debe realizar la pedida del recurso al UGC
-                    //por ahora no se como se realizara esto, asi que lo dejo como devolucion de los recursos
-
                     //En caso de que la UGC no pueda brindar los insumos, se liberan los recursos que se tomaron 
                     //y se procede a transferir al paciente
                     if(respirador_flag)
                     {
-                        sem_wait(&refHospital->consultaOxigeno);
                         refqueue_put(&refHospital->respiradores, NULL);
                         refHospital->estadis_recursos.nrespira++;
-                        sem_post(&refHospital->consultaOxigeno);
                     }
                     for (int i = 0; i < enf_flag; i++)
                     {
@@ -249,18 +254,34 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     }
                 }
                 //reserva de tanque de oxigeno
-                sem_wait(&refHospital->consultaTanques);
                 if(refqueue_tryget(&refHospital->tanquesOxigeno)==NULL)
                 {
                     if (errno= EAGAIN)
-                       oxigeno_flag=false;
+                    {
+                        TuplaInventario *pedir = malloc (sizeof(TuplaInventario));
+                        pedir->idHospital=refHospital->id;
+                        pedir->cantidad=1;
+                        pedir->tipo_recurso=PideTanque;
+                        refqueue_put(&gestor_central.peticiones, pedir);
+                        sem_wait(&refHospital->EsperandoPorRecurso);
+                        if(refqueue_tryget(&refHospital->tanquesOxigeno)==NULL)
+                        {
+                            if (errno==EAGAIN)
+                                respirador_flag=false;
+                        }
+                        else
+                        {
+                            refHospital->estadis_recursos.nrespira--;
+                            respirador_flag=true;
+                        }
+                    }
+                       
                 }
                 else
                 {
                     refHospital->estadis_recursos.ntanques--;
                     oxigeno_flag=true;
                 }
-                sem_post(&refHospital->consultaTanques);
 
                 //Verificacion de que todos lo recursos fueron reservados correctamente
                 if (oxigeno_flag && (atendiendo->enfID[0]!=-1) && (atendiendo->medID[0]!=-1))
@@ -269,9 +290,6 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                 }
                 else
                 {
-                    //antes de las condiciones inferiores se debe realizar la pedida del recurso al UGC
-                    //por ahora no se como se realizara esto, asi que lo dejo como devolucion de los recursos
-
                     //En caso de que la UGC no pueda brindar los insumos, se liberan los recursos que se tomaron 
                     //y se procede a transferir al paciente
                     if(respirador_flag)
@@ -524,7 +542,8 @@ void actor_gestor(void *datos_gestor)
             //si el estatus es -1, implica que al paciente no se le pudieron asignar recursos suficientes y debe ser transferido de hospial
             if (status==-1)
             {
-                //refqueue_put(&UGC, atendiendo);
+                atendiendo->ingresando=1;
+                refqueue_put(&gestor_central.pacientes, atendiendo);
                 continue;
             } 
             else
