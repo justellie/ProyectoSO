@@ -2,10 +2,11 @@
 # Elige la extensión del ejecutable según el Sistema Operativo:
 # (para el caso en el que se utilice la librería pthread en windows)
 EXT	   :=
-# Colores: Azul(BL), Rojo(RL),
+# Colores: Azul(BL), Rojo(RL), Verde(GL)
 # 		   Reiniciar Color(RE). Sólo en Unix/Linux.
 RL     :=
 BL     :=
+GL     :=
 RE     :=
 ifeq ($(OS),Windows_NT)
 	EXT +=exe
@@ -13,6 +14,7 @@ else
 	EXT +=out
 	BL  += \u001b[38;5;32m
 	RL  += \u001b[38;5;9m
+	GL  += \u001b[38;5;10m
 	RE  += \u001b[0m
 endif
 # ------------------------------------------------------------------
@@ -36,17 +38,20 @@ TXAMPL := $(TYPES)/$(EXAMPL)
 
 # TODO: Agregar los objetos generados por definiciones y actores
 all: refmap generic-queue
+	@echo -e "$(BL) [@] Generando archivo principal $(GL)($(TARGET))$(BL)...$(RE)"
 	$(CC) $(COMMON) $(OBJS) $(MFILES) -o $(TARGET)
 run:
-	@echo "Ejecutando Programa..."
+	@echo -e "$(BL) [|>] Ejecutando Programa...$(RE)"
 	@command ./$(TARGET)
+	@echo -e "$(GL)Hecho\n$(RE)"
 
 
 # ------------------------------------------------------
 # Crea los archivos de definiciones:
 definiciones: refmap generic-queue
-	@echo [D] Generando definiciones:
+	@echo -e "$(BL) [D] Generando definiciones: $(RE)"
 	$(CC) $(COMMON) $(LIBFLG) definiciones.h definiciones.c
+	@echo -e "$(GL)Hecho\n$(RE)"
 
 
 # ------------------------------------------------------
@@ -55,20 +60,20 @@ tests: queue-tests refmap-tests
 
 # Genera los casos de prueba para el tipo "Cola de Referencias":
 queue-tests: generic-queue
-	@echo [Q] Generando ejemplos de uso para la Cola de Referencias...
+	@echo -e "$(BL) [Q] Generando ejemplos de uso para la Cola de Referencias...$(RE)"
 	$(CC) $(COMMON) $(TXAMPL)/simple_queue.c       RefQueue.o -o $(TXAMPL)/simple_queue.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/shared_queue.c       RefQueue.o -o $(TXAMPL)/shared_queue.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/quick_shared_queue.c RefQueue.o -o $(TXAMPL)/quick_shared_queue.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/tryget_queue.c       RefQueue.o -o $(TXAMPL)/tryget_queue.$(EXT)
-	@echo
+	@echo -e "$(GL)Hecho\n$(RE)"
 
 # Genera los casos de prueba para el tipo "Mapa de Referencias":
 refmap-tests: refmap
-	@echo [M] Generando ejemplos de uso para el Mapa de Referencias...
+	@echo -e "$(BL) [M] Generando ejemplos de uso para el Mapa de Referencias...$(RE)"
 	$(CC) $(COMMON) $(TXAMPL)/refmap-allocate.c  RefMap.o -o $(TXAMPL)/refmap-allocate.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/refmap-debug.c     RefMap.o -o $(TXAMPL)/refmap-debug.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/refmap-debug-max.c RefMap.o -o $(TXAMPL)/refmap-debug-max.$(EXT)
-	@echo
+	@echo -e "$(GL)Hecho\n$(RE)"
 # ------------------------------------------------------
 
 
@@ -79,8 +84,10 @@ refmap-tests: refmap
 # 	>>> Los .o se generan en el archivo raíz.
 # 		Ejemplo: compilar ./$(TYPES)/RefQueue.c --> genera --> ./RefQueue.o
 generic-queue:
+	@echo -e "$(BL) [Q] Creando $(GL)RefQueue$(BL):$(RE)"
 	$(CC) $(COMMON) $(LIBFLG) $(TYPES)/RefQueue.c $(TYPES)/RefQueue.h
 refmap:
+	@echo -e "$(BL) [M] Creando $(GL)RefMap$(BL):$(RE)"
 	$(CC) $(COMMON) $(LIBFLG) $(TYPES)/RefMap.c $(TYPES)/RefMap.h
 # ------------------------------------------------------
 
@@ -90,19 +97,18 @@ refmap:
 # ------------------------------------------------------
 # Métodos para limpiar los rastros de las compilaciones:
 clean-all: clean-types clean-root
-	@echo Listo
-	@echo
+	@echo -e "$(GL)Hecho\n$(RE)"
 
 # Limpieza:
 clean-types:
-	@echo Eliminando archivos ejecutables de $(TXAMPL)
+	@echo -e "$(RL)[!] Eliminando archivos ejecutables de $(TXAMPL)$(RE)"
 	rm -f $(TXAMPL)/*.$(EXT)
-	@echo Eliminando archivos objetos de $(TYPES)
+	@echo -e "$(RL)[!] Eliminando archivos objetos de $(TYPES)$(RE)"
 	rm -f $(TYPES)/*.h.gch
 	@echo
 
 clean-root:
-	@echo Eliminando archivos objetos de ./
+	@echo -e "$(RL)[!] Eliminando archivos objetos de ./$(RE)"
 	rm -f *.o *.h.gch
 	@echo
 # --------------------------------------------------------------------

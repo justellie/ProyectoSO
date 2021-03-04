@@ -1,3 +1,10 @@
+/**
+ * @file definiciones.h
+ * @brief Definiciones de las estructuras y variables globales usadas dentro del programa.
+ * @author Todos
+ * @version 0.0.3.1
+ * @date 2021-03-04
+ */
 #ifndef __DEFINICIONES_H__
 #define __DEFINICIONES_H__
 

@@ -252,6 +252,9 @@ void refmap_init( RefMap* t                            ,
     STOP_IF_UNSAFE( t->callstack , "refmap_init: Unable to build call stack." );
 }
 
+void*  refmap_unsafe_lock  ( RefMap* t ){ pthread_mutex_lock( &t->lock );   }
+int    refmap_unsafe_unlock( RefMap* t ){ pthread_mutex_unlock( &t->lock ); }
+
 int refmap_unsafe_empty( RefMap* t ){ return t->root == NULL; }
 int refmap_unsafe_size ( RefMap* t ){ return nodeSize( t->root ); }
 
