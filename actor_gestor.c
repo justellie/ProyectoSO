@@ -47,10 +47,8 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                 refmap_put(&refHospital->medicos[4], &med->id, med);
             }
             //Liberacion de los respiradores
-            sem_wait(&refHospital->consultaOxigeno);
             refqueue_put(&refHospital->respiradores, NULL);
             refHospital->estadis_recursos.nrespira++;
-            sem_post(&refHospital->consultaOxigeno);
             //Liberacion de la cama
             sem_post(&refHospital->camasIntensivo);
             refHospital->estadis_recursos.ncamasInt++;
@@ -82,10 +80,8 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                     refmap_put(&refHospital->medicos[i+1], &med->id, med);
                 }
             }
-            //Liberacion del tanque de oxigeno que esta en uso por el paciente
-            sem_wait(&refHospital->consultaTanques);
+            //Liberacion del tanque de oxigeno que esta en uso por el paciente            
             refqueue_put(&refHospital->tanquesOxigeno, NULL);
-            sem_post(&refHospital->consultaTanques);
             refHospital->estadis_recursos.ntanques++;
             //Liberacion de la cama basica
             sem_post(&refHospital->camasBasico);
@@ -161,7 +157,6 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     }
                 }
                 //reservacion respirador artificial
-                sem_wait(&refHospital->consultaOxigeno);
                 if(refqueue_tryget(&refHospital->respiradores)==NULL)
                 {
                     if (errno==EAGAIN){
@@ -188,7 +183,6 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     refHospital->estadis_recursos.nrespira--;
                     respirador_flag=true;
                 }
-                sem_post(&refHospital->consultaOxigeno);
                 //verificacion de que todos los insumos necesarios fueron reservados con exito
                 if(respirador_flag && (med_flag==cantidad) && (enf_flag==cantidad))
                     resultado=1;
@@ -198,10 +192,8 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     //y se procede a transferir al paciente
                     if(respirador_flag)
                     {
-                        sem_wait(&refHospital->consultaOxigeno);
                         refqueue_put(&refHospital->respiradores, NULL);
                         refHospital->estadis_recursos.nrespira++;
-                        sem_post(&refHospital->consultaOxigeno);
                     }
                     for (int i = 0; i < enf_flag; i++)
                     {
@@ -262,7 +254,6 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     }
                 }
                 //reserva de tanque de oxigeno
-                sem_wait(&refHospital->consultaTanques);
                 if(refqueue_tryget(&refHospital->tanquesOxigeno)==NULL)
                 {
                     if (errno= EAGAIN)
@@ -291,7 +282,6 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                     refHospital->estadis_recursos.ntanques--;
                     oxigeno_flag=true;
                 }
-                sem_post(&refHospital->consultaTanques);
 
                 //Verificacion de que todos lo recursos fueron reservados correctamente
                 if (oxigeno_flag && (atendiendo->enfID[0]!=-1) && (atendiendo->medID[0]!=-1))

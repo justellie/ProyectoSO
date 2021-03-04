@@ -166,9 +166,6 @@ typedef struct {
     TipoHospital tipo;
     sem_t        camasBasico;
     sem_t        camasIntensivo;
-
-    sem_t        consultaTanques;
-    sem_t        consultaOxigeno;
     
     sem_t        EsperandoPorRecurso;
     RefQueue     tanquesOxigeno;
