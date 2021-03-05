@@ -1,24 +1,13 @@
 # ------------------------------------------------------------------
 # Elige la extensión del ejecutable según el Sistema Operativo:
 # (para el caso en el que se utilice la librería pthread en windows)
-EXT	   :=
+#
 # Colores: Azul(BL), Rojo(RL), Verde(GL)
 # 		   Reiniciar Color(RE). Sólo en Unix/Linux.
-RL     :=
-BL     :=
-GL     :=
-RE     :=
-ifeq ($(OS),Windows_NT)
-	EXT +=exe
-	JOIN :=type
-else
-	EXT +=out
-	BL  += \u001b[38;5;32m
-	RL  += \u001b[38;5;9m
-	GL  += \u001b[38;5;10m
-	RE  += \u001b[0m
-	JOIN :=cat
-endif
+BL  := \u001b[38;5;32m
+RL  := \u001b[38;5;9m
+GL  := \u001b[38;5;10m
+RE  := \u001b[0m
 # ------------------------------------------------------------------
 
 # COMMON -> -lm:  enlaza librería matemática,
@@ -30,7 +19,7 @@ DEBUG  := -g -O0
 COMMON := -pthread $(DEBUG) -lm -lrt
 MERGE  :=
 LIBFLG := -c
-TARGET := proyecto.$(EXT)
+TARGET := proyecto.out
 TYPES  := Tipos
 OBJS   := RefQueue.o RefMap.o definiciones.o main.o
 EXAMPL := ejemplos
@@ -73,27 +62,27 @@ tests: queue-tests refmap-tests
 # Genera los casos de prueba para el tipo "Cola de Referencias":
 queue-tests: generic-queue
 	@echo -e "$(BL) [Q] Generando ejemplos de uso para la $(GL)Cola de Referencias$(RE)"
-	$(CC) $(COMMON) $(TXAMPL)/simple_queue-long.c  RefQueue.o -o $(TXAMPL)/simple_queue-long.$(EXT)
-	$(CC) $(COMMON) $(TXAMPL)/simple_queue.c       RefQueue.o -o $(TXAMPL)/simple_queue.$(EXT)
-	$(CC) $(COMMON) $(TXAMPL)/shared_queue.c       RefQueue.o -o $(TXAMPL)/shared_queue.$(EXT)
-	$(CC) $(COMMON) $(TXAMPL)/quick_shared_queue.c RefQueue.o -o $(TXAMPL)/quick_shared_queue.$(EXT)
-	$(CC) $(COMMON) $(TXAMPL)/tryget_queue.c       RefQueue.o -o $(TXAMPL)/tryget_queue.$(EXT)
+	$(CC) $(COMMON) $(TXAMPL)/simple_queue-long.c  RefQueue.o -o $(TXAMPL)/simple_queue-long.out
+	$(CC) $(COMMON) $(TXAMPL)/simple_queue.c       RefQueue.o -o $(TXAMPL)/simple_queue.out
+	$(CC) $(COMMON) $(TXAMPL)/shared_queue.c       RefQueue.o -o $(TXAMPL)/shared_queue.out
+	$(CC) $(COMMON) $(TXAMPL)/quick_shared_queue.c RefQueue.o -o $(TXAMPL)/quick_shared_queue.out
+	$(CC) $(COMMON) $(TXAMPL)/tryget_queue.c       RefQueue.o -o $(TXAMPL)/tryget_queue.out
 	@echo -e "$(GL)Hecho\n$(RE)"
 
 # Genera los casos de prueba para el tipo "Mapa de Referencias":
 refmap-tests: refmap
 	@echo -e "$(BL) [M] Generando ejemplos de uso para el $(GL)Mapa de Referencias$(RE)"
-	$(CC) $(COMMON) $(TXAMPL)/refmap-allocate.c  RefMap.o -o $(TXAMPL)/refmap-allocate.$(EXT)
-	$(CC) $(COMMON) $(TXAMPL)/refmap-debug.c     RefMap.o -o $(TXAMPL)/refmap-debug.$(EXT)
-	$(CC) $(COMMON) $(TXAMPL)/refmap-debug-max.c RefMap.o -o $(TXAMPL)/refmap-debug-max.$(EXT)
+	$(CC) $(COMMON) $(TXAMPL)/refmap-allocate.c  RefMap.o -o $(TXAMPL)/refmap-allocate.out
+	$(CC) $(COMMON) $(TXAMPL)/refmap-debug.c     RefMap.o -o $(TXAMPL)/refmap-debug.out
+	$(CC) $(COMMON) $(TXAMPL)/refmap-debug-max.c RefMap.o -o $(TXAMPL)/refmap-debug-max.out
 	@echo -e "$(GL)Hecho\n$(RE)"
 # ------------------------------------------------------
 
 misc-tests:
 	@echo -e "$(BL) [?] Pruebas $(GL)Misceláneas$(BL)$(RE)"
-	$(CC) $(COMMON) $(TXAMPL)/signals.c  -o $(TXAMPL)/signals.$(EXT)
-	$(CC) $(COMMON) $(TXAMPL)/timers.c   -o $(TXAMPL)/timers.$(EXT)
-	$(CC) $(COMMON) $(TXAMPL)/fin-cond.c -o $(TXAMPL)/fin-cond.$(EXT)
+	$(CC) $(COMMON) $(TXAMPL)/signals.c  -o $(TXAMPL)/signals.out
+	$(CC) $(COMMON) $(TXAMPL)/timers.c   -o $(TXAMPL)/timers.out
+	$(CC) $(COMMON) $(TXAMPL)/fin-cond.c -o $(TXAMPL)/fin-cond.out
 	@echo -e "$(GL)Hecho\n$(RE)"
 
 
@@ -122,7 +111,7 @@ clean-all: clean-types clean-root
 # Limpieza:
 clean-types:
 	@echo -e "$(RL)[!] Eliminando archivos ejecutables de $(TXAMPL)$(RE)"
-	rm -f $(TXAMPL)/*.$(EXT)
+	rm -f $(TXAMPL)/*.out
 	@echo -e "$(RL)[!] Eliminando archivos objetos de $(TYPES)$(RE)"
 	rm -f $(TYPES)/*.h.gch
 	@echo
