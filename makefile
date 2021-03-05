@@ -30,14 +30,15 @@ LIBFLG := -c
 TARGET := proyecto.$(EXT)
 MFILES := main.c
 TYPES  := Tipos
-OBJS   := RefQueue.o RefMap.o
+OBJS   := RefQueue.o RefMap.o definiciones.o actores.o
 EXAMPL := ejemplos
 TXAMPL := $(TYPES)/$(EXAMPL)
+ACTORS := $(wildcard actor_*)
 
 .PHONY: all
 
 # TODO: Agregar los objetos generados por definiciones y actores
-all: refmap generic-queue
+all: refmap generic-queue definiciones actores
 	@echo -e "$(BL) [@] Generando archivo principal $(GL)($(TARGET))$(BL)...$(RE)"
 	$(CC) $(COMMON) $(OBJS) $(MFILES) -o $(TARGET)
 run:
@@ -49,15 +50,16 @@ run:
 # ------------------------------------------------------
 # Crea los archivos de definiciones:
 definiciones: refmap generic-queue
-<<<<<<< HEAD
-	@echo [D] Generando definiciones:
-	$(CC) $(COMMON) $(LIBFLG) RefQueue.o RefMap.o definiciones.h definiciones.c
-=======
-	@echo -e "$(BL) [D] Generando definiciones: $(RE)"
-	$(CC) $(COMMON) $(LIBFLG) definiciones.h definiciones.c
+	@echo -e "$(BL) [D] Generando $(GL)definiciones$(BL): $(RE)"
+	$(CC) $(COMMON) $(LIBFLG) definiciones.c definiciones.h
 	@echo -e "$(GL)Hecho\n$(RE)"
->>>>>>> 79f2de3b831490ed84eb347d79eb61ad6c651c3d
 
+# ------------------------------------------------------
+# Crea los actores de definiciones:
+actores: definiciones refmap generic-queue
+	@echo -e "$(BL) [D] Generando $(GL)actores$(BL): $(RE)"
+	$(CC) $(COMMON) $(LIBFLG) actores.h $(ACTORS)
+	@echo -e "$(GL)Hecho\n$(RE)"
 
 # ------------------------------------------------------
 # Genera casos de pruebas para los tipos de datos:
@@ -66,6 +68,7 @@ tests: queue-tests refmap-tests
 # Genera los casos de prueba para el tipo "Cola de Referencias":
 queue-tests: generic-queue
 	@echo -e "$(BL) [Q] Generando ejemplos de uso para la $(GL)Cola de Referencias$(BL)...$(RE)"
+	$(CC) $(COMMON) $(TXAMPL)/simple_queue-long.c  RefQueue.o -o $(TXAMPL)/simple_queue-long.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/simple_queue.c       RefQueue.o -o $(TXAMPL)/simple_queue.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/shared_queue.c       RefQueue.o -o $(TXAMPL)/shared_queue.$(EXT)
 	$(CC) $(COMMON) $(TXAMPL)/quick_shared_queue.c RefQueue.o -o $(TXAMPL)/quick_shared_queue.$(EXT)

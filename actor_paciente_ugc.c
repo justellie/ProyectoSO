@@ -16,7 +16,7 @@
  * 
  * @param inv_ugc estructura que contiene los datos basicos del hospital 
  */
-void actor_paciente_ugc(void *inv_ugc)
+void* actor_paciente_ugc(void *inv_ugc)
 {
     int i,      // Discriminador de tipo de hospital 0)General 1)Intermedio 2)Centinela  
     j,          // Recorre todos los hospitales    
@@ -80,4 +80,5 @@ void actor_paciente_ugc(void *inv_ugc)
 
     }
     
+    return NULL;
 }
