@@ -24,6 +24,8 @@
 #define NSALA_ESPERA        20  // # de puestos en la sala de espera.
 #define NSALA_MUESTRA       5   // # de habitaciones de toma de muestras.
 
+#define NLOTE_PCR     30    // # de PCR que se solicitan por vez
+#define NMIN_PCR      5    // # mínimo de PCR en el hospital antes de pedir otro lote
 // ---------------------------
 #define NCAMAS_CENTINELA    25
 #define NCAMAS_INTERMEDIO   20
@@ -62,6 +64,10 @@ typedef pthread_barrier_t Barrier;
 typedef enum { Ninguno, EnCasa, Basica, Intensivo, Muerto} TipoAtencion; // Antes: enum cama.
 typedef enum { PidePCR , PideTanque, PideRespirador,PideEnfermera,PideMedico} Recurso; 
 typedef enum { Medico , Enfermera } TipoPersonal;
+typedef enum { test=1} MuestraPcr;
+typedef enum { dummyTanque } TanqueDato;
+typedef enum { dummyRespirador } Respirador;
+
 typedef struct {
     int          id;
     TipoPersonal tipo;
@@ -182,6 +188,7 @@ typedef struct {
     RefQueue     tanquesOxigeno;
     RefQueue     respiradores;
     RefQueue     PCR;
+    RefQueue     reporte;
 
     Condicion        stast;
     TuplaRecursos estadis_recursos; // Se actualizan siempre (incremento en valores), pero son reiniciadas
@@ -200,8 +207,9 @@ typedef struct {
     sem_t        camasIntensivo;
     sem_t        tanquesOxigeno;
     sem_t        respiradores;
-    sem_t        espera_personal;
-    sem_t        EsperandoPorRecurso;
+    // TODO: convertir ambos a mutex
+    Mutex        espera_personal;
+    Mutex        EsperandoPorRecurso;
 
     // TODO: Inicializar primero antes de usar.
     // Todos están disponibles.

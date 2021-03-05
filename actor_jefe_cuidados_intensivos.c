@@ -58,7 +58,7 @@ void* actor_jefe_cuidados_intensivos( void * datos)
                 pedido->tipo_recurso= PideMedico;
             }
             refqueue_put(&gestor_central.peticionesPersonal, pedido);
-            sem_wait(&gestor_central.espera_personal);
+            pthread_mutex_lock(&gestor_central.espera_personal);
         pthread_mutex_unlock(&datos_jefe->espera);
             
     }

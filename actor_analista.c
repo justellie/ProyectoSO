@@ -25,7 +25,6 @@ void* actor_analista(void *datos_hospital)
         Paciente *atendiendo = refqueue_get(&hospital->pacientesEnSilla);
         refqueue_get(&hospital->PCR);
         atendiendo->servicio=obtener_diagnostico_simple();
-        sem_signal(&atendiendo->muestraTomada);
         *diag = atendiendo->servicio;
         refqueue_put(&hospital->pacientes, atendiendo);
         refqueue_put(&hospital->reporte, diag);
