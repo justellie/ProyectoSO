@@ -36,4 +36,6 @@ void* actor_director(void* datos_hospital) {
     current_hosp->estadis_pacientes.muertos = 0;
 
     pthread_mutex_unlock(&(current_hosp->estadisticasLock));
+
+    return NULL;
 }

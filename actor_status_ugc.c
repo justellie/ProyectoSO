@@ -58,4 +58,6 @@ void *actor_status_ugc(void* param) {
     fprintf(fptr,"Nro. de pacientes con monitoreados: %d\n",daily_stats.monitoreados);
     fprintf(fptr,"Nro. de pacientes con muertos: %d\n",daily_stats.muertos);
     fclose(fptr);
+
+    return NULL;
 }
