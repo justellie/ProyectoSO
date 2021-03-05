@@ -317,5 +317,7 @@ void forzar_finalizacion( int signo , siginfo_t* info , void* context ){
 void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* context ){
     if( signo != SIGUSR1 ) return;
     fprintf( stderr , "Peticion: Actualizar estadisticas:\n" );
+    gestor_central.continuar = 0;
+    pthread_cond_signal(&(gestor_central.FinalizarStatLock));
 }
 
