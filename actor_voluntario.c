@@ -18,7 +18,7 @@
 void* actor_voluntario(void* datos_voluntario)
 {
 	
-	Voluntario *datos = (Voluntario *) datos_voluntario;
+	//Voluntario *datos = (Voluntario *) datos_voluntario;
 	TipoAtencion diagAct;
 	while(true)
 	{

@@ -22,7 +22,6 @@ static char* opaque_object_str    ( void* ignored );
 // Nodo:
 static _LNode* new_node( void* e );
 static void only_free_node( _LNode* node );
-static void free_node( _LNode* node , void (*free_obj)(void*) );
 
 static _LNode* new_node( void* e ){
     _LNode* node = (_LNode*) malloc(sizeof(_LNode));
@@ -34,13 +33,6 @@ static _LNode* new_node( void* e ){
 
 // {Pre: node != NULL}
 static void only_free_node( _LNode* node ){
-    free(node);
-}
-
-// {Pre: node != NULL}
-static void free_node( _LNode* node ,
-                       void (*free_obj)(void*) ){
-    (*free_obj)(node->item);
     free(node);
 }
 
