@@ -92,6 +92,9 @@ int main(){
     int SYS_CLOCK = CLOCK_REALTIME;
     int status;
 
+    // TODO: Verficar valores
+    TuplaRecursos RecUGC = {.ncamasBas=NCAMAS_CENTINELA,.ncamasInt=NCAMAS_GENERAL};
+    construirUGC( &gestor_central , &RecUGC );
     inicializarPacientes();
     inicializarMedicos();
     inicializarEnfermeras();
@@ -142,51 +145,50 @@ int main(){
     HilosActores* act = &Actores;
 
     for( int id = 0 ; id < NPACIENTES ; id += 1 ){
-        pthread_create( act->Pacientes + id ,   // Thread-id reference.
+        pthread_create( &act->Pacientes[id],   // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_paciente,        // routine.
-                        Tabla_Pacientes + id); // ref. attributes.
+                        &Tabla_Pacientes[id]); // ref. attributes.
         if (id%5==0)
         {
             sleep(3);
         }
-        
     }
 
     // Hilos relacionados con los hospitales:
     int analista      = 0;
     for( int id = 0 ; id < NHOSPITALES ; id += 1 ){
         // TODO: Verificar si se puede eliminar. Hace algo?
-        pthread_create( act->Director + id,         // Thread-id reference.
+        pthread_create( &act->Director[id],         // Thread-id reference.
                         NULL,                       // No special attributes.
                         &actor_director,            // routine.
-                        Tabla_Hospitales + id );   // ref. attributes.
+                        &Tabla_Hospitales[id]);// ref. attributes.
 
-        pthread_create( act->Gestores + id,     // Thread-id reference.
+        pthread_create( &act->Gestores[id],     // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_gestor,          // routine.
-                        Tabla_Gestores + id);  // ref. attributes.
+                        &Tabla_Hospitales[id]);// ref. attributes.
 
-        pthread_create( act->JefeEpidemia + id, // Thread-id reference.
+        pthread_create( &act->JefeEpidemia[id], // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_jefe_epidemia,   // routine.
-                        Tabla_Hospitales + id);// ref. attributes.
+                        &Tabla_Hospitales[id]);// ref. attributes.
 
-        pthread_create( act->JefeCuidados + id, // Thread-id reference.
+        pthread_create( &act->JefeCuidados[id], // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_jefe_cuidados_intensivos, // routine
-                        Tabla_Hospitales + id);// ref. attributes.
+                        &Tabla_Hospitales[id]);// ref. attributes.
 
-        pthread_create( act->JefeAdmin + id,    // Thread-id reference.
+        pthread_create( &act->JefeAdmin[id],    // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_jefe_admin,      // routine
-                        Tabla_Hospitales + id);// ref. attributes.
+                        &Tabla_Hospitales[id]);// ref. attributes.
 
         for( int iter = 0 ; iter < NSALA_MUESTRA ; iter += 1 ){
-            pthread_create( act->Analistas + analista,      // Thread-id reference.
+            pthread_create( &act->Analistas[analista],      // Thread-id reference.
                             NULL,                           // No special attributes.
                             &actor_analista,                // routine.
-                            Tabla_Hospitales + analista ); // ref. attributes.
+                            &Tabla_Hospitales[id] );        // ref. attributes.
             analista += 1;
         }
     }
@@ -273,7 +275,6 @@ int main(){
     while( Continuar ) pthread_cond_wait( &FinalizarAhora , &FinalizarAhoraLock );
     pthread_mutex_unlock( &FinalizarAhoraLock );
 
-
     exit( EXIT_SUCCESS );
 }
 
@@ -294,6 +295,7 @@ void forzar_finalizacion( int signo , siginfo_t* info , void* context ){
     fprintf( stderr , "Finalizando..." );
     // Realizar tareas de finalización.
 }
+
 
 // TODO: Finalizar. falta integración con status UGC.
 void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* context ){
