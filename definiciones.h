@@ -24,8 +24,15 @@
 #define NSALA_ESPERA        20  // # de puestos en la sala de espera.
 #define NSALA_MUESTRA       5   // # de habitaciones de toma de muestras.
 
+<<<<<<< HEAD
+<<<<<<< HEAD
 #define NLOTE_PCR     30    // # de PCR que se solicitan por vez
 #define NMIN_PCR      5    // # mínimo de PCR en el hospital antes de pedir otro lote
+=======
+=======
+#define NLOTE_PCR     30    // # de PCR que se solicitan por vez
+#define NMIN_PCR      5    // # mínimo de PCR en el hospital antes de pedir otro lote
+>>>>>>> b2c2ead47fc425d0bd7759455021d1c701f1e757
 // ---------------------------
 #define NCAMAS_CENTINELA    25
 #define NCAMAS_INTERMEDIO   20
@@ -36,7 +43,11 @@
 #define PORCENTAJE_INT_INTERMEDIO  0.15
 #define PORCENTAJE_INT_GENERAL     0.05
 // ---------------------------
+<<<<<<< HEAD
+>>>>>>> 5060334ce2d8741d5f044c5ca6e88fa74243b1ad
+=======
 
+>>>>>>> b2c2ead47fc425d0bd7759455021d1c701f1e757
 
 #include <stdbool.h>
 #include <errno.h>
