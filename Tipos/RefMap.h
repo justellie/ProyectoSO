@@ -108,8 +108,8 @@ void*  refmap_extract_min_if_key( RefMap* t , int (*predicate)(void*) );
 //          y dicha clave cumpla con el predicado.
 void*  refmap_extract_max_if_key( RefMap* t , int (*predicate)(void*) );
 
-void*  refmap_unsafe_lock  ( RefMap* t );
-int    refmap_unsafe_unlock( RefMap* t );
+void   refmap_unsafe_lock  ( RefMap* t );
+void   refmap_unsafe_unlock( RefMap* t );
 
 void refmap_unsafe_put( RefMap* t , void* key , void* value );
 void   refmap_unsafe_delete   ( RefMap* t , void* key );
@@ -193,14 +193,14 @@ void   refmap_debug( RefMap* t , int use_ascii_color , void (*print_key)(void*) 
 ///          para asegurar la exclusión mutua.
 /// @see refmap_clear
 
-/// @fn void* refmap_unsafe_lock( RefMap* t )
+/// @fn void  refmap_unsafe_lock( RefMap* t )
 /// @brief Bloquea el semáforo interno de t.
 /// @param t Mapa objetivo.
 /// @warning **DEBE ESTAR SEGURO DE USAR ESTA PRIMITIVA. DEJAR BLOQUEADO EL MAPA PUEDE CAUSAR INTERBLOQUEO**
 /// @details Permite reservar exclusivamente a t. Una vez finalizada todas las operaciones, **debe desbloquear manualmente el mapa**.
 /// @see refmap_unsafe_unlock
 
-/// @fn void* refmap_unsafe_unlock( RefMap* t )
+/// @fn void  refmap_unsafe_unlock( RefMap* t )
 /// @brief Desbloquea el semáforo interno de t.
 /// @param t Mapa objetivo.
 /// @warning **EL MAPA DEBE ESTAR BLOQUEADO ANTES DE USAR ESTA PRIMITIVA, PUEDE OCURRIR ERRORES DE EJECUCION.**
