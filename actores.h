@@ -22,6 +22,7 @@ void* actor_paciente( void* datos_iniciales );
 
 void* actor_inventario_ugc( void* datos_ugc );
 void* actor_personal_ugc  ( void* datos_ugc );
+void* actor_paciente_ugc  ( void* datos_ugc );
 // daemon. Estadísticas, inventario, uso, resumen de todo, etc.
 void* actor_status_ugc    ( void* datos_ugc );
 

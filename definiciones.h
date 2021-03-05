@@ -55,10 +55,6 @@ typedef pthread_barrier_t Barrier;
 // --------------------------------
 
 
-// [@] Sincronizacion global ------
-//Barrier Paso_Inicializacion;
-// --------------------------------
-
 
 // [*] PERSONAL:
 typedef enum { Ninguno, EnCasa, Basica, Intensivo, Muerto} TipoAtencion; // Antes: enum cama.
@@ -291,5 +287,24 @@ typedef struct {
 TipoAtencion obtener_diagnostico_simple();
 TipoAtencion obtener_diagnostico_compuesta(void *paciente);
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// [@] Sincronizacion global ---------
+extern Barrier    Paso_Inicializacion;
+extern Condicion  FinalizarAhora;
+extern int        Continuar;
+extern Mutex      FinalizarAhoraLock;
+
+// [+] Tablas globales de Datos -----------------
+extern Paciente   Tabla_Pacientes[NPACIENTES];
+extern Personal   Tabla_Medicos[NMEDICOS];
+extern Personal   Tabla_Enfermeras[NENFERMERAS];
+extern Hospital   Tabla_Hospitales[NHOSPITALES];
+extern GestorCama Tabla_Gestores[NHOSPITALES];
+extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+extern UGC        gestor_central;
+extern Estadistica statHospital[NACTUALIZACIONES][NHOSPITALES];
+
+// [*] Voluntarios -----------
+extern RefQueue pacienteEnCasa;
 
 #endif

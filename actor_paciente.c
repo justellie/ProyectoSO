@@ -8,18 +8,13 @@
  * @copyright Copyright (c) 2021
  * 
  */
-
-#ifndef __ACTOR_PACIENT__
-#define __ACTOR_PACIENT__
-
 #include "actores.h"
 #include "definiciones.h"
 #include <time.h>
 #include <unistd.h>
 
 
-
-extern Hospital Tabla_Hospitales[NHOSPITALES];
+//extern Hospital Tabla_Hospitales[NHOSPITALES];
 
 // TODO: Documentar!
 int autoexamen();
@@ -87,4 +82,3 @@ int autoexamen()
     sleep(3);
     return rand ()%100 < 30; //Hay un 30% de posibilidades de que se sienta mal
 }
-#endif

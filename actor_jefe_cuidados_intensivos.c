@@ -12,7 +12,7 @@
 #include "definiciones.h"
 #include "actores.h"
 
-extern UGC        gestor_central;
+//extern UGC        gestor_central;
 
 void* actor_jefe_cuidados_intensivos( void * datos)
 {

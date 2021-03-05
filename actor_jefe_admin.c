@@ -8,8 +8,11 @@
  * @copyright Copyright (c) 2021
  * 
  */
+#include "actores.h"
 #include "definiciones.h"
-#include "main.c"
+//#include "main.c"
+
+//extern UGC gestor_central;
 
 void* actor_jefe_admin ( void* hospital ){
     int i;
