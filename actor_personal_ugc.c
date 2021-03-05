@@ -17,7 +17,7 @@ extern Paciente   Tabla_Pacientes[NPACIENTES];
 extern Personal   Tabla_Medicos[NMEDICOS];
 extern Personal   Tabla_Enfermeras[NENFERMERAS];
 extern Hospital   Tabla_Hospitales[NHOSPITALES];
-extern GestorCama Tabla_Gestores[NGESTORES];
+extern GestorCama Tabla_Gestores[GESTORES_H];
 extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
 
 // [*] Voluntarios -----------
@@ -128,7 +128,7 @@ void* actor_personal_ugc(void *datos_UGC)
             }
             
         }
-        sem_signal(gestion_central->espera_personal);
+        sem_signal(&gestion_central->espera_personal);
         free(peticion);
 
     }

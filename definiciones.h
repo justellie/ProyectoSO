@@ -62,6 +62,10 @@ typedef pthread_barrier_t Barrier;
 typedef enum { Ninguno, EnCasa, Basica, Intensivo, Muerto} TipoAtencion; // Antes: enum cama.
 typedef enum { PidePCR , PideTanque, PideRespirador,PideEnfermera,PideMedico} Recurso; 
 typedef enum { Medico , Enfermera } TipoPersonal;
+typedef enum { test=1} MuestraPcr;
+typedef enum { dummyTanque } TanqueDato;
+typedef enum { dummyRespirador } Respirador;
+
 typedef struct {
     int          id;
     TipoPersonal tipo;
