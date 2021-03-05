@@ -54,7 +54,7 @@ void* actor_paciente_ugc(void *inv_ugc)
                         sem_getvalue(&busqHospital->camasBasico,&numDisp);      // Ve cuantas camas tiene disponible
 
 
-                    if(! numDisp < maxCamDisp)
+                    if(!(numDisp < maxCamDisp))
                     {
                         maxCamDisp = numDisp;
                         hospMaxCam = i;

@@ -145,7 +145,7 @@ int main(){
         pthread_create( act->Pacientes + id ,   // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_paciente,        // routine.
-                        &Tabla_Pacientes + id); // ref. attributes.
+                        Tabla_Pacientes + id); // ref. attributes.
     }
 
     // Hilos relacionados con los hospitales:
