@@ -249,8 +249,8 @@ void refmap_init( RefMap* t                            ,
     STOP_IF_UNSAFE( t->callstack , "refmap_init: Unable to build call stack." );
 }
 
-void*  refmap_unsafe_lock  ( RefMap* t ){ pthread_mutex_lock( &t->lock );   }
-int    refmap_unsafe_unlock( RefMap* t ){ pthread_mutex_unlock( &t->lock ); }
+void   refmap_unsafe_lock  ( RefMap* t ){ pthread_mutex_lock( &t->lock );   }
+void   refmap_unsafe_unlock( RefMap* t ){ pthread_mutex_unlock( &t->lock ); }
 
 int refmap_unsafe_empty( RefMap* t ){ return t->root == NULL; }
 int refmap_unsafe_size ( RefMap* t ){ return nodeSize( t->root ); }
@@ -381,8 +381,6 @@ void* refmap_extract( RefMap* t , void* key ){
 // [$] Mutable traversal
 // Returns the retrieved key. This doesn't care about callstack integrity
 static void* delete( NodeRB** root , void* key , int (*compare)(void*,void*) , NodeRB*** callstack ){
-    static int extra = BOTTOM_STACK_SIZE;   // counts the head and the new node.
-
     // [^] Build Stack:
     NodeRB*** stack = callstack;
     int used = 0;
@@ -512,8 +510,6 @@ void refmap_unsafe_deleteMin( RefMap* t ){
 
 // [$] Mutable traversal
 static void* deleteMin( NodeRB** root , NodeRB*** callstack ){
-    static int extra = BOTTOM_STACK_SIZE;   // counts the head and the new node.
-
     // [^] Build Stack:
     NodeRB*** stack = callstack;
     int used = 0;
@@ -597,7 +593,6 @@ void refmap_unsafe_deleteMax( RefMap* t ){
 // [$] Mutable traversal
 // This doesn't care about callstack integrity
 static void* deleteMax( NodeRB** root , NodeRB*** callstack ){
-    static int extra = BOTTOM_STACK_SIZE;   // counts the head and the new node.
 
     // [^] Build Stack:
     NodeRB*** stack = callstack;
