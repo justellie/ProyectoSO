@@ -1,3 +1,13 @@
+/**
+ * @file actor_paciente_ugc.c
+ * @author Juan Herrera 26.972.881
+ * @brief 
+ * @version 0.1
+ * @date 2021-03-03
+ * 
+ * @copyright Copyright (c) 2021
+ * 
+ */
 #include "definiciones.h"
 
 void actor_jefe_admin ( void* hospital ){
