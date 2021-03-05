@@ -38,10 +38,10 @@ void* actor_jefe_cuidados_intensivos( void * datos)
     {
         pthread_mutex_lock(&datos_jefe->espera);
             while (refrecursos->nenfermeras >= cantidad * refrecursos->ncamasInt 
-                                                + 16 / refrecursos->ncamasBas 
+                                                + 0.12 * refrecursos->ncamasBas 
                                             || 
-                    refrecursos->nmedicos <= cantidad * refrecursos->ncamasInt 
-                                                + 16 / refrecursos->ncamasBas)
+                    refrecursos->nmedicos >= cantidad * refrecursos->ncamasInt 
+                                                + 0.12 * refrecursos->ncamasBas)
             {
                 pthread_cond_wait(&datos_jefe->refHospital.stast, &datos_jefe->espera);
             }
