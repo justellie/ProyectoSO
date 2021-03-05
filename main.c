@@ -304,6 +304,6 @@ void forzar_finalizacion( int signo , siginfo_t* info , void* context ){
 // TODO: Finalizar. falta integración con status UGC.
 void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* context ){
     if( signo != SIGUSR1 ) return;
-    fprintf( stderr , "Peticion: Actualizar estadisticas:..." );
+    fprintf( stderr , "Peticion: Actualizar estadisticas:\n" );
 }
 
