@@ -28,7 +28,7 @@ void* actor_jefe_admin ( void* hospital ){
                 pedir = malloc (sizeof(TuplaInventario));
                 
                 pedir->idHospital=datosHospital->id;
-                pedir->cantidad=1;
+                pedir->cantidad=NLOTE_PCR;
                 pedir->tipo_recurso=PidePCR;
                 
                 refqueue_put(&gestor_central.peticiones, pedir);
