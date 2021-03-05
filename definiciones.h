@@ -200,7 +200,8 @@ typedef struct {
     sem_t        camasIntensivo;
     sem_t        tanquesOxigeno;
     sem_t        respiradores;
-    sem_t        espera_personal;
+    sem_t        espera_personal;   // TODO: Convertir a Mutex
+    // TODO: convertir EsperandoPorRecurso a Mutex
 
     // TODO: Inicializar primero antes de usar.
     // Todos están disponibles.
