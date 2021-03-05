@@ -27,42 +27,44 @@ void *actor_status_ugc(void* actor_ugc) {
     FILE *fptr;
     UGC* datos_ugc = (UGC *)actor_ugc;
     while(true) {
-        pthread_mutex_lock(&(datos_ugc->turnoLock));
-        daily_stats.covid = 0;
-        daily_stats.dadosDeAlta = 0;
-        daily_stats.hospitalizados = 0;
-        daily_stats.monitoreados = 0;
-        daily_stats.muertos = 0;
+        pthread_mutex_lock(&(datos_ugc->FinalizarStatLock));
+        while(datos_ugc->continuar){
+            pthread_cond_wait(&(datos_ugc->FinalizarStat), &(datos_ugc->FinalizarStatLock));
+            daily_stats.covid = 0;
+            daily_stats.dadosDeAlta = 0;
+            daily_stats.hospitalizados = 0;
+            daily_stats.monitoreados = 0;
+            daily_stats.muertos = 0;
 
-        for(i = 0; i < NACTUALIZACIONES; i++) {
-            for(j = 0; j < NHOSPITALES; j++){
-                daily_stats.covid += statHospital[i][j].covid;
-                daily_stats.dadosDeAlta += statHospital[i][j].dadosDeAlta;
-                daily_stats.hospitalizados += statHospital[i][j].hospitalizados;
-                daily_stats.monitoreados += statHospital[i][j].monitoreados;
-                daily_stats.muertos += statHospital[i][j].muertos;
+            for(i = 0; i < NACTUALIZACIONES; i++) {
+                for(j = 0; j < NHOSPITALES; j++){
+                    daily_stats.covid += statHospital[i][j].covid;
+                    daily_stats.dadosDeAlta += statHospital[i][j].dadosDeAlta;
+                    daily_stats.hospitalizados += statHospital[i][j].hospitalizados;
+                    daily_stats.monitoreados += statHospital[i][j].monitoreados;
+                    daily_stats.muertos += statHospital[i][j].muertos;
+                }
             }
+            printf("\n****************************************************\n");
+            printf("Estadísticas diarias para el manejo del COVID-19. Sistema Facyt-SO\n");
+            printf("Nro. de pacientes con covid: %d\n",daily_stats.covid);
+            printf("Nro. de pacientes con dados de alta: %d\n",daily_stats.dadosDeAlta);
+            printf("Nro. de pacientes con hospitalizados: %d\n",daily_stats.hospitalizados);
+            printf("Nro. de pacientes con monitoreados: %d\n",daily_stats.monitoreados);
+            printf("Nro. de pacientes con muertos: %d\n",daily_stats.muertos);
+
+            fptr = fopen("dailystats.txt", "a");
+            fprintf(fptr,"\n****************************************************\n");
+            fprintf(fptr,"Estadísticas diarias para el manejo del COVID-19. Sistema Facyt-SO\n");
+            fprintf(fptr,"Nro. de pacientes con covid: %d\n",daily_stats.covid);
+            fprintf(fptr,"Nro. de pacientes con dados de alta: %d\n",daily_stats.dadosDeAlta);
+            fprintf(fptr,"Nro. de pacientes con hospitalizados: %d\n",daily_stats.hospitalizados);
+            fprintf(fptr,"Nro. de pacientes con monitoreados: %d\n",daily_stats.monitoreados);
+            fprintf(fptr,"Nro. de pacientes con muertos: %d\n",daily_stats.muertos);
+            fclose(fptr);
         }
-        printf("\n****************************************************\n");
-        printf("Estadísticas diarias para el manejo del COVID-19. Sistema Facyt-SO\n");
-        printf("Nro. de pacientes con covid: %d\n",daily_stats.covid);
-        printf("Nro. de pacientes con dados de alta: %d\n",daily_stats.dadosDeAlta);
-        printf("Nro. de pacientes con hospitalizados: %d\n",daily_stats.hospitalizados);
-        printf("Nro. de pacientes con monitoreados: %d\n",daily_stats.monitoreados);
-        printf("Nro. de pacientes con muertos: %d\n",daily_stats.muertos);
-
-        fptr = fopen("dailystats.txt", "a");
-        fprintf(fptr,"\n****************************************************\n");
-        fprintf(fptr,"Estadísticas diarias para el manejo del COVID-19. Sistema Facyt-SO\n");
-        fprintf(fptr,"Nro. de pacientes con covid: %d\n",daily_stats.covid);
-        fprintf(fptr,"Nro. de pacientes con dados de alta: %d\n",daily_stats.dadosDeAlta);
-        fprintf(fptr,"Nro. de pacientes con hospitalizados: %d\n",daily_stats.hospitalizados);
-        fprintf(fptr,"Nro. de pacientes con monitoreados: %d\n",daily_stats.monitoreados);
-        fprintf(fptr,"Nro. de pacientes con muertos: %d\n",daily_stats.muertos);
-        fclose(fptr);
-
-        pthread_mutex_unlock(&(datos_ugc->turnoLock));
-
+        pthread_mutex_unlock(&(datos_ugc->FinalizarStatLock));
+        datos_ugc->continuar = 1;
     }
         
         

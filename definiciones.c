@@ -197,6 +197,10 @@ void construirUGC( UGC* ugc , TuplaRecursos* descripcion ){
 
     ugc->turno = 0;
     pthread_mutex_init( &ugc->turnoLock , NULL );
+    pthread_mutex_init( &ugc->FinalizarStatLock , NULL );
+    ugc->continuar = 1;
+    pthread_cond_init ( &ugc->FinalizarStat     , NULL );
+
 }
 void destruirUGC( UGC* ugc ){
     sem_destroy( &ugc->camasBasico    );

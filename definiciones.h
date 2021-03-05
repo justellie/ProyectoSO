@@ -222,6 +222,11 @@ typedef struct {
     int           turno;        // Indica cuál tabla de estadisticas se debe leer
     Mutex         turnoLock;    // Una vez que se necesite actualizar, simplemente se pasará al valor
                                 // turno = (turno+1) % NACTUALIZACIONES;
+
+    Condicion FinalizarStat;
+    int continuar;
+    Mutex FinalizarStatLock;
+
 } UGC;
 void construirUGC( UGC* ugc , TuplaRecursos* descripcion );
 void destruirUGC ( UGC* ugc );
