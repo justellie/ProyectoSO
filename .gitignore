@@ -12,5 +12,6 @@
 # Archivos generados por Doxygen
 /html
 /latex
+*.[0-9]*
 
 propuesta.c

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <math.h> // Requires -lm
 
 #define COMPARE(x,y) (                          \
                         ((x) < (y))?            \

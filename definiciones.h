@@ -39,7 +39,7 @@
 
 #include <stdbool.h>
 #include <errno.h>
-#include <math.h>
+#include <math.h> // Requires -lm
 
 // [T] Tipos de datos -------------
 #include "Tipos/RefMap.h"
