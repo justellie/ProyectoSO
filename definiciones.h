@@ -188,6 +188,7 @@ typedef struct {
     RefQueue     tanquesOxigeno;
     RefQueue     respiradores;
     RefQueue     PCR;
+    RefQueue     reporte;
 
     Condicion        stast;
     TuplaRecursos estadis_recursos; // Se actualizan siempre (incremento en valores), pero son reiniciadas
