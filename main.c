@@ -98,6 +98,7 @@ int main(){
     inicializarHospitales( 0.20 , 0.30 , 0.50 ); // 0.20 + 0.30 + 0.50 ~= 1.0
     inicializarPacientesEnCasa();
     inicializarVoluntarios();
+    inicializarGestorCama();
 
 
     // ----------------------------------------------------------------------------------
@@ -144,7 +145,7 @@ int main(){
         pthread_create( act->Pacientes + id ,   // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_paciente,        // routine.
-                        Tabla_Pacientes + id); // ref. attributes.
+                        &Tabla_Pacientes + id); // ref. attributes.
     }
 
     // Hilos relacionados con los hospitales:
@@ -154,33 +155,33 @@ int main(){
         pthread_create( act->Director + id,         // Thread-id reference.
                         NULL,                       // No special attributes.
                         &actor_director,            // routine.
-                        Tabla_Hospitales + id );   // ref. attributes.
+                        &Tabla_Hospitales + id );   // ref. attributes.
 
         pthread_create( act->Gestores + id,     // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_gestor,          // routine.
-                        Tabla_Gestores + id);  // ref. attributes.
+                        &Tabla_Gestores + id);  // ref. attributes.
 
         pthread_create( act->JefeEpidemia + id, // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_jefe_epidemia,   // routine.
-                        Tabla_Hospitales + id);// ref. attributes.
+                        &Tabla_Hospitales + id);// ref. attributes.
 
         pthread_create( act->JefeCuidados + id, // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_jefe_cuidados_intensivos, // routine
-                        Tabla_Hospitales + id);// ref. attributes.
+                        &Tabla_Hospitales + id);// ref. attributes.
 
         pthread_create( act->JefeAdmin + id,    // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_jefe_admin,      // routine
-                        Tabla_Hospitales + id);// ref. attributes.
+                        &Tabla_Hospitales + id);// ref. attributes.
 
         for( int iter = 0 ; iter < NSALA_MUESTRA ; iter += 1 ){
             pthread_create( act->Analistas + analista,      // Thread-id reference.
                             NULL,                           // No special attributes.
                             &actor_analista,                // routine.
-                            Tabla_Hospitales + analista ); // ref. attributes.
+                            &Tabla_Hospitales + analista ); // ref. attributes.
             analista += 1;
         }
     }
@@ -205,7 +206,7 @@ int main(){
         pthread_create( act->Voluntarios + id ,     // Thread-id reference.
                         NULL,                       // No special attributes.
                         &actor_voluntario,          // routine.
-                        Tabla_Voluntarios + id);   // ref. attributes.
+                        &Tabla_Voluntarios + id);   // ref. attributes.
     }
     // ------------------------------------------------------------------------
 

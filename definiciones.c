@@ -321,3 +321,12 @@ void inicializarVoluntarios(){
     }
 }
 
+void inicializarGestorCama(){
+    Hospital *grupoh = Tabla_Hospitales;
+    GestorCama *grupog = Tabla_Gestores;
+    for (int i = 0; i < NHOSPITALES; i++)
+    {
+        construirGestorCama(grupog + i, i, grupoh + i);
+    }
+    
+}
