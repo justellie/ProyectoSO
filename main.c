@@ -35,6 +35,7 @@ Personal   Tabla_Enfermeras[NENFERMERAS];
 Hospital   Tabla_Hospitales[NHOSPITALES];
 GestorCama Tabla_Gestores[NHOSPITALES];
 Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+jefe_uci   Tabla_JefeUCI [NHOSPITALES];
 UGC        gestor_central;
 Estadistica statHospital[NACTUALIZACIONES][NHOSPITALES];
 
@@ -52,7 +53,7 @@ typedef struct HilosActores{
 
     pthread_t Director    [NHOSPITALES];    // 2H   //TODO: Verificar si se puede eliminar. (¿Hace algo?)
     pthread_t JefeEpidemia[NHOSPITALES];    // 3H
-    pthread_t JefeCuidados[NHOSPITALES];    // 4H
+    pthread_t JefeUCI     [NHOSPITALES];    // 4H
     pthread_t JefeAdmin   [NHOSPITALES];    // 5H
 
     pthread_t InventarioUGC;                // 1
@@ -102,6 +103,7 @@ int main(){
     inicializarPacientesEnCasa();
     inicializarVoluntarios();
     inicializarGestorCama();
+    inicializarJefeUCI();
 
 
     // ----------------------------------------------------------------------------------
@@ -149,10 +151,10 @@ int main(){
                         NULL,                   // No special attributes.
                         &actor_paciente,        // routine.
                         &Tabla_Pacientes[id]); // ref. attributes.
-        if (id%5==0)
-        {
-            sleep(3);
-        }
+        //if (id%5==0)
+        //{
+        //    sleep(3);
+        //}
     }
 
     // Hilos relacionados con los hospitales:
@@ -167,17 +169,17 @@ int main(){
         pthread_create( &act->Gestores[id],     // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_gestor,          // routine.
-                        &Tabla_Hospitales[id]);// ref. attributes.
+                        &Tabla_Gestores[id]);   // ref.attributes.
 
         pthread_create( &act->JefeEpidemia[id], // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_jefe_epidemia,   // routine.
                         &Tabla_Hospitales[id]);// ref. attributes.
 
-        pthread_create( &act->JefeCuidados[id], // Thread-id reference.
+        pthread_create( &act->JefeUCI     [id], // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_jefe_cuidados_intensivos, // routine
-                        &Tabla_Hospitales[id]);// ref. attributes.
+                        &Tabla_JefeUCI[id]);// ref. attributes.
 
         pthread_create( &act->JefeAdmin[id],    // Thread-id reference.
                         NULL,                   // No special attributes.
@@ -270,10 +272,13 @@ int main(){
     pthread_mutex_init( &FinalizarAhoraLock , NULL );
     pthread_cond_init ( &FinalizarAhora     , NULL );
 
-    // Espera hasta que deba finalizar.
+    // Espera hasta Ctrl+C
     pthread_mutex_lock( &FinalizarAhoraLock );
     while( Continuar ) pthread_cond_wait( &FinalizarAhora , &FinalizarAhoraLock );
     pthread_mutex_unlock( &FinalizarAhoraLock );
+
+    pthread_mutex_destroy( &FinalizarAhoraLock );
+    pthread_cond_destroy( &FinalizarAhora      );
 
     exit( EXIT_SUCCESS );
 }
@@ -291,9 +296,8 @@ void forzar_finalizacion( int signo , siginfo_t* info , void* context ){
     if( signo != SIGINT ) return;
 
     Continuar = 0;
-    pthread_cond_signal( &FinalizarAhora );  // Wake up only a thread
-    fprintf( stderr , "Finalizando..." );
-    // Realizar tareas de finalización.
+    pthread_cond_signal( &FinalizarAhora );  // Despierta a main para finalizar.
+    fprintf( stderr , "Finalizando...\n" );
 }
 
 
