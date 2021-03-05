@@ -2,7 +2,7 @@
  * @file main.c
  * @brief Programa principal. Inicializa todas las variables e hilos para el funcionamiento del programa.
  * @author Gabriel Peraza
- * @version 0.0.0.2
+ * @version 0.0.0.4
  * @date 2021-03-04
  */
 #include "actores.h"
@@ -47,18 +47,18 @@ typedef struct HilosActores{
     pthread_t Analistas  [NANALISTAS];      // 1A
     pthread_t Voluntarios[NVOLUNTARIOS];    // 1V
 
-    //pthread_t Director  [NHOSPITALES];    // 2H   //TODO: Verificar si se puede eliminar. (¿Hace algo?)
+    pthread_t Director  [NHOSPITALES];      // 2H   //TODO: Verificar si se puede eliminar. (¿Hace algo?)
     pthread_t JefeEpidemia[NHOSPITALES];    // 3H
     pthread_t JefeCuidados[NHOSPITALES];    // 4H
-    //pthread_t JefeAdmin   [NHOSPITALES];  // 5H
+    pthread_t JefeAdmin   [NHOSPITALES];    // 5H
 
     pthread_t InventarioUGC;                // 1
     pthread_t PersonalUGC;                  // 1
-    //pthread_t StatusUGC;                  // 1
+    pthread_t StatusUGC;                    // 1
 } HilosActores;
 
 HilosActores Actores;
-pthread_t    TodosLosActores[1*NPACIENTES + 1*NANALISTA + 1*NVOLUNTARIOS + 5*NHOSPITALES + 1 + 1 + 1];
+pthread_t    TodosLosActores[1*NPACIENTES + 1*NANALISTAS + 1*NVOLUNTARIOS + 5*NHOSPITALES + 1 + 1 + 1];
 long         nTodosLosActores = sizeof( TodosLosActores );
 
 
@@ -148,30 +148,30 @@ int main(){
     int analista      = 0;
     for( int id = 0 ; id < NHOSPITALES ; id += 1 ){
         // TODO: Verificar si se puede eliminar. Hace algo?
-        //pthread_create( &act->StatusUGC    ,        // Thread-id reference.
-        //                NULL,                       // No special attributes.
-        //                &actor_status_ugc,          // routine.
-        //                &gestion_central        );  // ref. attributes.
+        pthread_create( &act->Director + id    ,    // Thread-id reference.
+                        NULL,                       // No special attributes.
+                        &actor_director,            // routine.
+                        &gestion_central        );  // ref. attributes.
 
         pthread_create( act->Gestores + id,     // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_gestor,          // routine.
                         &Tabla_Gestores + id);  // ref. attributes.
 
-        //pthread_create( act->JefeEpidemia + id, // Thread-id reference.
-        //                NULL,                   // No special attributes.
-        //                &actor_jefe_epidemia,   // routine.
-        //                &Tabla_Hospitales + id);// ref. attributes.
+        pthread_create( act->JefeEpidemia + id, // Thread-id reference.
+                        NULL,                   // No special attributes.
+                        &actor_jefe_epidemia,   // routine.
+                        &Tabla_Hospitales + id);// ref. attributes.
 
         pthread_create( act->JefeCuidados + id, // Thread-id reference.
                         NULL,                   // No special attributes.
                         &actor_jefe_cuidados_intensivos, // routine
                         &Tabla_Hospitales + id);// ref. attributes.
 
-        //pthread_create( act->JefeAdmin + id,    // Thread-id reference.
-        //                NULL,                   // No special attributes.
-        //                &actor_jefe_admin;      // routine
-        //                &Tabla_Hospitales + id);// ref. attributes.
+        pthread_create( act->JefeAdmin + id,    // Thread-id reference.
+                        NULL,                   // No special attributes.
+                        &actor_jefe_admin;      // routine
+                        &Tabla_Hospitales + id);// ref. attributes.
 
         for( int iter = 0 ; iter < NSALA_MUESTRA ; iter += 1 ){
             pthread_create( act->Analistas + analista,      // Thread-id reference.
@@ -193,10 +193,10 @@ int main(){
                     &actor_personal_ugc,        // routine.
                     &gestor_central         );  // ref. attributes.
 
-    //pthread_create( &act->StatusUGC    ,        // Thread-id reference.
-    //                NULL,                       // No special attributes.
-    //                &actor_status_ugc,          // routine.
-    //                &gestor_central         );  // ref. attributes.
+    pthread_create( &act->StatusUGC    ,        // Thread-id reference.
+                    NULL,                       // No special attributes.
+                    &actor_status_ugc,          // routine.
+                    &gestor_central         );  // ref. attributes.
 
     for( int id = 0 ; id < NVOLUNTARIOS ; id += 1 ){
         pthread_create( act->Voluntarios + id ,     // Thread-id reference.

@@ -19,6 +19,7 @@
 
 
 
+extern Hospital Tabla_Hospitales[NHOSPITALES];
 
 ///@fn void actor_paciente(void *datos_paciente)
 ///@brief funcion que ejecuta el actor paciente para realizar sus funciones
@@ -46,7 +47,7 @@ void* actor_paciente(void *datos_paciente)
             // Entra a la sala de espera para poder ir luego a la sala de muestras
             sem_wait(&HospElegid->salaEspera);       // Espera a que haya espacio dentro de la sala de espera hospital
             sem_wait(&HospElegid->salaMuestra);      // Espera a que esté disponible la entrada a la sala de muestra
-            sem_signal(&HospElegid->salaEspera);     // Sale de la sala de espera
+            sem_post(&HospElegid->salaEspera);     // Sale de la sala de espera
 
             // Se realiza la cola para ingresar
             refqueue_put(&HospElegid->pacientesEnSilla, datos); // Hace la cola en la sala de muestra

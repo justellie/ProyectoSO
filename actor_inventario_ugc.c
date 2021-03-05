@@ -143,7 +143,7 @@ void* actor_inventario_ugc(void *datos_UGC)
             }
             
         }
-        sem_signal(&gestion_central->EsperandoPorRecurso);
+        pthread_mutex_unlock(&gestion_central->EsperandoPorRecurso);
         free(peticion);
         
 

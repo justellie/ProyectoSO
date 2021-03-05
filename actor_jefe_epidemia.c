@@ -19,7 +19,7 @@
  * 
  */
     
-void actor_jefe_epidemia(void* datos_hospital) {
+void* actor_jefe_epidemia(void* datos_hospital) {
     Hospital *hospital = (Hospital *)datos_hospital;
     int diagnostico;
     while(true) {

@@ -179,7 +179,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                         pedir->cantidad=1;
                         pedir->tipo_recurso=PideRespirador;
                         refqueue_put(&gestor_central.peticiones, pedir);
-                        sem_wait(&gestor_central.EsperandoPorRecurso);
+                        pthread_mutex_lock(&gestor_central.EsperandoPorRecurso);
                         if(refqueue_tryget(&refHospital->respiradores)==NULL)
                         {
                             if (errno==EAGAIN)
@@ -279,7 +279,7 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                         pedir->cantidad=1;
                         pedir->tipo_recurso=PideTanque;
                         refqueue_put(&gestor_central.peticiones, pedir);
-                        sem_wait(&gestor_central.EsperandoPorRecurso);
+                        pthread_mutex_lock(&gestor_central.EsperandoPorRecurso);
                         if(refqueue_tryget(&refHospital->tanquesOxigeno)==NULL)
                         {
                             if (errno==EAGAIN)

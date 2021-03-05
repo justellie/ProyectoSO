@@ -42,6 +42,7 @@ void* actor_personal_ugc(void *datos_UGC)
             switch (peticion->tipo_recurso)
             {
             case PideEnfermera:
+                // TODO: esto es un arreglo
                 refmap_unsafe_lock(&Tabla_Hospitales[i].enfermeras);
                 break;
             case PideMedico:
