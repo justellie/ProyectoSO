@@ -38,6 +38,9 @@ Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
 UGC        gestor_central;
 Estadistica statHospital[NACTUALIZACIONES][NHOSPITALES];
 
+// [*] Voluntarios -----------
+RefQueue pacienteEnCasa;
+
 // [^] Tablas globales de Hilos(Actores) --------
 typedef struct HilosActores{
     //                                          Numeración incremental:
@@ -64,8 +67,6 @@ long         nTodosLosActores = sizeof( TodosLosActores );
 void finalizarATodos();
 void esperarATodos();
 
-// [*] Voluntarios -----------
-RefQueue pacienteEnCasa;
 
 /// @brief Cambia las condiciones globales para obligar a la actualización de las estadísticas.
 /// @details Cambia ciertos flags y variables de condición en el programa para forzar la evaluación y

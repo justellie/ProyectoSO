@@ -19,9 +19,9 @@
  * 
  */
 
-extern Estadistica statHospital[NACTUALIZACIONES][NHOSPITALES];
-extern Hospital   Tabla_Hospitales[NHOSPITALES];
-extern UGC        gestor_central;
+//extern Estadistica statHospital[NACTUALIZACIONES][NHOSPITALES];
+//extern Hospital   Tabla_Hospitales[NHOSPITALES];
+//extern UGC        gestor_central;
 
 void* actor_director(void* datos_hospital) {
     Hospital* current_hosp = (Hospital *) datos_hospital;

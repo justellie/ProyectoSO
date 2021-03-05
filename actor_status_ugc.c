@@ -18,8 +18,8 @@
  * @param param datos del hospital cuyas estadísticas estamos llevando
  * 
  */
-extern Estadistica statHospital[NACTUALIZACIONES][NHOSPITALES];
-extern Hospital   Tabla_Hospitales[NHOSPITALES];
+//extern Estadistica statHospital[NACTUALIZACIONES][NHOSPITALES];
+//extern Hospital   Tabla_Hospitales[NHOSPITALES];
 
 void *actor_status_ugc(void* param) {
     Estadistica daily_stats;

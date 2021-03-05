@@ -10,12 +10,14 @@ GL     :=
 RE     :=
 ifeq ($(OS),Windows_NT)
 	EXT +=exe
+	JOIN :=type
 else
 	EXT +=out
 	BL  += \u001b[38;5;32m
 	RL  += \u001b[38;5;9m
 	GL  += \u001b[38;5;10m
 	RE  += \u001b[0m
+	JOIN :=cat
 endif
 # ------------------------------------------------------------------
 
@@ -26,22 +28,24 @@ endif
 CC	   := gcc
 DEBUG  := -g -O0
 COMMON := -pthread $(DEBUG) -lm -lrt
+MERGE  :=
 LIBFLG := -c
 TARGET := proyecto.$(EXT)
-MFILES := main.c
 TYPES  := Tipos
-OBJS   := RefQueue.o RefMap.o definiciones.o actores.h
+OBJS   := RefQueue.o RefMap.o definiciones.o main.o
 EXAMPL := ejemplos
 TXAMPL := $(TYPES)/$(EXAMPL)
 ACTORS := $(wildcard actor_*.c)
-OCTORS  = $(wildcard actor_*.o)
+OCTORS := $(ACTORS:%.c=%.o)
 
 .PHONY: all
 
 # TODO: Agregar los objetos generados por definiciones y actores
 all: refmap generic-queue definiciones actores
 	@echo -e "$(BL) [@] Generando archivo principal $(GL)($(TARGET))$(BL)...$(RE)"
-	$(CC) $(COMMON) $(OBJS) $(OCTORS) $(MFILES) -o $(TARGET)
+	@echo -e "$(RL)$(OCTORS)$(RE)"
+	$(CC) $(COMMON) $(LIBFLG) -c main.c definiciones.h actores.h
+	$(CC) $(COMMON) $(OBJS) $(MERGE) $(OCTORS) -o $(TARGET)
 run:
 	@echo -e "$(BL) [|>] Ejecutando Programa...$(RE)"
 	@command ./$(TARGET)
@@ -59,7 +63,7 @@ definiciones: refmap generic-queue
 # Crea los actores de definiciones:
 actores: definiciones refmap generic-queue
 	@echo -e "$(BL) [D] Generando $(GL)actores$(BL): $(RE)"
-	$(CC) $(COMMON) $(LIBFLG) actores.h $(ACTORS)
+	$(CC) $(COMMON) $(LIBFLG) $(ACTORS)
 	@echo -e "$(GL)Hecho\n$(RE)"
 
 # ------------------------------------------------------

@@ -13,21 +13,22 @@
                                         1 : 0   \
                             )                   \
                      )
+
 // ...................................................
 // [@] Sincronizacion global ---------
-extern Barrier    Paso_Inicializacion;
-
-// [+] Tablas globales global -------------------
-extern Paciente   Tabla_Pacientes[NPACIENTES];
-extern Personal   Tabla_Medicos[NMEDICOS];
-extern Personal   Tabla_Enfermeras[NENFERMERAS];
-extern Hospital   Tabla_Hospitales[NHOSPITALES];
-extern GestorCama Tabla_Gestores[NHOSPITALES];
-extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
-extern UGC        gestion_central;
-
-// [*] Voluntarios -----------
-extern RefQueue pacienteEnCasa;
+//extern Barrier    Paso_Inicializacion;
+//
+//// [+] Tablas globales global -------------------
+//extern Paciente   Tabla_Pacientes[NPACIENTES];
+//extern Personal   Tabla_Medicos[NMEDICOS];
+//extern Personal   Tabla_Enfermeras[NENFERMERAS];
+//extern Hospital   Tabla_Hospitales[NHOSPITALES];
+//extern GestorCama Tabla_Gestores[NHOSPITALES];
+//extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+//extern UGC        gestion_central;
+//
+//// [*] Voluntarios -----------
+//extern RefQueue pacienteEnCasa;
 // ...................................................
 
 

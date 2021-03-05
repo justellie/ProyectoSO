@@ -12,8 +12,8 @@
 #include "actores.h"
 #include "definiciones.h"
 
-extern UGC        gestor_central;
-extern RefQueue   pacienteEnCasa;
+//extern UGC        gestor_central;
+//extern RefQueue   pacienteEnCasa;
 
 ///@fn int liberarRecursos(int, Paciente *, float, TipoAtencion);
 ///@brief Libera los recursos que el paciente tenga reservados anteriormente, segun su diagnostico
