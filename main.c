@@ -47,7 +47,7 @@ typedef struct HilosActores{
     pthread_t Analistas  [NANALISTAS];      // 1A
     pthread_t Voluntarios[NVOLUNTARIOS];    // 1V
 
-    pthread_t Director  [NHOSPITALES];      // 2H   //TODO: Verificar si se puede eliminar. (¿Hace algo?)
+    pthread_t Director    [NHOSPITALES];    // 2H   //TODO: Verificar si se puede eliminar. (¿Hace algo?)
     pthread_t JefeEpidemia[NHOSPITALES];    // 3H
     pthread_t JefeCuidados[NHOSPITALES];    // 4H
     pthread_t JefeAdmin   [NHOSPITALES];    // 5H
@@ -61,6 +61,8 @@ HilosActores Actores;
 pthread_t    TodosLosActores[1*NPACIENTES + 1*NANALISTAS + 1*NVOLUNTARIOS + 5*NHOSPITALES + 1 + 1 + 1];
 long         nTodosLosActores = sizeof( TodosLosActores );
 
+void finalizarATodos();
+void esperarATodos();
 
 // [*] Voluntarios -----------
 RefQueue pacienteEnCasa;
@@ -148,10 +150,10 @@ int main(){
     int analista      = 0;
     for( int id = 0 ; id < NHOSPITALES ; id += 1 ){
         // TODO: Verificar si se puede eliminar. Hace algo?
-        pthread_create( &act->Director + id    ,    // Thread-id reference.
+        pthread_create( act->Director + id,         // Thread-id reference.
                         NULL,                       // No special attributes.
                         &actor_director,            // routine.
-                        &gestion_central        );  // ref. attributes.
+                        &Tabla_Hospitales + id );   // ref. attributes.
 
         pthread_create( act->Gestores + id,     // Thread-id reference.
                         NULL,                   // No special attributes.
