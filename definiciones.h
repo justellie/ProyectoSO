@@ -201,6 +201,7 @@ typedef struct {
     sem_t        tanquesOxigeno;
     sem_t        respiradores;
     sem_t        espera_personal;
+    sem_t        EsperandoPorRecurso;
 
     // TODO: Inicializar primero antes de usar.
     // Todos están disponibles.
