@@ -136,6 +136,7 @@ void construirHospital( Hospital* h , int id , TipoHospital tipo , int camasBas 
     refqueue_singleton( &h->tanquesOxigeno );
     refqueue_singleton( &h->respiradores   );
     refqueue_singleton( &h->PCR );
+    refqueue_singleton( &h->reporte );
 
     // Init:
     // TODO: Hay que inicilaizar los campos nuevos!!
@@ -176,7 +177,7 @@ void destruirHospital ( Hospital* h ){
     pthread_mutex_destroy( &h->estadisticasLock );
 }
 
-void construirUGC( UGC* ugc , int id , TuplaRecursos* descripcion ){
+void construirUGC( UGC* ugc , TuplaRecursos* descripcion ){
     sem_init( &ugc->camasBasico    , CompartidoEntreHilos , descripcion->ncamasBas );
     sem_init( &ugc->camasIntensivo , CompartidoEntreHilos , descripcion->ncamasInt );
     sem_init( &ugc->tanquesOxigeno , CompartidoEntreHilos , descripcion->ntanques  );
@@ -191,6 +192,7 @@ void construirUGC( UGC* ugc , int id , TuplaRecursos* descripcion ){
     for( int i = 0 ; i < NACTUALIZACIONES ; i += 2 ){
         ugc->estadisticas[i] = (TuplaRecursos) {0};
     }
+
     pthread_mutex_init( &ugc->estadisticasLock , NULL );
 
     ugc->turno = 0;
@@ -334,5 +336,5 @@ void inicializarGestorCama(){
     {
         construirGestorCama(grupog + i, i, grupoh + i);
     }
-    
 }
+
