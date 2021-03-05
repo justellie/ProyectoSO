@@ -24,6 +24,9 @@
 #define NSALA_ESPERA        20  // # de puestos en la sala de espera.
 #define NSALA_MUESTRA       5   // # de habitaciones de toma de muestras.
 
+#define NLOTE_PCR     30    // # de PCR que se solicitan por vez
+#define NMIN_PCR      5    // # mínimo de PCR en el hospital antes de pedir otro lote
+
 #include <stdbool.h>
 #include <errno.h>
 
