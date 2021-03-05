@@ -170,7 +170,7 @@ int main(){
 
         pthread_create( act->JefeAdmin + id,    // Thread-id reference.
                         NULL,                   // No special attributes.
-                        &actor_jefe_admin;      // routine
+                        &actor_jefe_admin,      // routine
                         &Tabla_Hospitales + id);// ref. attributes.
 
         for( int iter = 0 ; iter < NSALA_MUESTRA ; iter += 1 ){

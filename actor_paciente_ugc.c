@@ -10,6 +10,7 @@
  */
 #include "definiciones.h"
 #include <unistd.h>
+extern Hospital   Tabla_Hospitales[NHOSPITALES];
 
 /**
  * @brief Funcion que ejecuta el actor gestor para reasignar pacientes a los hospitales
