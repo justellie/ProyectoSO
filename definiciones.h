@@ -9,10 +9,10 @@
 #define __DEFINICIONES_H__
 
 #define MAX_ATENCION    5       // Maximo número de pacientes que pueden atender.
-#define NHOSPITALES     10      // Maximo número de pacientes.
-#define NPACIENTES      100     // Se asume un número máximo de pacientes en el sistema.
-#define NMEDICOS        15      // Se asume un número máximo de médicos a nivel nacional.
-#define NENFERMERAS     30      // Se asume un número máximo de enfermeras a nivel nacional.
+#define NHOSPITALES     3      // Maximo número de pacientes.
+#define NPACIENTES      10     // Se asume un número máximo de pacientes en el sistema.
+#define NMEDICOS        5      // Se asume un número máximo de médicos a nivel nacional.
+#define NENFERMERAS     8      // Se asume un número máximo de enfermeras a nivel nacional.
 #define GESTORES_H      1       // Numeros de gestores por hospital
 #define NANALISTAS      (NHOSPITALES * NSALA_MUESTRA)
 
