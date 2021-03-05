@@ -16,8 +16,7 @@ RE  := \u001b[0m
 # Variables de compilación
 CC	   := gcc
 DEBUG  := -g -O0
-COMMON := -pthread $(DEBUG) -lm -lrt
-MERGE  :=
+COMMON := -pthread $(DEBUG) -lm -lrt --std=gnu99
 LIBFLG := -c
 TARGET := proyecto.out
 TYPES  := Tipos
@@ -34,12 +33,13 @@ all: refmap generic-queue definiciones actores
 	@echo -e "$(BL) [@] Generando archivo principal $(GL)($(TARGET))$(BL)...$(RE)"
 	@echo -e "$(RL)$(OCTORS)$(RE)"
 	$(CC) $(COMMON) $(LIBFLG) -c main.c definiciones.h actores.h
-	$(CC) $(COMMON) $(OBJS) $(MERGE) $(OCTORS) -o $(TARGET)
+	$(CC) $(COMMON) $(OBJS) $(OCTORS) -o $(TARGET)
 run:
 	@echo -e "$(BL) [|>] Ejecutando Programa...$(RE)"
 	@command ./$(TARGET)
 	@echo -e "$(GL)Hecho\n$(RE)"
 
+force: clean-all all
 
 # ------------------------------------------------------
 # Crea los archivos de definiciones:
