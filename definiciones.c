@@ -140,7 +140,7 @@ void construirHospital( Hospital* h , int id , TipoHospital tipo , int camasBas 
     // Init:
     // TODO: Hay que inicilaizar los campos nuevos!!
     // No se ha usado nada:
-    h->estadis_recursos = (TuplaRecursos) {0};
+    h->estadis_recursos = (TuplaRecursos) { .ncamasBas=camasBas, .ncamasInt=camasInt, .nrespira=0, .ntanques=0, .nenfermeras=0, .nmedicos=0};
     pthread_mutex_init( &h->estadisticasLock , NULL );
 }
 
