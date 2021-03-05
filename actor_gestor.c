@@ -592,6 +592,7 @@ void* actor_gestor(void *datos_gestor)
                 break;
             }
             //si el estatus es -1, implica que al paciente no se le pudieron asignar recursos suficientes y debe ser transferido de hospial
+            pthread_cond_signal(&datos->hospital->stast);
             if (status==-1)
             {
                 atendiendo->ingresando=1;
