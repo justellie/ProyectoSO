@@ -30,17 +30,18 @@ LIBFLG := -c
 TARGET := proyecto.$(EXT)
 MFILES := main.c
 TYPES  := Tipos
-OBJS   := RefQueue.o RefMap.o definiciones.o actores.o
+OBJS   := RefQueue.o RefMap.o definiciones.o actores.h
 EXAMPL := ejemplos
 TXAMPL := $(TYPES)/$(EXAMPL)
-ACTORS := $(wildcard actor_*)
+ACTORS := $(wildcard actor_*.c)
+OCTORS  = $(wildcard actor_*.o)
 
 .PHONY: all
 
 # TODO: Agregar los objetos generados por definiciones y actores
 all: refmap generic-queue definiciones actores
 	@echo -e "$(BL) [@] Generando archivo principal $(GL)($(TARGET))$(BL)...$(RE)"
-	$(CC) $(COMMON) $(OBJS) $(MFILES) -o $(TARGET)
+	$(CC) $(COMMON) $(OBJS) $(OCTORS) $(MFILES) -o $(TARGET)
 run:
 	@echo -e "$(BL) [|>] Ejecutando Programa...$(RE)"
 	@command ./$(TARGET)

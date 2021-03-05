@@ -21,6 +21,9 @@
 
 extern Hospital Tabla_Hospitales[NHOSPITALES];
 
+// TODO: Documentar!
+int autoexamen();
+
 ///@fn void actor_paciente(void *datos_paciente)
 ///@brief funcion que ejecuta el actor paciente para realizar sus funciones
 ///@param datos_paciente estructura que contiene los datos basicos de un paciente
@@ -52,7 +55,7 @@ void* actor_paciente(void *datos_paciente)
             // Se realiza la cola para ingresar
             refqueue_put(&HospElegid->pacientesEnSilla, datos); // Hace la cola en la sala de muestra
             sem_wait(&datos->muestraTomada);                    // Espera a que le tomen la muestra
-            sem_signal(&HospElegid->salaMuestra);               // Sale de la sala de muestra
+            sem_post(&HospElegid->salaMuestra);               // Sale de la sala de muestra
 
             // Espera a que lo atiendan
             pthread_mutex_lock( &datos->atendidoLock);

@@ -42,11 +42,14 @@ void* actor_personal_ugc(void *datos_UGC)
             switch (peticion->tipo_recurso)
             {
             case PideEnfermera:
-                // TODO: esto es un arreglo
-                refmap_unsafe_lock(&Tabla_Hospitales[i].enfermeras);
+                // NOTE: esto es un arreglo.
+                // TODO: Bloquear el nivel más alto?
+                refmap_unsafe_lock(&Tabla_Hospitales[i].enfermeras[MAX_ATENCION-1]);
                 break;
             case PideMedico:
-                refmap_unsafe_lock(&Tabla_Hospitales[i].medicos);
+                // NOTE: esto es un arreglo.
+                // TODO: Bloquear el nivel más alto?
+                refmap_unsafe_lock(&Tabla_Hospitales[i].medicos[MAX_ATENCION-1]);
                 break;
             default:
                 break;
@@ -119,17 +122,17 @@ void* actor_personal_ugc(void *datos_UGC)
             switch (peticion->tipo_recurso)
             {
             case PideTanque:
-                refmap_unsafe_unlock(&Tabla_Hospitales[i].enfermeras);
+                refmap_unsafe_unlock(&Tabla_Hospitales[i].enfermeras[MAX_ATENCION-1]);
                 break;
             case PideRespirador:
-                refmap_unsafe_unlock(&Tabla_Hospitales[i].medicos);
+                refmap_unsafe_unlock(&Tabla_Hospitales[i].medicos[MAX_ATENCION-1]);
                 break;
             default:
                 break;
             }
             
         }
-        sem_signal(&gestion_central->espera_personal);
+        pthread_mutex_unlock(&gestion_central->espera_personal);
         free(peticion);
 
     }
