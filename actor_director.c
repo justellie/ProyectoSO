@@ -25,17 +25,18 @@
 
 void* actor_director(void* datos_hospital) {
     Hospital* current_hosp = (Hospital *) datos_hospital;
-    
-    pthread_mutex_lock(&(current_hosp->estadisticasLock));
-    
-    statHospital[gestor_central.turno][current_hosp->id] = current_hosp->estadis_pacientes;
-    current_hosp->estadis_pacientes.covid = 0;
-    current_hosp->estadis_pacientes.dadosDeAlta = 0;
-    current_hosp->estadis_pacientes.hospitalizados = 0;
-    current_hosp->estadis_pacientes.monitoreados = 0;
-    current_hosp->estadis_pacientes.muertos = 0;
 
-    pthread_mutex_unlock(&(current_hosp->estadisticasLock));
+   while(true) {
+        pthread_mutex_lock(&(current_hosp->estadisticasLock));
 
+        statHospital[gestor_central.turno][current_hosp->id] = current_hosp->estadis_pacientes;
+        current_hosp->estadis_pacientes.covid = 0;
+        current_hosp->estadis_pacientes.dadosDeAlta = 0;
+        current_hosp->estadis_pacientes.hospitalizados = 0;
+        current_hosp->estadis_pacientes.monitoreados = 0;
+        current_hosp->estadis_pacientes.muertos = 0;
+
+        pthread_mutex_unlock(&(current_hosp->estadisticasLock));
+   } 
     return NULL;
 }
