@@ -8,6 +8,12 @@
 #include "actores.h"
 #include "definiciones.h"
 
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+// Activa/Deactiva el timer de las estadísticas para debuggear el código.
+#define ACTIVAR_ESTADISTICAS 0
+//
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -18,7 +24,8 @@
 // Crea los timers y eventos particulares:
 // SIGUSR1 <-> Llegó el momento de hacer un reporte.
 // SIGINT  <-> Hay que liberar los recursos y finalizar el programa.
-#define NANOSEGUNDOS_EN_SEGUNDOS 1000000000;
+#define NANOSEGUNDOS_EN_SEGUNDO 1000000000
+#define SEGUNDOS_EN_MINUTO      60
 #define ABSOLUTE TIMER_ABSTIME
 #define RELATIVE 0
 
@@ -120,9 +127,9 @@ int main(){
 
     // Ahora, establece los manejadores de la señal:
     if( sigaction( SIGUSR1 , &on_timeout      , NULL ) == -1 )
-        { fprintf(stderr, "Unable to set sigaction\n"); exit( EXIT_FAILURE); }
+        { fprintf(stderr, "No se puede registrar la señal del reloj (SIGUSR1)\n"); exit( EXIT_FAILURE); }
     if( sigaction( SIGINT  , &on_quit_request , NULL ) == -1 )
-        { fprintf(stderr, "Unable to set sigaction\n"); exit( EXIT_FAILURE); }
+        { fprintf(stderr, "No se puede registrar el manejador de (SIGINT)\n"); exit( EXIT_FAILURE); }
     // ----------------------------------------------------------------------------------
 
 
@@ -240,8 +247,11 @@ int main(){
     sev.sigev_signo  = SIGUSR1;
     sev.sigev_value.sival_ptr = &timer_id;  // información que pasa junto a una señal.
 
+#if !defined(ACTIVAR_ESTADISTICAS) || (ACTIVAR_ESTADISTICAS != 0 )
+    // [!] Crear Timer:
     if( timer_create( SYS_CLOCK , &sev , &timer_id ) == -1 )
         { fprintf( stderr , "Error al crear el timer." ); exit(EXIT_FAILURE); }
+#endif
 
     int segundos      = 10;
     int nano_segundos = 0;
@@ -251,10 +261,12 @@ int main(){
     interval.it_interval.tv_sec  = segundos;       // Segundos para activarse regularmente.
     interval.it_interval.tv_nsec = nano_segundos;  // Nano Segundos para activarse regularmente.
 
+#if !defined(ACTIVAR_ESTADISTICAS) || (ACTIVAR_ESTADISTICAS != 0 )
     // [!] Activar Timer:
     if( timer_settime( timer_id , RELATIVE , &interval , NULL ) )   // No interesa retomar el valor anterior
         { fprintf( stderr , "Error al crear iniciar el timer." ); exit(EXIT_FAILURE); }
     // ------------------------------------------------------------------------
+#endif
     
     // Unblock signals:
     if( pthread_sigmask( SIG_UNBLOCK , &mask , NULL ) == -1 )
