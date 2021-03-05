@@ -16,7 +16,7 @@
  * 
  * @param datos_hospital estructura que contiene los datos basicos del hospital 
  */
-void actor_analista(void *datos_hospital)
+void* actor_analista(void *datos_hospital)
 {
     Hospital *hospital = (Hospital *) datos_hospital;
     int* diag = malloc( sizeof(int) );
@@ -25,10 +25,10 @@ void actor_analista(void *datos_hospital)
         Paciente *atendiendo = refqueue_get(&hospital->pacientesEnSilla);
         refqueue_get(&hospital->PCR);
         atendiendo->servicio=obtener_diagnostico_simple();
-        sem_signal(&atendiendo->muestraTomada);
         *diag = atendiendo->servicio;
         refqueue_put(&hospital->pacientes, atendiendo);
         refqueue_put(&hospital->reporte, diag);
     }
     
+    return NULL;
 }

@@ -13,33 +13,53 @@
 #define NPACIENTES      100     // Se asume un número máximo de pacientes en el sistema.
 #define NMEDICOS        15      // Se asume un número máximo de médicos a nivel nacional.
 #define NENFERMERAS     30      // Se asume un número máximo de enfermeras a nivel nacional.
-#define GESTORES_H      2       // Numeros de gestores por hospital
+#define GESTORES_H      1       // Numeros de gestores por hospital
+#define NANALISTAS      (NHOSPITALES * NSALA_MUESTRA)
 
 // Más gestores por cada hospital.
 // NOTE: posiblemente sólo se necesite uno de ellos, no estoy seguro.
-#define NGESTORES   (NHOSPITALES * GESTORES_H) 
 #define NVOLUNTARIOS        5   // Cuántos voluntarios hay en el país
 #define NACTUALIZACIONES    2   // Cuántas veces se actualizan las estadísticas de la UGC.
 
 #define NSALA_ESPERA        20  // # de puestos en la sala de espera.
 #define NSALA_MUESTRA       5   // # de habitaciones de toma de muestras.
 
+<<<<<<< HEAD
 #define NLOTE_PCR     30    // # de PCR que se solicitan por vez
 #define NMIN_PCR      5    // # mínimo de PCR en el hospital antes de pedir otro lote
+=======
+// ---------------------------
+#define NCAMAS_CENTINELA    25
+#define NCAMAS_INTERMEDIO   20
+#define NCAMAS_GENERAL      15
+#define NCAMAS_UGC          200
+
+#define PORCENTAJE_INT_CENTINELA   0.20
+#define PORCENTAJE_INT_INTERMEDIO  0.15
+#define PORCENTAJE_INT_GENERAL     0.05
+// ---------------------------
+>>>>>>> 5060334ce2d8741d5f044c5ca6e88fa74243b1ad
 
 #include <stdbool.h>
 #include <errno.h>
-
-// [>] POSIX ----------------------
-#include <pthread.h>
-#include <semaphore.h>
-typedef pthread_mutex_t  Mutex;
-typedef pthread_cond_t   Condicion;
-// --------------------------------
+#include <math.h>
 
 // [T] Tipos de datos -------------
 #include "Tipos/RefMap.h"
 #include "Tipos/RefQueue.h"
+// --------------------------------
+
+// [>] POSIX ----------------------
+#include <pthread.h>
+#include <semaphore.h>
+typedef pthread_mutex_t   Mutex;
+typedef pthread_cond_t    Condicion;
+typedef pthread_barrier_t Barrier;
+// --------------------------------
+
+
+// [@] Sincronizacion global ------
+//Barrier Paso_Inicializacion;
 // --------------------------------
 
 
@@ -47,19 +67,16 @@ typedef pthread_cond_t   Condicion;
 typedef enum { Ninguno, EnCasa, Basica, Intensivo, Muerto} TipoAtencion; // Antes: enum cama.
 typedef enum { PidePCR , PideTanque, PideRespirador,PideEnfermera,PideMedico} Recurso; 
 typedef enum { Medico , Enfermera } TipoPersonal;
+typedef enum { test=1} MuestraPcr;
+typedef enum { dummyTanque } TanqueDato;
+typedef enum { dummyRespirador } Respirador;
+
 typedef struct {
     int          id;
-    int          idHospital;                // QUESTION(sGaps): ¿Es necesario? (digo, sólo se puede transferir si está totalmente libre)
     TipoPersonal tipo;
-    TipoAtencion servicio;
-    int          pacientes[MAX_ATENCION];   // QUESTION(sGaps): ¿Es necesario? sabemos que los pacientes
-    int          cuantos;                   // almacenan el id de alguno del personal. Por lo que se pueden
-                                            // Ubicar desde allí.
-                                            //
-                                            // Además, la ocupación del médico/enfermera la decide el hospital
-                                            // con los arreglos de árboles(medicos/enfermeras)
 } Personal;
-void construirPersonal( Personal* p , int id , TipoPersonal profesion , TipoAtencion servicio );
+
+void construirPersonal( Personal* p , int id , TipoPersonal profesion );
 void destruirPersonal ( Personal* p );
 
 // [*] PACIENTE:
@@ -70,7 +87,6 @@ typedef struct {
     int          fueAtendido;
     int          ingresando;
     int          tiene_cama;
-    char*        sintomas;
     TipoAtencion servicio;
     
 
@@ -128,7 +144,7 @@ typedef struct {
     //       error. y manejarlo según corresponda.
     RefMap       medicos   [MAX_ATENCION];
     RefMap       enfermeras[MAX_ATENCION];
-    RefQueue       pacientesEnSilla;	
+    RefQueue     pacientesEnSilla;	
     // TODO:    ^^^ Inicializar ambos grupos de diccionarios.
     //       >>>    Se indexarán por su id.     <<<
     // NOTE: No se necesita saber cuántos hay
@@ -171,8 +187,7 @@ typedef struct {
     TipoHospital tipo;
     sem_t        camasBasico;
     sem_t        camasIntensivo;
-    
-    sem_t        EsperandoPorRecurso;
+
     RefQueue     tanquesOxigeno;
     RefQueue     respiradores;
     RefQueue     PCR;
@@ -183,7 +198,7 @@ typedef struct {
                                     // (Así como en base de datos)
 } Hospital;
 
-void construirHospital( Hospital* h , int id , TuplaRecursos* descripcion );
+void construirHospital( Hospital* h , int id , TipoHospital tipo , int camasInt , int camasBas );
 void destruirHospital ( Hospital* h );
 
 // [*] INVENTARIO UGC:
@@ -195,6 +210,7 @@ typedef struct {
     sem_t        tanquesOxigeno;
     sem_t        respiradores;
     sem_t        espera_personal;
+    sem_t        EsperandoPorRecurso;
 
     // TODO: Inicializar primero antes de usar.
     // Todos están disponibles.
@@ -212,6 +228,8 @@ typedef struct {
     Mutex         turnoLock;    // Una vez que se necesite actualizar, simplemente se pasará al valor
                                 // turno = (turno+1) % NACTUALIZACIONES;
 } UGC;
+void construirUGC( UGC* ugc , int id , TuplaRecursos* descripcion );
+void destruirUGC ( UGC* ugc );
 
 // Tupla de peticion a inventario.
 typedef struct {
@@ -219,12 +237,6 @@ typedef struct {
     Recurso tipo_recurso; 
     int cantidad;
 } TuplaInventario;
-
-
-
-
-void construirUGC( UGC* ugc , int id , TuplaRecursos* descripcion );
-void destruirUGC ( UGC* ugc );
 
 
 
@@ -248,42 +260,37 @@ typedef struct {
 void construirVoluntario( Voluntario* v , int id );
 void destruirVoluntario ( Voluntario* v );
 
-RefQueue pacienteEnCasa;
 
-//[*] JEFE DE CUIDADOS INTENSIVOS
-//Encargado de garantizar el personal en el hospital
+//RefQueue pacienteEnCasa;
+
+// referencias globales que se puedan alcanzar desde
+// cualquier hilo.
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+// ---- Tablas Globales ----
+// NOTE: Tdos requieren de inicializacion
+//Paciente   Tabla_Pacientes[NPACIENTES];
+//Personal   Tabla_Medicos[NMEDICOS];
+//Personal   Tabla_Enfermeras[NENFERMERAS];
+//Hospital   Tabla_Hospitales[NHOSPITALES];
+//GestorCama Tabla_Gestores[NHOSPITALES];
+//Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+
+void inicializarPacientes();
+void inicializarMedicos();
+void inicializarEnfermeras();
+void inicializarHospitales( float porc_centinelas, float porc_intermedio , float porc_general );
+void inicializarPacientesEnCasa();
+void inicializarVoluntarios();
+
 typedef struct {
     int id;
     Hospital         refHospital;
     pthread_mutex_t  espera;
 }jefe_uci;
 
-// Se podría utilizar si se decide emplear tuplas como llaves dentro de los diccionarios.
-void EXTRAER_SI_BASICO   ( void* personal );
-void EXTRAER_SI_INTENSIVO( void* personal );
-
-
-
-// TODO: Dejar referencias globales que se puedan alcanzar desde
-//       cualquier hilo.
-//       vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-// ---- Tablas Globales ----
-// NOTE: Tdos requieren de inicializacion
-Paciente   Tabla_Pacientes[NPACIENTES];
-Personal   Tabla_Medicos[NMEDICOS];
-Personal   Tabla_Enfermeras[NENFERMERAS];
-Hospital   Tabla_Hospitales[NHOSPITALES];
-GestorCama Tabla_Gestores[NGESTORES];
-Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
-UGC        gestor_central;
-
-void inicializarPacientes( char* ruta_archivo_pacientes );
-void inicializarMedicos( char* ruta_archivo_medicos );
-void inicializarEnfermeras( char* ruta_archivo_enfermeras );
-void inicializarHospitales();
 TipoAtencion obtener_diagnostico_simple();
 TipoAtencion obtener_diagnostico_compuesta(void *paciente);
-// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 #endif

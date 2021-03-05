@@ -9,6 +9,7 @@
  * 
  */
 #include "definiciones.h"
+#include "main.c"
 
 void actor_jefe_admin ( void* hospital ){
     int i;
@@ -27,7 +28,7 @@ void actor_jefe_admin ( void* hospital ){
         if(refqueue_unsafe_len(&datosHospital->PCR) < NMIN_PCR )
         {
                 refqueue_put(&gestor_central.peticiones, pedir);
-                sem_wait(&datosHospital->EsperandoPorRecurso);
+                sem_wait(&gestor_central.EsperandoPorRecurso);
 
             for (i=0; i < NLOTE_PCR; i++){
 

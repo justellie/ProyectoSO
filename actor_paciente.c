@@ -23,7 +23,7 @@
 ///@fn void actor_paciente(void *datos_paciente)
 ///@brief funcion que ejecuta el actor paciente para realizar sus funciones
 ///@param datos_paciente estructura que contiene los datos basicos de un paciente
-void actor_paciente(void *datos_paciente)
+void* actor_paciente(void *datos_paciente)
 {
     Paciente *datos = (Paciente *) datos_paciente;
     int decidirHosp;                                // Entero que se obtiene al azar y decide a cual hospital ir
@@ -73,6 +73,7 @@ void actor_paciente(void *datos_paciente)
     }
 
     printf("Adios mundo cruel\n");
+    return NULL;
 }
 
 
