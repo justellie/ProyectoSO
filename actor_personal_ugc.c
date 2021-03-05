@@ -9,7 +9,19 @@
  * 
  */
 #include "definiciones.h"
+// [@] Sincronizacion global ---------
+extern Barrier    Paso_Inicializacion;
 
+// [+] Tablas globales global -------------------
+extern Paciente   Tabla_Pacientes[NPACIENTES];
+extern Personal   Tabla_Medicos[NMEDICOS];
+extern Personal   Tabla_Enfermeras[NENFERMERAS];
+extern Hospital   Tabla_Hospitales[NHOSPITALES];
+extern GestorCama Tabla_Gestores[GESTORES_H];
+extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+
+// [*] Voluntarios -----------
+extern RefQueue pacienteEnCasa;
 /**
  * @brief Funcion que ejecuta el actor gestor para realizar sus funciones
  * 
@@ -18,12 +30,6 @@
 void* actor_personal_ugc(void *datos_UGC)
 {
     UGC *gestion_central = (UGC *) datos_UGC;
-    
-    /**
-     * refmap_unsafe_lock()
-     * refmap_unsafe_unlock()
-     * 
-     */
     while (true)
     {
         TuplaInventario *peticion = refqueue_get(&gestion_central->peticionesPersonal);
@@ -80,14 +86,14 @@ void* actor_personal_ugc(void *datos_UGC)
                 actual = refmap_unsafe_size(&Tabla_Hospitales[i].medicos[4]); // verifico cual es la cantidad del recurso en ese momento
                 for (i = 0; i < NHOSPITALES; i++)
                 {
-                    if (actual >= peticion->cantidad) // encontre el uno que tiene la cantidad o mas del recurso
+                    if ((actual >= peticion->cantidad) && peticion->idHospital!=i ) // encontre el uno que tiene la cantidad o mas del recurso
                     {
                         maxDisponible = peticion->cantidad;
                         indexMax = i;
                     }
                     else
                     {
-                        if (actual > maxDisponible)
+                        if ((actual > maxDisponible) && peticion->idHospital!=i)
                         {
                             maxDisponible = actual;
                             indexMax = i;
@@ -122,6 +128,7 @@ void* actor_personal_ugc(void *datos_UGC)
             }
             
         }
+        sem_signal(&gestion_central->espera_personal);
         free(peticion);
 
     }
