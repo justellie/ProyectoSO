@@ -14,8 +14,8 @@ RE  := \u001b[0m
 #           -lrt: enlaza con la librería de temporizadores a tiempo real.
 
 # Variables de compilación
-CC	   := gcc
-DEBUG  := -g -O0
+CC     := gcc
+DEBUG  := -g -O0 -Wall
 COMMON := -pthread $(DEBUG) -lm -lrt --std=gnu99
 LIBFLG := -c
 TARGET := proyecto.out
@@ -32,8 +32,8 @@ OCTORS := $(ACTORS:%.c=%.o)
 all: refmap generic-queue definiciones actores
 	@echo -e "$(BL) [@] Generando archivo principal $(GL)($(TARGET))$(BL)...$(RE)"
 	@echo -e "$(RL)$(OCTORS)$(RE)"
-	$(CC) $(COMMON) $(LIBFLG) -c main.c definiciones.h actores.h
-	$(CC) $(COMMON) $(OBJS) $(OCTORS) -o $(TARGET)
+	$(CC) $(LIBFLG) -c main.c definiciones.h actores.h $(COMMON) 
+	$(CC) $(OBJS) $(OCTORS) -o $(TARGET)               $(COMMON) 
 run:
 	@echo -e "$(BL) [|>] Ejecutando Programa...$(RE)"
 	@command ./$(TARGET)
@@ -45,14 +45,14 @@ force: clean-all all
 # Crea los archivos de definiciones:
 definiciones: refmap generic-queue
 	@echo -e "$(BL) [D] Generando $(GL)definiciones$(BL): $(RE)"
-	$(CC) $(COMMON) $(LIBFLG) definiciones.c definiciones.h
+	$(CC) $(LIBFLG) definiciones.c definiciones.h $(COMMON) 
 	@echo -e "$(GL)Hecho\n$(RE)"
 
 # ------------------------------------------------------
 # Crea los actores de definiciones:
 actores: definiciones refmap generic-queue
 	@echo -e "$(BL) [D] Generando $(GL)actores$(BL): $(RE)"
-	$(CC) $(COMMON) $(LIBFLG) $(ACTORS)
+	$(CC) $(LIBFLG) $(ACTORS) $(COMMON) 
 	@echo -e "$(GL)Hecho\n$(RE)"
 
 # ------------------------------------------------------
@@ -62,27 +62,27 @@ tests: queue-tests refmap-tests
 # Genera los casos de prueba para el tipo "Cola de Referencias":
 queue-tests: generic-queue
 	@echo -e "$(BL) [Q] Generando ejemplos de uso para la $(GL)Cola de Referencias$(RE)"
-	$(CC) $(COMMON) $(TXAMPL)/simple_queue-long.c  RefQueue.o -o $(TXAMPL)/simple_queue-long.out
-	$(CC) $(COMMON) $(TXAMPL)/simple_queue.c       RefQueue.o -o $(TXAMPL)/simple_queue.out
-	$(CC) $(COMMON) $(TXAMPL)/shared_queue.c       RefQueue.o -o $(TXAMPL)/shared_queue.out
-	$(CC) $(COMMON) $(TXAMPL)/quick_shared_queue.c RefQueue.o -o $(TXAMPL)/quick_shared_queue.out
-	$(CC) $(COMMON) $(TXAMPL)/tryget_queue.c       RefQueue.o -o $(TXAMPL)/tryget_queue.out
+	$(CC) $(TXAMPL)/simple_queue-long.c  RefQueue.o -o $(TXAMPL)/simple_queue-long.out  $(COMMON) 
+	$(CC) $(TXAMPL)/simple_queue.c       RefQueue.o -o $(TXAMPL)/simple_queue.out       $(COMMON) 
+	$(CC) $(TXAMPL)/shared_queue.c       RefQueue.o -o $(TXAMPL)/shared_queue.out       $(COMMON) 
+	$(CC) $(TXAMPL)/quick_shared_queue.c RefQueue.o -o $(TXAMPL)/quick_shared_queue.out $(COMMON) 
+	$(CC) $(TXAMPL)/tryget_queue.c       RefQueue.o -o $(TXAMPL)/tryget_queue.out       $(COMMON) 
 	@echo -e "$(GL)Hecho\n$(RE)"
 
 # Genera los casos de prueba para el tipo "Mapa de Referencias":
 refmap-tests: refmap
 	@echo -e "$(BL) [M] Generando ejemplos de uso para el $(GL)Mapa de Referencias$(RE)"
-	$(CC) $(COMMON) $(TXAMPL)/refmap-allocate.c  RefMap.o -o $(TXAMPL)/refmap-allocate.out
-	$(CC) $(COMMON) $(TXAMPL)/refmap-debug.c     RefMap.o -o $(TXAMPL)/refmap-debug.out
-	$(CC) $(COMMON) $(TXAMPL)/refmap-debug-max.c RefMap.o -o $(TXAMPL)/refmap-debug-max.out
+	$(CC) $(TXAMPL)/refmap-allocate.c  RefMap.o -o $(TXAMPL)/refmap-allocate.out  $(COMMON) 
+	$(CC) $(TXAMPL)/refmap-debug.c     RefMap.o -o $(TXAMPL)/refmap-debug.out     $(COMMON) 
+	$(CC) $(TXAMPL)/refmap-debug-max.c RefMap.o -o $(TXAMPL)/refmap-debug-max.out $(COMMON) 
 	@echo -e "$(GL)Hecho\n$(RE)"
 # ------------------------------------------------------
 
 misc-tests:
 	@echo -e "$(BL) [?] Pruebas $(GL)Misceláneas$(BL)$(RE)"
-	$(CC) $(COMMON) $(TXAMPL)/signals.c  -o $(TXAMPL)/signals.out
-	$(CC) $(COMMON) $(TXAMPL)/timers.c   -o $(TXAMPL)/timers.out
-	$(CC) $(COMMON) $(TXAMPL)/fin-cond.c -o $(TXAMPL)/fin-cond.out
+	$(CC) $(TXAMPL)/signals.c  -o $(TXAMPL)/signals.out  $(COMMON) 
+	$(CC) $(TXAMPL)/timers.c   -o $(TXAMPL)/timers.out   $(COMMON) 
+	$(CC) $(TXAMPL)/fin-cond.c -o $(TXAMPL)/fin-cond.out $(COMMON) 
 	@echo -e "$(GL)Hecho\n$(RE)"
 
 
@@ -94,10 +94,10 @@ misc-tests:
 # 		Ejemplo: compilar ./$(TYPES)/RefQueue.c --> genera --> ./RefQueue.o
 generic-queue:
 	@echo -e "$(BL) [Q] Creando $(GL)RefQueue$(BL):$(RE)"
-	$(CC) $(COMMON) $(LIBFLG) $(TYPES)/RefQueue.c $(TYPES)/RefQueue.h
+	$(CC) $(LIBFLG) $(TYPES)/RefQueue.c $(TYPES)/RefQueue.h $(COMMON) 
 refmap:
 	@echo -e "$(BL) [M] Creando $(GL)RefMap$(BL):$(RE)"
-	$(CC) $(COMMON) $(LIBFLG) $(TYPES)/RefMap.c $(TYPES)/RefMap.h
+	$(CC) $(LIBFLG) $(TYPES)/RefMap.c $(TYPES)/RefMap.h $(COMMON) 
 # ------------------------------------------------------
 
 
