@@ -277,6 +277,7 @@ void inicializarEnfermeras();
 void inicializarHospitales( float porc_centinelas, float porc_intermedio , float porc_general );
 void inicializarPacientesEnCasa();
 void inicializarVoluntarios();
+void inicializarGestorCama();
 
 typedef struct {
     int id;

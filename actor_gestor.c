@@ -105,6 +105,10 @@ int liberarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, T
                 resultado=true;
             
         break;
+
+        default:
+            printf("esto no se deberia mostrar nunca: liberacion");
+        break;
     }
 
     return resultado;
@@ -345,6 +349,10 @@ int reservarRecursos(Hospital *refHospital, Paciente *atendiendo, int cantidad, 
                 }                
             }
         break;
+        
+        default:
+            printf("esto no deberia mostarse nunca: reserva");
+        break;
     }
     return resultado;
 }
@@ -523,19 +531,28 @@ void* actor_gestor(void *datos_gestor)
                     switch (hosp_type)
                     {
                         case Centinela:
-                            liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                            if (atendiendo->tiene_cama)
+                            {
+                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                            }
                             datos->hospital->estadis_pacientes.muertos++;
                             dead=true;
                         break;
 
                         case Intermedio:
-                            liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                            if (atendiendo->tiene_cama)
+                            {
+                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                            }
                             datos->hospital->estadis_pacientes.muertos++;
                             dead=true;
                         break;
                         
                         case General:
-                            liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                            if (atendiendo->tiene_cama)
+                            {
+                                liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                            }
                             datos->hospital->estadis_pacientes.muertos++;
                             dead=true;
                         break;
@@ -546,19 +563,28 @@ void* actor_gestor(void *datos_gestor)
                     switch (hosp_type)
                     {
                         case Centinela:
-                            liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                            if (atendiendo->tiene_cama)
+                            {
+                                liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
+                            }
                             datos->hospital->estadis_pacientes.dadosDeAlta++;
                             alta = true;
                         break;
 
                         case Intermedio:
-                            liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                            if (atendiendo->tiene_cama)
+                            {
+                                liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
+                            }
                             datos->hospital->estadis_pacientes.dadosDeAlta++;
                             alta = true;
                         break;
                         
                         case General:
-                            liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                            if (atendiendo->tiene_cama)
+                            {
+                                liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
+                            }
                             datos->hospital->estadis_pacientes.dadosDeAlta++;
                             alta = true;
                         break;
