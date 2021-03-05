@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
+#include <math.h> // Requires -lm
 
 #define COMPARE(x,y) (                          \
                         ((x) < (y))?            \
@@ -13,21 +14,22 @@
                                         1 : 0   \
                             )                   \
                      )
+
 // ...................................................
 // [@] Sincronizacion global ---------
-extern Barrier    Paso_Inicializacion;
-
-// [+] Tablas globales global -------------------
-extern Paciente   Tabla_Pacientes[NPACIENTES];
-extern Personal   Tabla_Medicos[NMEDICOS];
-extern Personal   Tabla_Enfermeras[NENFERMERAS];
-extern Hospital   Tabla_Hospitales[NHOSPITALES];
-extern GestorCama Tabla_Gestores[NHOSPITALES];
-extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
-extern UGC        gestion_central;
-
-// [*] Voluntarios -----------
-extern RefQueue pacienteEnCasa;
+//extern Barrier    Paso_Inicializacion;
+//
+//// [+] Tablas globales global -------------------
+//extern Paciente   Tabla_Pacientes[NPACIENTES];
+//extern Personal   Tabla_Medicos[NMEDICOS];
+//extern Personal   Tabla_Enfermeras[NENFERMERAS];
+//extern Hospital   Tabla_Hospitales[NHOSPITALES];
+//extern GestorCama Tabla_Gestores[NHOSPITALES];
+//extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+//extern UGC        gestion_central;
+//
+//// [*] Voluntarios -----------
+//extern RefQueue pacienteEnCasa;
 // ...................................................
 
 
@@ -114,7 +116,7 @@ void construirHospital( Hospital* h , int id , TipoHospital tipo , int camasBas 
 
     // Init:
     refqueue_singleton( &h->pacientesEnSilla );
-
+    refqueue_singleton( &h->reporte );
     // Init:
     h->estadis_pacientes = (Estadistica) {0};
 
@@ -134,11 +136,18 @@ void construirHospital( Hospital* h , int id , TipoHospital tipo , int camasBas 
     refqueue_singleton( &h->tanquesOxigeno );
     refqueue_singleton( &h->respiradores   );
     refqueue_singleton( &h->PCR );
+    refqueue_singleton( &h->reporte );
 
     // Init:
     // TODO: Hay que inicilaizar los campos nuevos!!
     // No se ha usado nada:
-    h->estadis_recursos = (TuplaRecursos) {0};
+    pthread_cond_init  ( &h->stast, NULL );
+    h->estadis_recursos = (TuplaRecursos) { .ncamasBas=camasBas,
+                                            .ncamasInt=camasInt, 
+                                            .nrespira=0, 
+                                            .ntanques=0, 
+                                            .nenfermeras=0, 
+                                            .nmedicos=0};
     pthread_mutex_init( &h->estadisticasLock , NULL );
 }
 
@@ -168,7 +177,7 @@ void destruirHospital ( Hospital* h ){
     pthread_mutex_destroy( &h->estadisticasLock );
 }
 
-void construirUGC( UGC* ugc , int id , TuplaRecursos* descripcion ){
+void construirUGC( UGC* ugc , TuplaRecursos* descripcion ){
     sem_init( &ugc->camasBasico    , CompartidoEntreHilos , descripcion->ncamasBas );
     sem_init( &ugc->camasIntensivo , CompartidoEntreHilos , descripcion->ncamasInt );
     sem_init( &ugc->tanquesOxigeno , CompartidoEntreHilos , descripcion->ntanques  );
@@ -183,6 +192,7 @@ void construirUGC( UGC* ugc , int id , TuplaRecursos* descripcion ){
     for( int i = 0 ; i < NACTUALIZACIONES ; i += 2 ){
         ugc->estadisticas[i] = (TuplaRecursos) {0};
     }
+
     pthread_mutex_init( &ugc->estadisticasLock , NULL );
 
     ugc->turno = 0;
@@ -228,6 +238,19 @@ void construirVoluntario( Voluntario* v , int id ){
 void destruirVoluntario( Voluntario* v ){
     v->id       = -1;
 }
+
+void construirJefeUCI( jefe_uci* j , int id , Hospital* h ){
+    j->id          = id;
+    j->refHospital = h;
+    pthread_mutex_init( &j->espera , NULL );
+}
+void destruirJefeUCI ( jefe_uci* j ){
+    j->id          = -1;
+    j->refHospital = NULL;
+    pthread_mutex_destroy( &j->espera );
+}
+
+
 
 TipoAtencion obtener_diagnostico_simple()
 {
@@ -319,3 +342,19 @@ void inicializarVoluntarios(){
     }
 }
 
+void inicializarGestorCama(){
+    Hospital *grupoh = Tabla_Hospitales;
+    GestorCama *grupog = Tabla_Gestores;
+    for (int i = 0; i < NHOSPITALES; i++)
+    {
+        construirGestorCama(grupog + i, i, grupoh + i);
+    }
+}
+
+void inicializarJefeUCI(){
+    Hospital *grupoh = Tabla_Hospitales;
+    jefe_uci *grupoj = Tabla_JefeUCI;
+    for( int i = 0; i < NHOSPITALES; i += 1 ) {
+        construirJefeUCI(grupoj + i, i, grupoh + i);
+    }
+}

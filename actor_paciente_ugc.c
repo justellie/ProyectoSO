@@ -8,8 +8,11 @@
  * @copyright Copyright (c) 2021
  * 
  */
+#include "actores.h"
 #include "definiciones.h"
 #include <unistd.h>
+
+//extern Hospital   Tabla_Hospitales[NHOSPITALES];
 
 /**
  * @brief Funcion que ejecuta el actor gestor para reasignar pacientes a los hospitales
@@ -51,7 +54,7 @@ void* actor_paciente_ugc(void *inv_ugc)
                         sem_getvalue(&busqHospital->camasBasico,&numDisp);      // Ve cuantas camas tiene disponible
 
 
-                    if(! numDisp < maxCamDisp)
+                    if(!(numDisp < maxCamDisp))
                     {
                         maxCamDisp = numDisp;
                         hospMaxCam = i;

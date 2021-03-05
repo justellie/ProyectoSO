@@ -9,10 +9,10 @@
 #define __DEFINICIONES_H__
 
 #define MAX_ATENCION    5       // Maximo número de pacientes que pueden atender.
-#define NHOSPITALES     10      // Maximo número de pacientes.
-#define NPACIENTES      100     // Se asume un número máximo de pacientes en el sistema.
-#define NMEDICOS        15      // Se asume un número máximo de médicos a nivel nacional.
-#define NENFERMERAS     30      // Se asume un número máximo de enfermeras a nivel nacional.
+#define NHOSPITALES     3      // Maximo número de pacientes.
+#define NPACIENTES      10     // Se asume un número máximo de pacientes en el sistema.
+#define NMEDICOS        5      // Se asume un número máximo de médicos a nivel nacional.
+#define NENFERMERAS     8      // Se asume un número máximo de enfermeras a nivel nacional.
 #define GESTORES_H      1       // Numeros de gestores por hospital
 #define NANALISTAS      (NHOSPITALES * NSALA_MUESTRA)
 
@@ -24,15 +24,8 @@
 #define NSALA_ESPERA        20  // # de puestos en la sala de espera.
 #define NSALA_MUESTRA       5   // # de habitaciones de toma de muestras.
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 #define NLOTE_PCR     30    // # de PCR que se solicitan por vez
 #define NMIN_PCR      5    // # mínimo de PCR en el hospital antes de pedir otro lote
-=======
-=======
-#define NLOTE_PCR     30    // # de PCR que se solicitan por vez
-#define NMIN_PCR      5    // # mínimo de PCR en el hospital antes de pedir otro lote
->>>>>>> b2c2ead47fc425d0bd7759455021d1c701f1e757
 // ---------------------------
 #define NCAMAS_CENTINELA    25
 #define NCAMAS_INTERMEDIO   20
@@ -43,15 +36,10 @@
 #define PORCENTAJE_INT_INTERMEDIO  0.15
 #define PORCENTAJE_INT_GENERAL     0.05
 // ---------------------------
-<<<<<<< HEAD
->>>>>>> 5060334ce2d8741d5f044c5ca6e88fa74243b1ad
-=======
-
->>>>>>> b2c2ead47fc425d0bd7759455021d1c701f1e757
 
 #include <stdbool.h>
 #include <errno.h>
-#include <math.h>
+#include <math.h> // Requires -lm
 
 // [T] Tipos de datos -------------
 #include "Tipos/RefMap.h"
@@ -66,10 +54,6 @@ typedef pthread_cond_t    Condicion;
 typedef pthread_barrier_t Barrier;
 // --------------------------------
 
-
-// [@] Sincronizacion global ------
-//Barrier Paso_Inicializacion;
-// --------------------------------
 
 
 // [*] PERSONAL:
@@ -200,6 +184,7 @@ typedef struct {
     RefQueue     tanquesOxigeno;
     RefQueue     respiradores;
     RefQueue     PCR;
+    RefQueue     reporte;
 
     Condicion        stast;
     TuplaRecursos estadis_recursos; // Se actualizan siempre (incremento en valores), pero son reiniciadas
@@ -218,8 +203,9 @@ typedef struct {
     sem_t        camasIntensivo;
     sem_t        tanquesOxigeno;
     sem_t        respiradores;
-    sem_t        espera_personal;
-    sem_t        EsperandoPorRecurso;
+    // TODO: convertir ambos a mutex
+    Mutex        espera_personal;
+    Mutex        EsperandoPorRecurso;
 
     // TODO: Inicializar primero antes de usar.
     // Todos están disponibles.
@@ -237,7 +223,7 @@ typedef struct {
     Mutex         turnoLock;    // Una vez que se necesite actualizar, simplemente se pasará al valor
                                 // turno = (turno+1) % NACTUALIZACIONES;
 } UGC;
-void construirUGC( UGC* ugc , int id , TuplaRecursos* descripcion );
+void construirUGC( UGC* ugc , TuplaRecursos* descripcion );
 void destruirUGC ( UGC* ugc );
 
 // Tupla de peticion a inventario.
@@ -269,6 +255,13 @@ typedef struct {
 void construirVoluntario( Voluntario* v , int id );
 void destruirVoluntario ( Voluntario* v );
 
+typedef struct {
+    int id;
+    Hospital*        refHospital;
+    pthread_mutex_t  espera;
+}jefe_uci;
+void construirJefeUCI( jefe_uci* j , int id , Hospital* h );
+void destruirJefeUCI ( jefe_uci* j );
 
 //RefQueue pacienteEnCasa;
 
@@ -291,15 +284,32 @@ void inicializarEnfermeras();
 void inicializarHospitales( float porc_centinelas, float porc_intermedio , float porc_general );
 void inicializarPacientesEnCasa();
 void inicializarVoluntarios();
+void inicializarGestorCama();
+void inicializarJefeUCI();
 
-typedef struct {
-    int id;
-    Hospital         refHospital;
-    pthread_mutex_t  espera;
-}jefe_uci;
 
 TipoAtencion obtener_diagnostico_simple();
 TipoAtencion obtener_diagnostico_compuesta(void *paciente);
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+// [@] Sincronizacion global ---------
+extern Barrier    Paso_Inicializacion;
+extern Condicion  FinalizarAhora;
+extern int        Continuar;
+extern Mutex      FinalizarAhoraLock;
+
+// [+] Tablas globales de Datos -----------------
+extern Paciente   Tabla_Pacientes[NPACIENTES];
+extern Personal   Tabla_Medicos[NMEDICOS];
+extern Personal   Tabla_Enfermeras[NENFERMERAS];
+extern Hospital   Tabla_Hospitales[NHOSPITALES];
+extern GestorCama Tabla_Gestores[NHOSPITALES];
+extern jefe_uci   Tabla_JefeUCI [NHOSPITALES];
+extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+extern UGC        gestor_central;
+extern Estadistica statHospital[NACTUALIZACIONES][NHOSPITALES];
+
+// [*] Voluntarios -----------
+extern RefQueue pacienteEnCasa;
 
 #endif

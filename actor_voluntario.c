@@ -10,14 +10,15 @@
 #include "actores.h"
 #include "definiciones.h"
 
-extern UGC        gestor_central;
+//extern UGC      gestor_central;
+//extern RefQueue pacienteEnCasa;
 ///@fn void actor_voluntario(void* datos_voluntario)
 ///@brief funcion que ejecuta el actor voluntario para realizar sus funciones
 ///@param datos_voluntario estructura que contiene los datos basicos de un voluntario
 void* actor_voluntario(void* datos_voluntario)
 {
 	
-	Voluntario *datos = (Voluntario *) datos_voluntario;
+	//Voluntario *datos = (Voluntario *) datos_voluntario;
 	TipoAtencion diagAct;
 	while(true)
 	{

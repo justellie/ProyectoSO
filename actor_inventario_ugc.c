@@ -8,20 +8,21 @@
  * @copyright Copyright (c) 2021
  * 
  */
+#include "actores.h"
 #include "definiciones.h"
 // [@] Sincronizacion global ---------
-extern Barrier    Paso_Inicializacion;
-
-// [+] Tablas globales global -------------------
-extern Paciente   Tabla_Pacientes[NPACIENTES];
-extern Personal   Tabla_Medicos[NMEDICOS];
-extern Personal   Tabla_Enfermeras[NENFERMERAS];
-extern Hospital   Tabla_Hospitales[NHOSPITALES];
-extern GestorCama Tabla_Gestores[GESTORES_H];
-extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
-
-// [*] Voluntarios -----------
-extern RefQueue pacienteEnCasa;
+//extern Barrier    Paso_Inicializacion;
+//
+//// [+] Tablas globales global -------------------
+//extern Paciente   Tabla_Pacientes[NPACIENTES];
+//extern Personal   Tabla_Medicos[NMEDICOS];
+//extern Personal   Tabla_Enfermeras[NENFERMERAS];
+//extern Hospital   Tabla_Hospitales[NHOSPITALES];
+//extern GestorCama Tabla_Gestores[GESTORES_H];
+//extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
+//
+//// [*] Voluntarios -----------
+//extern RefQueue pacienteEnCasa;
 /**
  * @brief Funcion que ejecuta el actor gestor para realizar sus funciones
  * 
@@ -143,7 +144,7 @@ void* actor_inventario_ugc(void *datos_UGC)
             }
             
         }
-        sem_signal(&gestion_central->EsperandoPorRecurso);
+        pthread_mutex_unlock(&gestion_central->EsperandoPorRecurso);
         free(peticion);
         
 

@@ -8,17 +8,16 @@
  * @copyright Copyright (c) 2021
  * 
  */
-
-#ifndef __ACTOR_PACIENT__
-#define __ACTOR_PACIENT__
-
 #include "actores.h"
 #include "definiciones.h"
 #include <time.h>
 #include <unistd.h>
 
 
+//extern Hospital Tabla_Hospitales[NHOSPITALES];
 
+// TODO: Documentar!
+int autoexamen();
 
 ///@fn void actor_paciente(void *datos_paciente)
 ///@brief funcion que ejecuta el actor paciente para realizar sus funciones
@@ -46,12 +45,12 @@ void* actor_paciente(void *datos_paciente)
             // Entra a la sala de espera para poder ir luego a la sala de muestras
             sem_wait(&HospElegid->salaEspera);       // Espera a que haya espacio dentro de la sala de espera hospital
             sem_wait(&HospElegid->salaMuestra);      // Espera a que esté disponible la entrada a la sala de muestra
-            sem_signal(&HospElegid->salaEspera);     // Sale de la sala de espera
+            sem_post(&HospElegid->salaEspera);     // Sale de la sala de espera
 
             // Se realiza la cola para ingresar
             refqueue_put(&HospElegid->pacientesEnSilla, datos); // Hace la cola en la sala de muestra
             sem_wait(&datos->muestraTomada);                    // Espera a que le tomen la muestra
-            sem_signal(&HospElegid->salaMuestra);               // Sale de la sala de muestra
+            sem_post(&HospElegid->salaMuestra);               // Sale de la sala de muestra
 
             // Espera a que lo atiendan
             pthread_mutex_lock( &datos->atendidoLock);
@@ -83,4 +82,3 @@ int autoexamen()
     sleep(3);
     return rand ()%100 < 30; //Hay un 30% de posibilidades de que se sienta mal
 }
-#endif
