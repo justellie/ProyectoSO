@@ -255,6 +255,13 @@ typedef struct {
 void construirVoluntario( Voluntario* v , int id );
 void destruirVoluntario ( Voluntario* v );
 
+typedef struct {
+    int id;
+    Hospital*        refHospital;
+    pthread_mutex_t  espera;
+}jefe_uci;
+void construirJefeUCI( jefe_uci* j , int id , Hospital* h );
+void destruirJefeUCI ( jefe_uci* j );
 
 //RefQueue pacienteEnCasa;
 
@@ -278,12 +285,8 @@ void inicializarHospitales( float porc_centinelas, float porc_intermedio , float
 void inicializarPacientesEnCasa();
 void inicializarVoluntarios();
 void inicializarGestorCama();
+void inicializarJefeUCI();
 
-typedef struct {
-    int id;
-    Hospital         refHospital;
-    pthread_mutex_t  espera;
-}jefe_uci;
 
 TipoAtencion obtener_diagnostico_simple();
 TipoAtencion obtener_diagnostico_compuesta(void *paciente);
@@ -301,6 +304,7 @@ extern Personal   Tabla_Medicos[NMEDICOS];
 extern Personal   Tabla_Enfermeras[NENFERMERAS];
 extern Hospital   Tabla_Hospitales[NHOSPITALES];
 extern GestorCama Tabla_Gestores[NHOSPITALES];
+extern jefe_uci   Tabla_JefeUCI [NHOSPITALES];
 extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
 extern UGC        gestor_central;
 extern Estadistica statHospital[NACTUALIZACIONES][NHOSPITALES];

@@ -18,8 +18,8 @@ void* actor_jefe_cuidados_intensivos( void * datos)
 {
     jefe_uci *datos_jefe = (jefe_uci *) datos;
     int cantidad;
-    TuplaRecursos *refrecursos = &datos_jefe->refHospital.estadis_recursos;
-    switch (datos_jefe->refHospital.tipo)
+    TuplaRecursos *refrecursos = &datos_jefe->refHospital->estadis_recursos;
+    switch (datos_jefe->refHospital->tipo)
     {
     case Centinela:
         cantidad = 3;
@@ -43,13 +43,13 @@ void* actor_jefe_cuidados_intensivos( void * datos)
                     refrecursos->nmedicos >= cantidad * refrecursos->ncamasInt 
                                                 + 0.12 * refrecursos->ncamasBas)
             {
-                pthread_cond_wait(&datos_jefe->refHospital.stast, &datos_jefe->espera);
+                pthread_cond_wait(&datos_jefe->refHospital->stast, &datos_jefe->espera);
             }
             TuplaInventario *pedido = malloc(sizeof(TuplaInventario *));
-            pedido->idHospital=datos_jefe->refHospital.id;
+            pedido->idHospital=datos_jefe->refHospital->id;
             pedido->cantidad=cantidad;
 
-            if(refrecursos->nenfermeras <= cantidad * refrecursos->ncamasInt + 16 / refrecursos->ncamasBas)
+            if(refrecursos->nenfermeras <= cantidad * refrecursos->ncamasInt + 0.12 / refrecursos->ncamasBas)
             {
                 pedido->tipo_recurso= PideEnfermera;
             }

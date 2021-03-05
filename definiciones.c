@@ -239,6 +239,19 @@ void destruirVoluntario( Voluntario* v ){
     v->id       = -1;
 }
 
+void construirJefeUCI( jefe_uci* j , int id , Hospital* h ){
+    j->id          = id;
+    j->refHospital = h;
+    pthread_mutex_init( &j->espera , NULL );
+}
+void destruirJefeUCI ( jefe_uci* j ){
+    j->id          = -1;
+    j->refHospital = NULL;
+    pthread_mutex_destroy( &j->espera );
+}
+
+
+
 TipoAtencion obtener_diagnostico_simple()
 {
     srand(time(NULL));
@@ -338,3 +351,10 @@ void inicializarGestorCama(){
     }
 }
 
+void inicializarJefeUCI(){
+    Hospital *grupoh = Tabla_Hospitales;
+    jefe_uci *grupoj = Tabla_JefeUCI;
+    for( int i = 0; i < NHOSPITALES; i += 1 ) {
+        construirJefeUCI(grupoj + i, i, grupoh + i);
+    }
+}
