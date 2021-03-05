@@ -24,6 +24,9 @@
 
 // [@] Sincronizacion global ---------
 Barrier    Paso_Inicializacion;
+Condicion  FinalizarAhora;
+int        Continuar = 1;
+Mutex      FinalizarAhoraLock;
 
 // [+] Tablas globales de Datos -----------------
 Paciente   Tabla_Pacientes[NPACIENTES];
@@ -33,26 +36,30 @@ Hospital   Tabla_Hospitales[NHOSPITALES];
 GestorCama Tabla_Gestores[NHOSPITALES];
 Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
 UGC        gestor_central;
+Estadistica statHospital[NACTUALIZACIONES][NHOSPITALES];
 
 // [^] Tablas globales de Hilos(Actores) --------
 typedef struct HilosActores{
-    pthread_t Pacientes  [NPACIENTES];
+    //                                          Numeración incremental:
+    pthread_t Pacientes  [NPACIENTES];      // 1P
 
-    pthread_t Gestores   [NHOSPITALES];
-    pthread_t Analistas  [NANALISTAS];
-    pthread_t Voluntarios[NVOLUNTARIOS];
+    pthread_t Gestores   [NHOSPITALES];     // 1H
+    pthread_t Analistas  [NANALISTAS];      // 1A
+    pthread_t Voluntarios[NVOLUNTARIOS];    // 1V
 
-    //pthread_t Director  [NHOSPITALES];    //TODO: Verificar si se puede eliminar. (¿Hace algo?)
-    pthread_t JefeEpidemia[NHOSPITALES];
-    pthread_t JefeCuidados[NHOSPITALES];
-    //pthread_t JefeAdmin   [NHOSPITALES];
+    //pthread_t Director  [NHOSPITALES];    // 2H   //TODO: Verificar si se puede eliminar. (¿Hace algo?)
+    pthread_t JefeEpidemia[NHOSPITALES];    // 3H
+    pthread_t JefeCuidados[NHOSPITALES];    // 4H
+    //pthread_t JefeAdmin   [NHOSPITALES];  // 5H
 
-    pthread_t InventarioUGC;
-    pthread_t PersonalUGC;
-    //pthread_t StatusUGC;
+    pthread_t InventarioUGC;                // 1
+    pthread_t PersonalUGC;                  // 1
+    //pthread_t StatusUGC;                  // 1
 } HilosActores;
 
 HilosActores Actores;
+pthread_t    TodosLosActores[1*NPACIENTES + 1*NANALISTA + 1*NVOLUNTARIOS + 5*NHOSPITALES + 1 + 1 + 1];
+long         nTodosLosActores = sizeof( TodosLosActores );
 
 
 // [*] Voluntarios -----------
@@ -101,8 +108,13 @@ int main(){
     sigemptyset( &on_quit_request.sa_mask );
     on_quit_request.sa_sigaction = forzar_finalizacion;
     on_quit_request.sa_flags     = SA_SIGINFO;                  // Hace que se lea sa_sigaction como manejador.
-    // ----------------------------------------------------------------------------------
 
+    // Ahora, establece los manejadores de la señal:
+    if( sigaction( SIGUSR1 , &on_timeout      , NULL ) == -1 )
+        { fprintf(stderr, "Unable to set sigaction\n"); exit( EXIT_FAILURE); }
+    if( sigaction( SIGINT  , &on_quit_request , NULL ) == -1 )
+        { fprintf(stderr, "Unable to set sigaction\n"); exit( EXIT_FAILURE); }
+    // ----------------------------------------------------------------------------------
 
 
     // TODO: Mover este bloque debajo del bloque donde se establecen los manejadores de señales.
@@ -120,12 +132,9 @@ int main(){
         fprintf( stderr , "No pueden bloquearse los hilos hijos" );
         exit( EXIT_FAILURE );
     }
+
     // Desde aquí se pueden crear el resto de los hilos.
-    // TODO: Crear hilos aquí
     // TODO: Añadir un barrier a todos los hilos para que esperen hasta que el main esté listo para continuar.
-    // pthread_create(...)
-    // ...
-    
     HilosActores* act = &Actores;
 
     for( int id = 0 ; id < NPACIENTES ; id += 1 ){
@@ -200,15 +209,9 @@ int main(){
 
 
     // ------------------------------------------------------------------------
-    // Al finalizar la creación de hilos:
+    // Al finalizar de la creación de hilos:
     // se recupera el bloqueo original
     status = pthread_sigmask( SIG_BLOCK , &oldmask , NULL );
-
-    // Ahora, establece los manejadores de la señal:
-    if( sigaction( SIGUSR1 , &on_timeout      , NULL ) == -1 )
-        { fprintf(stderr, "Unable to set sigaction\n"); exit( EXIT_FAILURE); }
-    if( sigaction( SIGINT  , &on_quit_request , NULL ) == -1 )
-        { fprintf(stderr, "Unable to set sigaction\n"); exit( EXIT_FAILURE); }
     // ------------------------------------------------------------------------
 
 
@@ -239,20 +242,46 @@ int main(){
     if( timer_settime( timer_id , RELATIVE , &interval , NULL ) )   // No interesa retomar el valor anterior
         { fprintf( stderr , "Error al crear iniciar el timer." ); exit(EXIT_FAILURE); }
     // ------------------------------------------------------------------------
-
-
-
-
-
+    
     // Unblock signals:
     if( pthread_sigmask( SIG_UNBLOCK , &mask , NULL ) == -1 )
         { fprintf( stderr , "Error al desbloquear el timer" ); exit(EXIT_FAILURE); }
+
+    // NOTE: El main será el único quien sirva las señales
+    //      especiales SIGINT y SIGUSR1(usada para el timer).
+    
+    // ------------------------------------
+    // Registra los protocolos de limpieza:
+    atexit( &esperarATodos   ); // es una pila de llamadas. <- aquella <-.
+    atexit( &finalizarATodos ); // primero llama a esta.       luego a --/
+    // ------------------------------------
+    
+    pthread_mutex_init( &FinalizarAhoraLock , NULL );
+    pthread_cond_init ( &FinalizarAhora     , NULL );
+
+    // Espera hasta que deba finalizar.
+    pthread_mutex_lock( &FinalizarAhoraLock );
+    while( Continuar ) pthread_cond_wait( &FinalizarAhora , &FinalizarAhoraLock );
+    pthread_mutex_unlock( &FinalizarAhoraLock );
+
+
     exit( EXIT_SUCCESS );
+}
+
+void finalizarATodos(){
+}
+
+void esperarATodos(){
+    pthread_mutex_destroy( &FinalizarAhoraLock );
+    pthread_cond_destroy (  &FinalizarAhora    );
 }
 
 // TODO: Finalizar. falta integración con una rutina que libere de todos los recursos e hilos.
 void forzar_finalizacion( int signo , siginfo_t* info , void* context ){
     if( signo != SIGINT ) return;
+
+    Continuar = 0;
+    pthread_cond_signal( &FinalizarAhora );  // Wake up only a thread
     fprintf( stderr , "Finalizando..." );
     // Realizar tareas de finalización.
 }
@@ -262,3 +291,4 @@ void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* conte
     if( signo != SIGUSR1 ) return;
     fprintf( stderr , "Peticion: Actualizar estadisticas:..." );
 }
+

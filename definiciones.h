@@ -207,6 +207,7 @@ typedef struct {
     sem_t        camasIntensivo;
     sem_t        tanquesOxigeno;
     sem_t        respiradores;
+    // TODO: convertir ambos a mutex
     sem_t        espera_personal;
     sem_t        EsperandoPorRecurso;
 
