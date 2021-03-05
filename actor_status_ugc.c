@@ -58,6 +58,17 @@ void *actor_status_ugc(void* param) {
     fprintf(fptr,"Nro. de pacientes con monitoreados: %d\n",daily_stats.monitoreados);
     fprintf(fptr,"Nro. de pacientes con muertos: %d\n",daily_stats.muertos);
     fclose(fptr);
-
+    if(gestor_central.turno == NACTUALIZACIONES -1) {
+        for(i = 0; i < NACTUALIZACIONES; i++) {
+            for(j = 0; j < NHOSPITALES; j++){
+                statHospital[i][j].covid = 0;
+                statHospital[i][j].dadosDeAlta = 0;
+                statHospital[i][j].hospitalizados = 0;
+                statHospital[i][j].monitoreados = 0;
+                statHospital[i][j].muertos = 0;
+            }
+        }
+    }
+    
     return NULL;
 }

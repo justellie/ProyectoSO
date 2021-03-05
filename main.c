@@ -149,6 +149,10 @@ int main(){
                         NULL,                   // No special attributes.
                         &actor_paciente,        // routine.
                         &Tabla_Pacientes[id]); // ref. attributes.
+        if (id%5==0)
+        {
+            sleep(3);
+        }
     }
 
     // Hilos relacionados con los hospitales:

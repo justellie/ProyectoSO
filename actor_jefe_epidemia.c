@@ -21,10 +21,10 @@
     
 void* actor_jefe_epidemia(void* datos_hospital) {
     Hospital *hospital = (Hospital *)datos_hospital;
-    long diagnostico;
+    long* diagnostico;
     while(true) {
-        diagnostico = (long) refqueue_get(&hospital->reporte);
-        if(diagnostico == Intensivo) {
+        diagnostico =  refqueue_get(&hospital->reporte);
+        if((*diagnostico) == Intensivo) {
             hospital->estadis_pacientes.covid += 1;
         }
     }

@@ -116,7 +116,7 @@ void construirHospital( Hospital* h , int id , TipoHospital tipo , int camasBas 
 
     // Init:
     refqueue_singleton( &h->pacientesEnSilla );
-
+    refqueue_singleton( &h->reporte );
     // Init:
     h->estadis_pacientes = (Estadistica) {0};
 
