@@ -227,6 +227,8 @@ typedef struct {
     int continuar;
     Mutex FinalizarStatLock;
 
+    int days;
+
 } UGC;
 void construirUGC( UGC* ugc , TuplaRecursos* descripcion );
 void destruirUGC ( UGC* ugc );

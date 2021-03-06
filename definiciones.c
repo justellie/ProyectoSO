@@ -200,6 +200,7 @@ void construirUGC( UGC* ugc , TuplaRecursos* descripcion ){
     pthread_mutex_init( &ugc->FinalizarStatLock , NULL );
     ugc->continuar = 1;
     pthread_cond_init ( &ugc->FinalizarStat     , NULL );
+    ugc->days = 0;
 
 }
 void destruirUGC( UGC* ugc ){
