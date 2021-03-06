@@ -402,6 +402,11 @@ void* actor_gestor(void *datos_gestor)
         dead = false;
         volunt = false;
 
+        printf("id %d ", atendiendo->id);
+        printf("serv %d ", atendiendo->servicio);
+        printf("act %d ", diagAct);
+        printf("prev %d ", diagPrev);
+
         //Si el diagnostico dado es el mismo que el anterior y este no es que el paciente esta sano, se coloca de nuevo en la cola
         if(atendiendo->tiene_cama && diagPrev==diagAct && diagAct!=Ninguno)
         {
@@ -421,6 +426,7 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);                                
                             }
+                            datos->hospital->estadis_pacientes.hospitalizados++;
                             status=reservarRecursos(datos->hospital, atendiendo, 3, Intensivo);                                                        
                         break;
 
@@ -429,6 +435,7 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);                                                             
                             }
+                            datos->hospital->estadis_pacientes.hospitalizados++;
                             status=reservarRecursos(datos->hospital, atendiendo, 2, Intensivo);
                         break;
                         
@@ -437,6 +444,7 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);                                
                             }
+                            datos->hospital->estadis_pacientes.hospitalizados++;
                             status=reservarRecursos(datos->hospital, atendiendo, 1, Intensivo);
                         break;
                     }
@@ -450,7 +458,8 @@ void* actor_gestor(void *datos_gestor)
                             if(atendiendo->tiene_cama)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);                                                                
-                            }                             
+                            }
+                            datos->hospital->estadis_pacientes.hospitalizados++;                             
                             status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                         break;
 
@@ -459,6 +468,7 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);                               
                             }
+                            datos->hospital->estadis_pacientes.hospitalizados++;
                             status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                         break;
                         
@@ -466,7 +476,8 @@ void* actor_gestor(void *datos_gestor)
                             if(atendiendo->tiene_cama)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);                                
-                            }                            
+                            }
+                            datos->hospital->estadis_pacientes.hospitalizados++;                            
                             status=reservarRecursos(datos->hospital, atendiendo, 0, Basica);
                         break;
                     }
@@ -481,9 +492,9 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);                                
                             }
-                            pthread_mutex_lock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_lock(&datos->hospital->estadisticasLock);
                             datos->hospital->estadis_pacientes.monitoreados++;
-                            pthread_mutex_unlock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_unlock(&datos->hospital->estadisticasLock);
                             volunt=true;                            
                         break;
 
@@ -492,9 +503,9 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);                                                                
                             }
-                            pthread_mutex_lock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_lock(&datos->hospital->estadisticasLock);
                             datos->hospital->estadis_pacientes.monitoreados++;
-                            pthread_mutex_unlock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_unlock(&datos->hospital->estadisticasLock);
                             volunt=true;
                         break;
                         
@@ -504,9 +515,9 @@ void* actor_gestor(void *datos_gestor)
                                 liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                             }
                             else
-                            pthread_mutex_lock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_lock(&datos->hospital->estadisticasLock);
                             datos->hospital->estadis_pacientes.monitoreados++;
-                            pthread_mutex_unlock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_unlock(&datos->hospital->estadisticasLock);
                             volunt=true;
                         break;
                     }
@@ -521,9 +532,9 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
                             }
-                            pthread_mutex_lock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_lock(&datos->hospital->estadisticasLock);
                             datos->hospital->estadis_pacientes.muertos++;
-                            pthread_mutex_unlock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_unlock(&datos->hospital->estadisticasLock);
                             dead=true;
                         break;
 
@@ -532,9 +543,9 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
                             }
-                            pthread_mutex_lock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_lock(&datos->hospital->estadisticasLock);
                             datos->hospital->estadis_pacientes.muertos++;
-                            pthread_mutex_unlock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_unlock(&datos->hospital->estadisticasLock);
                             dead=true;
                         break;
                         
@@ -543,9 +554,9 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                             }
-                            pthread_mutex_lock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_lock(&datos->hospital->estadisticasLock);
                             datos->hospital->estadis_pacientes.muertos++;
-                            pthread_mutex_unlock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_unlock(&datos->hospital->estadisticasLock);
                             dead=true;
                         break;
                     }
@@ -559,9 +570,9 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 3, diagPrev);
                             }
-                            pthread_mutex_lock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_lock(&datos->hospital->estadisticasLock);
                             datos->hospital->estadis_pacientes.dadosDeAlta++;
-                            pthread_mutex_unlock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_unlock(&datos->hospital->estadisticasLock);
                             alta = true;
                         break;
 
@@ -570,9 +581,9 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 2, diagPrev);
                             }
-                            pthread_mutex_lock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_lock(&datos->hospital->estadisticasLock);
                             datos->hospital->estadis_pacientes.dadosDeAlta++;
-                            pthread_mutex_unlock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_unlock(&datos->hospital->estadisticasLock);
                             alta = true;
                         break;
                         
@@ -581,9 +592,9 @@ void* actor_gestor(void *datos_gestor)
                             {
                                 liberarRecursos(datos->hospital, atendiendo, 1, diagPrev);
                             }
-                            pthread_mutex_lock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_lock(&datos->hospital->estadisticasLock);
                             datos->hospital->estadis_pacientes.dadosDeAlta++;
-                            pthread_mutex_unlock(&datos->hospital->estadisticasLock);
+                            //pthread_mutex_unlock(&datos->hospital->estadisticasLock);
                             alta = true;
                         break;
                     }
@@ -623,9 +634,6 @@ void* actor_gestor(void *datos_gestor)
                             //si el paciente no ha sido dado de alta, no ha muerto o no esta con los voluntarios, se le devuelve a la cola
                             atendiendo->tiene_cama=1;
                             atendiendo->ingresando=0;
-                            pthread_mutex_lock(&datos->hospital->estadisticasLock);
-                            datos->hospital->estadis_pacientes.hospitalizados++;
-                            pthread_mutex_unlock(&datos->hospital->estadisticasLock);
                             refqueue_put(&datos->hospital->pacientes, atendiendo);
                         }
                     }                        
