@@ -282,7 +282,6 @@ void destruirJefeUCI ( jefe_uci* j ){
 
 TipoAtencion obtener_diagnostico_simple()
 {
-    srand(time(NULL));
     return rand()% 4;
 }
 
@@ -291,8 +290,6 @@ TipoAtencion obtener_diagnostico_compuesta(void *paciente)
     Paciente *atendiendo=(Paciente *)paciente;
     int diagnostico_nuevo=0;
     
-
-    srand(time(NULL));
     diagnostico_nuevo= rand()% 5;
 
     diagnostico_nuevo=atendiendo->servicio*0.5+diagnostico_nuevo*0.5;

@@ -101,6 +101,9 @@ int main(){
     int SYS_CLOCK = CLOCK_REALTIME;
     int status;
 
+    // Datos aleatorios
+    srand(time(NULL));
+
     inicializarPacientes();
     inicializarMedicos();
     inicializarEnfermeras();

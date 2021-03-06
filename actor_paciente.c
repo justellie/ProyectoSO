@@ -13,6 +13,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#define TIEMPO_PRUDENCIAL 1
 
 //extern Hospital Tabla_Hospitales[NHOSPITALES];
 
@@ -79,6 +80,6 @@ void* actor_paciente(void *datos_paciente)
 int autoexamen()
 {
     //Espera 3 segundos
-    sleep(3);
+    sleep(TIEMPO_PRUDENCIAL);
     return rand ()%100 < 30; //Hay un 30% de posibilidades de que se sienta mal
 }
