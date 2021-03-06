@@ -2,7 +2,7 @@
  * @file actor_gestor.c
  * @author Juan Herrera 26972881 (onemoreguy3@gmail.com)
  * @brief 
- * @version 0.1
+ * @version 0.2
  * @date 2021-02-28
  * 
  * @copyright Copyright (c) 2021
@@ -13,10 +13,12 @@
 #include <time.h>
 #include <unistd.h>
 
+#define TIEMPO_PRUDENCIAL 1
 
 //extern Hospital Tabla_Hospitales[NHOSPITALES];
 
-// TODO: Documentar!
+/// @brief Usado por los pacientes. Se evalúan a sí mismos para decidir si deben dirigirse
+///        a un centro de salud.
 int autoexamen();
 
 ///@fn void actor_paciente(void *datos_paciente)
@@ -40,8 +42,6 @@ void* actor_paciente(void *datos_paciente)
             datos->fueAtendido = 0;
             datos->deAlta = 0;
 
-
-
             // Entra a la sala de espera para poder ir luego a la sala de muestras
             sem_wait(&HospElegid->salaEspera);       // Espera a que haya espacio dentro de la sala de espera hospital
             sem_wait(&HospElegid->salaMuestra);      // Espera a que esté disponible la entrada a la sala de muestra
@@ -59,7 +59,6 @@ void* actor_paciente(void *datos_paciente)
                 }
             pthread_mutex_unlock( &datos->atendidoLock);
             
-
             //Espera a estar sano
             pthread_mutex_lock( &datos->medLock);
                 while (!datos->vivo ||datos->deAlta) {
@@ -78,7 +77,7 @@ void* actor_paciente(void *datos_paciente)
 
 int autoexamen()
 {
-    //Espera 3 segundos
-    sleep(3);
+    //Espera 1 segundos
+    sleep(TIEMPO_PRUDENCIAL);
     return rand ()%100 < 30; //Hay un 30% de posibilidades de que se sienta mal
 }

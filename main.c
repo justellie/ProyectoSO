@@ -10,7 +10,7 @@
 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 // Activa/Deactiva el timer de las estadísticas para debuggear el código.
-#define ACTIVAR_ESTADISTICAS 1
+#define ACTIVAR_ESTADISTICAS 0
 //
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -100,6 +100,9 @@ void forzar_finalizacion( int signo , siginfo_t* info , void* context );
 int main(){
     int SYS_CLOCK = CLOCK_REALTIME;
     int status;
+
+    // Datos aleatorios
+    srand(time(NULL));
 
     inicializarPacientes();
     inicializarMedicos();

@@ -15,24 +15,6 @@
                             )                   \
                      )
 
-// ...................................................
-// [@] Sincronizacion global ---------
-//extern Barrier    Paso_Inicializacion;
-//
-//// [+] Tablas globales global -------------------
-//extern Paciente   Tabla_Pacientes[NPACIENTES];
-//extern Personal   Tabla_Medicos[NMEDICOS];
-//extern Personal   Tabla_Enfermeras[NENFERMERAS];
-//extern Hospital   Tabla_Hospitales[NHOSPITALES];
-//extern GestorCama Tabla_Gestores[NHOSPITALES];
-//extern Voluntario Tabla_Voluntarios[NVOLUNTARIOS];
-//extern UGC        gestion_central;
-//
-//// [*] Voluntarios -----------
-//extern RefQueue pacienteEnCasa;
-// ...................................................
-
-
 // Define todos los constructores y destructores dentro de definiciones.h
 static const int CompartidoEntreHilos = 0;
 
@@ -282,7 +264,6 @@ void destruirJefeUCI ( jefe_uci* j ){
 
 TipoAtencion obtener_diagnostico_simple()
 {
-    srand(time(NULL));
     return rand()% 4;
 }
 
@@ -291,8 +272,6 @@ TipoAtencion obtener_diagnostico_compuesta(void *paciente)
     Paciente *atendiendo=(Paciente *)paciente;
     int diagnostico_nuevo=0;
     
-
-    srand(time(NULL));
     diagnostico_nuevo= rand()% 5;
 
     diagnostico_nuevo=atendiendo->servicio*0.5+diagnostico_nuevo*0.5;
@@ -443,5 +422,4 @@ void borrarJefeUCI(){
         destruirJefeUCI(grupoj + i);
     }
 }
-
 

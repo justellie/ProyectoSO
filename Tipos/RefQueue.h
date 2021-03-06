@@ -3,7 +3,7 @@
  * @brief Define el tipo de datos RefQueue, que puede ser usado para
  *        sincronizar múltiples hilos mediante el paso de referencias a objetos.
  * @author Gabriel Peraza
- * @version 1.0.0.0
+ * @version 1.4.0.2
  * @date 2021-02-01
  */
 
