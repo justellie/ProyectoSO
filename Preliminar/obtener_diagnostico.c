@@ -7,7 +7,7 @@
 TipoAtencion obtener_diagnostico_simple()
 {
     srand(time(NULL));
-    return rand()% 4;
+    return rand()% 2;
 }
 
 TipoAtencion obtener_diagnostico_compuesta(void *paciente)

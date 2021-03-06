@@ -28,7 +28,10 @@ void* actor_director(void* datos_hospital) {
 
    while(true) {
         pthread_mutex_lock(&(current_hosp->estadisticasLock));
+        pthread_mutex_lock(&(gestor_central.turnoLock));
         statHospital[gestor_central.turno][current_hosp->id] = current_hosp->estadis_pacientes;
+        
+        pthread_mutex_unlock(&(gestor_central.turnoLock));
         pthread_mutex_unlock(&(current_hosp->estadisticasLock));
    } 
     return NULL;
