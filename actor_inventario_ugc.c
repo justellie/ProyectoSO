@@ -59,19 +59,19 @@ void* actor_inventario_ugc(void *datos_UGC)
         {
             switch (peticion->tipo_recurso)
             {
-            case PideTanque:
-                actual = refqueue_unsafe_len(&Tabla_Hospitales[i].tanquesOxigeno); // verifico cual es la cantidad del recurso en ese momento
+            case PideTanque: ;
                 TanqueDato *t;
                 for (i = 0; i < NHOSPITALES; i++)
                 {
-                    if (actual >= peticion->cantidad) // encontre el uno que tiene la cantidad o mas del recurso
+                actual = refqueue_unsafe_len(&Tabla_Hospitales[i].tanquesOxigeno); // verifico cual es la cantidad del recurso en ese momento
+                    if ((actual >= peticion->cantidad)&& peticion->idHospital!=i) // encontre el uno que tiene la cantidad o mas del recurso
                     {
                         maxDisponible = peticion->cantidad;
                         indexMax = i;
                     }
                     else
                     {
-                        if (actual > maxDisponible)
+                        if ((actual > maxDisponible)&& peticion->idHospital!=i)
                         {
                             maxDisponible = actual;
                             indexMax = i;
@@ -87,11 +87,11 @@ void* actor_inventario_ugc(void *datos_UGC)
                 Tabla_Hospitales[peticion->idHospital].estadis_recursos.ntanques+=maxDisponible;
                 break;
 
-            case PideRespirador:
-                actual = refqueue_unsafe_len(&Tabla_Hospitales[i].respiradores); // verifico cual es la cantidad del recurso en ese momento
+            case PideRespirador: ;
                 Respirador *r;
                 for (i = 0; i < NHOSPITALES; i++)
                 {
+                    actual = refqueue_unsafe_len(&Tabla_Hospitales[i].respiradores); // verifico cual es la cantidad del recurso en ese momento
                     if ((actual >= peticion->cantidad) && peticion->idHospital!=i ) // encontre el uno que tiene la cantidad o mas del recurso
                     {
                         maxDisponible = peticion->cantidad;
