@@ -69,10 +69,11 @@ typedef struct HilosActores{
 } HilosActores;
 
 HilosActores Actores;
-pthread_t    TodosLosActores[1*NPACIENTES + 1*NANALISTAS + 1*NVOLUNTARIOS + 5*NHOSPITALES + 1 + 1 + 1];
-long         nTodosLosActores = sizeof( TodosLosActores );
 
+/// @brief Finaliza todos los hilos
 void finalizarATodos();
+
+/// @brief Espera a todos los hilos y destruye los recursos empleados.
 void esperarATodos();
 
 
@@ -100,12 +101,16 @@ int main(){
     int SYS_CLOCK = CLOCK_REALTIME;
     int status;
 
-    // TODO: Verficar valores
-    TuplaRecursos RecUGC = {.ncamasBas=NCAMAS_CENTINELA,.ncamasInt=NCAMAS_GENERAL};
-    construirUGC( &gestor_central , &RecUGC );
     inicializarPacientes();
     inicializarMedicos();
     inicializarEnfermeras();
+
+    TuplaRecursos RecUGC = {.ncamasBas=NCAMAS_CENTINELA,.ncamasInt=NCAMAS_GENERAL};
+    construirUGC        ( &gestor_central , &RecUGC );
+    asignarMedicosUGC   ( &gestor_central , Tabla_Medicos    , NMEDICOS    );
+    asignarEnfermerasUGC( &gestor_central , Tabla_Enfermeras , NENFERMERAS );
+
+    // TODO: Verficar valores
     inicializarHospitales( 0.20 , 0.30 , 0.50 ); // 0.20 + 0.30 + 0.50 ~= 1.0
     inicializarPacientesEnCasa();
     inicializarVoluntarios();
@@ -277,9 +282,11 @@ int main(){
     atexit( &finalizarATodos ); // primero llama a esta.       luego a --/
     // ------------------------------------
     
+    printf( "[H] Nuevo sistema hospitalario\n" );
     pthread_mutex_init( &FinalizarAhoraLock , NULL );
     pthread_cond_init ( &FinalizarAhora     , NULL );
 
+    // 
     // Espera hasta Ctrl+C
     pthread_mutex_lock( &FinalizarAhoraLock );
     while( Continuar ) pthread_cond_wait( &FinalizarAhora , &FinalizarAhoraLock );

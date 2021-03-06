@@ -11,9 +11,8 @@
 #define MAX_ATENCION    5       // Maximo número de pacientes que pueden atender.
 #define NHOSPITALES     3      // Maximo número de pacientes.
 #define NPACIENTES      10     // Se asume un número máximo de pacientes en el sistema.
-#define NMEDICOS        5      // Se asume un número máximo de médicos a nivel nacional.
-#define NENFERMERAS     8      // Se asume un número máximo de enfermeras a nivel nacional.
-#define GESTORES_H      1       // Numeros de gestores por hospital
+#define NMEDICOS        20     // Se asume un número máximo de médicos a nivel nacional.
+#define NENFERMERAS     25     // Se asume un número máximo de enfermeras a nivel nacional.
 #define NANALISTAS      (NHOSPITALES * NSALA_MUESTRA)
 
 // Más gestores por cada hospital.
@@ -227,9 +226,13 @@ typedef struct {
     int continuar;
     Mutex FinalizarStatLock;
 
+    int days;
+
 } UGC;
 void construirUGC( UGC* ugc , TuplaRecursos* descripcion );
 void destruirUGC ( UGC* ugc );
+void asignarMedicosUGC   ( UGC* ugc , Personal medicos[]    , long n );
+void asignarEnfermerasUGC( UGC* ugc , Personal enfermeras[] , long n );
 
 // Tupla de peticion a inventario.
 typedef struct {
