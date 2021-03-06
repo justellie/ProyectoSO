@@ -54,7 +54,7 @@ void construirPaciente( Paciente* p , int id ){
     p->vivo         = 1;
     p->deAlta       = 0;
     p->fueAtendido  = 0;
-    p->ingresando   = 0;
+    p->ingresando   = 1;
     p->tiene_cama   = 0;
     p->servicio     = Ninguno;
 
