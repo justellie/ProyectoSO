@@ -47,7 +47,7 @@ void *actor_status_ugc(void* actor_ugc) {
             }
         }
         printf("\n****************************************************\n");
-        printf("Estadísticas diarias para el manejo del COVID-19. Sistema Facyt-SO\n");
+        printf("Estadísticas del día %d para el manejo del COVID-19. Sistema Facyt-SO\n",datos_ugc->days);
         printf("Nro. de pacientes con covid: %d\n",daily_stats.covid);
         printf("Nro. de pacientes con dados de alta: %d\n",daily_stats.dadosDeAlta);
         printf("Nro. de pacientes con hospitalizados: %d\n",daily_stats.hospitalizados);
@@ -56,13 +56,19 @@ void *actor_status_ugc(void* actor_ugc) {
 
         fptr = fopen("dailystats.txt", "a");
         fprintf(fptr,"\n****************************************************\n");
-        fprintf(fptr,"Estadísticas diarias para el manejo del COVID-19. Sistema Facyt-SO\n");
+        fprintf(fptr,"Estadísticas del día %d para el manejo del COVID-19. Sistema Facyt-SO\n",datos_ugc->days);
         fprintf(fptr,"Nro. de pacientes con covid: %d\n",daily_stats.covid);
         fprintf(fptr,"Nro. de pacientes con dados de alta: %d\n",daily_stats.dadosDeAlta);
         fprintf(fptr,"Nro. de pacientes con hospitalizados: %d\n",daily_stats.hospitalizados);
         fprintf(fptr,"Nro. de pacientes con monitoreados: %d\n",daily_stats.monitoreados);
         fprintf(fptr,"Nro. de pacientes con muertos: %d\n",daily_stats.muertos);
         fclose(fptr);
+        pthread_mutex_lock(&(datos_ugc->turnoLock));
+        if(datos_ugc->turno == NACTUALIZACIONES-1) {
+            datos_ugc->days += 1;
+        }
+        datos_ugc->turno = (datos_ugc->turno+1) % NACTUALIZACIONES;
+        pthread_mutex_unlock(&(datos_ugc->turnoLock));
         pthread_mutex_unlock(&(datos_ugc->FinalizarStatLock));
         datos_ugc->continuar = 1;
     }
