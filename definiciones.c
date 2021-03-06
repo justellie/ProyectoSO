@@ -134,7 +134,16 @@ void construirHospital( Hospital* h , int id , TipoHospital tipo , int camasBas 
     sem_init( &h->camasBasico    , CompartidoEntreHilos , camasBas );
     sem_init( &h->camasIntensivo , CompartidoEntreHilos , camasInt );
     refqueue_singleton( &h->tanquesOxigeno );
+    for (int i = 0; i < camasBas; i++)
+    {
+        refqueue_put(&h->tanquesOxigeno, (void *)1);
+    }
+    
     refqueue_singleton( &h->respiradores   );
+    for (int i = 0; i < camasInt; i++)
+    {
+        refqueue_put(&h->respiradores, (void *)1);
+    }
     refqueue_singleton( &h->PCR );
     refqueue_singleton( &h->reporte );
 
