@@ -372,6 +372,6 @@ void peticion_actualizar_estadisticas( int signo , siginfo_t* info , void* conte
     if( signo != SIGUSR1 ) return;
     fprintf( stderr , "Peticion: Actualizar estadisticas:\n" );
     gestor_central.continuar = 0;
-    pthread_cond_signal(&(gestor_central.FinalizarStatLock));
+    pthread_cond_signal(&(gestor_central.FinalizarStat));
 }
 
