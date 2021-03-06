@@ -293,6 +293,16 @@ void inicializarGestorCama();
 void inicializarJefeUCI();
 
 
+void borrarPacientes();
+void borrarMedicos();
+void borrarEnfermeras();
+void borrarHospitales();
+void borrarPacientesEnCasa();
+void borrarVoluntarios();
+void borrarGestorCama();
+void borrarJefeUCI();
+
+
 TipoAtencion obtener_diagnostico_simple();
 TipoAtencion obtener_diagnostico_compuesta(void *paciente);
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
