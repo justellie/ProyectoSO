@@ -24,7 +24,7 @@ void* actor_jefe_epidemia(void* datos_hospital) {
     long* diagnostico;
     while(true) {
         diagnostico =  refqueue_get(&hospital->reporte);
-        if((*diagnostico) == Intensivo) {
+        if((*diagnostico) == Intensivo) {//AHORA SI COMPARA EL TIPO DE DATO ADECUADO
             hospital->estadis_pacientes.covid += 1;
         }
     }
