@@ -28,11 +28,9 @@ void *actor_status_ugc(void* actor_ugc) {
     UGC* datos_ugc = (UGC *)actor_ugc;
     while(true) {
         pthread_mutex_lock(&(datos_ugc->FinalizarStatLock));
-        printf("pipisito\n");
         while(datos_ugc->continuar){
             pthread_cond_wait(&(datos_ugc->FinalizarStat), &(datos_ugc->FinalizarStatLock));
         }
-        printf("pipisito\n");
         daily_stats.covid = 0;
         daily_stats.dadosDeAlta = 0;
         daily_stats.hospitalizados = 0;
