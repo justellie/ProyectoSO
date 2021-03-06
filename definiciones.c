@@ -358,3 +358,62 @@ void inicializarJefeUCI(){
         construirJefeUCI(grupoj + i, i, grupoh + i);
     }
 }
+
+// --------------
+// [!] borrado general:
+void borrarPacientes(){
+    Paciente* grupo = Tabla_Pacientes;
+    for( int i = 0 ; i < NPACIENTES ; i += 1 ){
+        destruirPaciente( grupo + i );
+    }
+}
+
+void borrarMedicos(){
+    Personal* grupo = Tabla_Medicos;
+    for( int i = 0 ; i < NMEDICOS; i += 1 ){
+        destruirPersonal( grupo + i );
+    }
+}
+
+void borrarEnfermeras(){
+    Personal* grupo = Tabla_Enfermeras;
+    for( int i = 0 ; i < NENFERMERAS ; i += 1 ){
+        destruirPersonal( grupo + i );
+    }
+}
+
+void borrarHospitales(){
+    Hospital* grupo    = Tabla_Hospitales;
+    for( int id = 0 ; id < NHOSPITALES ; id += 1 ){
+        destruirHospital( grupo + id );
+    }
+}
+
+void borrarPacientesEnCasa(){
+    // Global:
+    refqueue_destroy( &pacienteEnCasa );
+}
+
+void borrarVoluntarios(){
+    Voluntario* grupo = Tabla_Voluntarios;
+    for( int i = 0 ; i < NVOLUNTARIOS ; i += 1 ){
+       destruirVoluntario( grupo + i );
+    }
+}
+
+void borrarGestorCama(){
+    GestorCama *grupog = Tabla_Gestores;
+    for (int i = 0; i < NHOSPITALES; i++)
+    {
+        destruirGestorCama(grupog + i);
+    }
+}
+
+void borrarJefeUCI(){
+    jefe_uci *grupoj = Tabla_JefeUCI;
+    for( int i = 0; i < NHOSPITALES; i += 1 ) {
+        destruirJefeUCI(grupoj + i);
+    }
+}
+
+

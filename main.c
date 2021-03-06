@@ -10,7 +10,7 @@
 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 // Activa/Deactiva el timer de las estadísticas para debuggear el código.
-#define ACTIVAR_ESTADISTICAS 0
+#define ACTIVAR_ESTADISTICAS 1
 //
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -158,10 +158,6 @@ int main(){
                         NULL,                   // No special attributes.
                         &actor_paciente,        // routine.
                         &Tabla_Pacientes[id]); // ref. attributes.
-        //if (id%5==0)
-        //{
-        //    sleep(3);
-        //}
     }
 
     // Hilos relacionados con los hospitales:
@@ -296,17 +292,75 @@ int main(){
 }
 
 void finalizarATodos(){
+    fprintf( stderr , "Cancelando ejecución de hilos.\n" );
+    // TODO: No está listo todavía.
+    //// Envía request de finalización para todos los hilos:
+    //HilosActores* act = &Actores;
+    //for( int id = 0 ; id < NPACIENTES ; id += 1 ){
+    //    pthread_cancel( act->Pacientes[id] );
+    //}
+
+    //for( int id = 0 ; id < NHOSPITALES ; id += 1 ){
+    //    pthread_cancel( act->Director[id] );
+    //    pthread_cancel( act->Gestores[id] );
+    //    pthread_cancel( act->JefeEpidemia[id] );
+    //    pthread_cancel( act->JefeUCI[id] );
+    //    pthread_cancel( act->JefeAdmin[id] );
+    //}
+
+    //for( int iter = 0 ; iter < NANALISTAS ; iter += 1 ){
+    //    pthread_cancel( act->Analistas[iter] );
+    //}
+
+    //// Voluntarios:
+    //for( int iter = 0 ; iter < NANALISTAS ; iter += 1 ){
+    //    pthread_cancel( act->Voluntarios[iter] );
+    //}
+
+    //pthread_cancel( act->InventarioUGC );
+    //pthread_cancel( act->PersonalUGC   );
+    //pthread_cancel( act->StatusUGC     );
+
 }
 
 void esperarATodos(){
+    fprintf( stderr , "Esperando por finalización de hilos.\n" );
     pthread_mutex_destroy( &FinalizarAhoraLock );
-    pthread_cond_destroy (  &FinalizarAhora    );
+    pthread_cond_destroy ( &FinalizarAhora     );
+
+    //// Espera por los hilos!
+    //for( int id = 0 ; id < NPACIENTES ; id += 1 ){
+    //    pthread_join( act->Pacientes[id] , NULL );
+    //}
+
+    //for( int id = 0 ; id < NHOSPITALES ; id += 1 ){
+    //    pthread_join( act->Director[id]     , NULL );
+    //    pthread_join( act->Gestores[id]     , NULL );
+    //    pthread_join( act->JefeEpidemia[id] , NULL );
+    //    pthread_join( act->JefeUCI[id]      , NULL );
+    //    pthread_join( act->JefeAdmin[id]    , NULL );
+    //}
+
+    //for( int iter = 0 ; iter < NANALISTAS ; iter += 1 ){
+    //    pthread_join( act->Analistas[iter] , NULL );
+    //}
+
+    //// Voluntarios:
+    //for( int iter = 0 ; iter < NVOLUNTARIOS ; iter += 1 ){
+    //    pthread_join( act->Voluntarios[iter] , NULL );
+    //}
+
+    //pthread_join( act->InventarioUGC , NULL );
+    //pthread_join( act->PersonalUGC   , NULL );
+    //pthread_join( act->StatusUGC     , NULL );
 }
 
 // TODO: Finalizar. falta integración con una rutina que libere de todos los recursos e hilos.
 void forzar_finalizacion( int signo , siginfo_t* info , void* context ){
-    if( signo != SIGINT ) return;
+    static int peticion = 0;
+    if( peticion || signo != SIGINT ) return;
 
+    peticion  = 1;
     Continuar = 0;
     pthread_cond_signal( &FinalizarAhora );  // Despierta a main para finalizar.
     fprintf( stderr , "Finalizando...\n" );
