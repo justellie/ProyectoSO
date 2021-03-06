@@ -211,6 +211,7 @@ void construirUGC( UGC* ugc , TuplaRecursos* descripcion ){
     pthread_cond_init ( &ugc->FinalizarStat     , NULL );
 
 }
+
 void destruirUGC( UGC* ugc ){
     sem_destroy( &ugc->camasBasico    );
     sem_destroy( &ugc->camasIntensivo );
@@ -233,6 +234,19 @@ void destruirUGC( UGC* ugc ){
     ugc->turno = 0;
     pthread_mutex_destroy( &ugc->turnoLock );
 }
+
+void asignarMedicosUGC( UGC* ugc , Personal medicos[] , long n ){
+    RefQueue* meds = &ugc->medicos;
+    for( long i = 0 ; i < n ; i += 1 )
+        refqueue_put( meds , medicos + i );
+}
+
+void asignarEnfermerasUGC( UGC* ugc , Personal enfermeras[] , long n ){
+    RefQueue* enfs = &ugc->enfermeras;
+    for( long i = 0 ; i < n ; i += 1 )
+        refqueue_put( enfs , enfermeras + i );
+}
+
 
 void construirGestorCama( GestorCama* g , int id , Hospital* hospital ){
     g->id       = id;
