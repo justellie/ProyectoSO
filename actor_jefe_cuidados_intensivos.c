@@ -58,7 +58,7 @@ void* actor_jefe_cuidados_intensivos( void * datos)
             if(refrecursos->nenfermeras <= cantidad * refrecursos->ncamasInt + 0.12 * refrecursos->ncamasBas)
             {   
                 //inicializacion del pedido de personal a la UGC
-                TuplaInventario *pedido = malloc(sizeof(TuplaInventario *));
+                TuplaInventario *pedido = malloc(sizeof(TuplaInventario));
                 //llenado de pedido
                 pedido->idHospital=datos_jefe->refHospital->id;
                 pedido->cantidad=cantidad;
@@ -71,7 +71,7 @@ void* actor_jefe_cuidados_intensivos( void * datos)
             else if(refrecursos->nmedicos >= cantidad * refrecursos->ncamasInt + 0.12 * refrecursos->ncamasBas)
             {
                 //inicializacion del pedido de personal a la UGC
-                TuplaInventario *pedido = malloc(sizeof(TuplaInventario *));
+                TuplaInventario *pedido = malloc(sizeof(TuplaInventario));
                 //llenado de pedido
                 pedido->idHospital=datos_jefe->refHospital->id;
                 pedido->cantidad=cantidad;
