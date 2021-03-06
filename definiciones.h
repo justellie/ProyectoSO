@@ -1,39 +1,39 @@
 /**
  * @file definiciones.h
- * @brief Definiciones de las estructuras y variables globales usadas dentro del programa.
+ * @brief Definiciones de los tipos de datos y las referencia de las variables globales usadas dentro del programa.
  * @author Todos
- * @version 0.0.3.1
+ * @version 0.2.0.6
  * @date 2021-03-04
  */
 #ifndef __DEFINICIONES_H__
 #define __DEFINICIONES_H__
 
-#define MAX_ATENCION    5       // Maximo número de pacientes que pueden atender.
-#define NHOSPITALES     3      // Maximo número de pacientes.
-#define NPACIENTES      10     // Se asume un número máximo de pacientes en el sistema.
-#define NMEDICOS        20     // Se asume un número máximo de médicos a nivel nacional.
-#define NENFERMERAS     25     // Se asume un número máximo de enfermeras a nivel nacional.
+#define MAX_ATENCION    5      ///< Maximo número de pacientes que pueden atender.
+#define NHOSPITALES     3      ///< Maximo número de pacientes.
+#define NPACIENTES      10     ///< Se asume un número máximo de pacientes en el sistema.
+#define NMEDICOS        20     ///< Se asume un número máximo de médicos a nivel nacional.
+#define NENFERMERAS     25     ///< Se asume un número máximo de enfermeras a nivel nacional.
 #define NANALISTAS      (NHOSPITALES * NSALA_MUESTRA)
 
 // Más gestores por cada hospital.
 // NOTE: posiblemente sólo se necesite uno de ellos, no estoy seguro.
-#define NVOLUNTARIOS        5   // Cuántos voluntarios hay en el país
-#define NACTUALIZACIONES    2   // Cuántas veces se actualizan las estadísticas de la UGC.
+#define NVOLUNTARIOS        5   ///< Cuántos voluntarios hay en el país
+#define NACTUALIZACIONES    2   ///< Cuántas veces se actualizan las estadísticas de la UGC.
 
-#define NSALA_ESPERA        20  // # de puestos en la sala de espera.
-#define NSALA_MUESTRA       5   // # de habitaciones de toma de muestras.
+#define NSALA_ESPERA        20  ///< núm. de puestos en la sala de espera.
+#define NSALA_MUESTRA       5   ///< núm. de habitaciones de toma de muestras.
 
-#define NLOTE_PCR     30    // # de PCR que se solicitan por vez
-#define NMIN_PCR      5    // # mínimo de PCR en el hospital antes de pedir otro lote
+#define NLOTE_PCR     30    ///< núm. de PCR que se solicitan por vez
+#define NMIN_PCR      5     ///< núm. mínimo de PCR en el hospital antes de pedir otro lote
 // ---------------------------
-#define NCAMAS_CENTINELA    25
-#define NCAMAS_INTERMEDIO   20
-#define NCAMAS_GENERAL      15
-#define NCAMAS_UGC          200
+#define NCAMAS_CENTINELA    25  ///< núm. de camas por hospital centinela.
+#define NCAMAS_INTERMEDIO   20  ///< núm. de camas por hospital intermedio.
+#define NCAMAS_GENERAL      15  ///< núm. de camas por hospital general.
+#define NCAMAS_UGC          200 ///< núm. de camas ugc.
 
-#define PORCENTAJE_INT_CENTINELA   0.20
-#define PORCENTAJE_INT_INTERMEDIO  0.15
-#define PORCENTAJE_INT_GENERAL     0.05
+#define PORCENTAJE_INT_CENTINELA   0.20 ///< porcentaje de camas intensivas por hospital centinela.
+#define PORCENTAJE_INT_INTERMEDIO  0.15 ///< porcentaje de camas intensivas por hospital intermedio.
+#define PORCENTAJE_INT_GENERAL     0.05 ///< porcentaje de camas intensivas por hospital general.
 // ---------------------------
 
 #include <stdbool.h>
@@ -48,21 +48,23 @@
 // [>] POSIX ----------------------
 #include <pthread.h>
 #include <semaphore.h>
-typedef pthread_mutex_t   Mutex;
-typedef pthread_cond_t    Condicion;
-typedef pthread_barrier_t Barrier;
+typedef pthread_mutex_t   Mutex;        ///< Alias para facilitar las declaraciones.
+typedef pthread_cond_t    Condicion;    ///< Alias para facilitar las declaraciones.
+typedef pthread_barrier_t Barrier;      ///< Alias para facilitar las declaraciones.
 // --------------------------------
 
 
-
 // [*] PERSONAL:
-typedef enum { Ninguno, EnCasa, Basica, Intensivo, Muerto} TipoAtencion; // Antes: enum cama.
-typedef enum { PidePCR , PideTanque, PideRespirador,PideEnfermera,PideMedico} Recurso; 
-typedef enum { Medico , Enfermera } TipoPersonal;
-typedef enum { test=1} MuestraPcr;
-typedef enum { dummyTanque } TanqueDato;
-typedef enum { dummyRespirador } Respirador;
+typedef enum { Ninguno, EnCasa, Basica, Intensivo, Muerto} TipoAtencion;                ///< Tipo de atención que debe recibir el paciente.
+typedef enum { PidePCR , PideTanque, PideRespirador,PideEnfermera,PideMedico} Recurso;  ///< Tipo de Petición de recursos.
+typedef enum { Medico , Enfermera } TipoPersonal;                                       ///< Diferencia el personal del hospital.
+typedef enum { test=1} MuestraPcr;                                                      ///< Tipo de datos de las muestras PCR
+typedef enum { dummyTanque } TanqueDato;                                                ///< Tipo de datos que representa los tanques de oxígeno.
+typedef enum { dummyRespirador } Respirador;                                            ///< Tipo de datos que representa los respiradores del hospital.
 
+/// Representa al recurso Personal del hospital. Puede ser Médico o enfermera.
+/// Según su ocupación y el servicio que atienden, estarán supervisando a un número
+/// determinado de pacientes.
 typedef struct {
     int          id;
     TipoPersonal tipo;

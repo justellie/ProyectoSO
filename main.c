@@ -10,7 +10,7 @@
 
 // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 // Activa/Deactiva el timer de las estadísticas para debuggear el código.
-#define ACTIVAR_ESTADISTICAS 1
+#define ACTIVAR_ESTADISTICAS 0
 //
 // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
